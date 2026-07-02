@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/*
+
+@default init de valor
+@id valor unico e incrementa automaticamente para cada usuario 
+  uuid - string de 32 caracteres que define um usuario 
+@unique valor unico na base de dados nao havendo assim valores duplicados nestes campos
+
+
+*/
+
+model User {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  email         String   @unique
+  
+
+  password      String?  
+
+  //provider      String?  @default("local")
+  //providerId    String?  @unique
+
+  // Perfil e Stats do 4 em Linha
+  avatarUrl     String?
+  wins          Int      @default(0)
+  losses        Int      @default(0)
+  draws         Int      @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
