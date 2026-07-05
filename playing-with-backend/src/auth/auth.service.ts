@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
-import { access } from 'fs';
+
 
 const SALT_ROUNDS = 10;
 

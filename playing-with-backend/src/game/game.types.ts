@@ -7,4 +7,5 @@ export interface GameState
     currentPlayer: number;//What turn is Player1 or Player2
     isGameOver: boolean;
     winnerId: string | null;
+    disconnectedPlayerId?: string | null;
 }

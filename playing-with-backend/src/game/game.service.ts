@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { GameState } from './game.types';
+import { PrismaService } from '../prisma/prisma.service';
 import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
 import { count } from 'console';
+
+const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
 
 @Injectable()
 export class GameService
 {
   //Mapa que contem os jogos ativos Key: Sala, Value: Estado do jogo
   private activeGames = new Map<string,GameState>();
+  private forfeitTimers = new Map<string, NodeJS.Timeout>();
+
+  constructor(private readonly prisma: PrismaService) {}
 
   // Função auxiliar para gerar matrizes 6x7 cheias de zeros
   private createEmptyBoard(): number[][] {
@@ -44,16 +50,6 @@ GetGameByPlayerId(playerId: string): GameState | undefined {
     return this.activeGames.get(roomId);
   }
 
-
-  //bye bye game de forma graciosa
-endGame(roomId: string): void {
-  const game = this.activeGames.get(roomId);
-  if(!game)
-    return;
-
-  game.isGameOver = true;
-  this.activeGames.delete(roomId);
-}
 
 //Processa uma jodada a ideia e returnar o estado atualizado ou undefined se for invalido :)
 MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
@@ -116,13 +112,6 @@ private checkDraw(board: number[][]): boolean
   return board[0].every(cell => cell !== 0);
 }
 
-/*
-Em ves de verificar o board todo podemos so verificar quando uma ficha cair verificar para os 4 lados possivels
-Horizontal (Esquerda + Direita)
-Vertical (Apenas para baixo pois nao ha fichas por cima da que acabou de cair)
-Diaginal Principal(Cima-Esquerda + baixo-Direita)
-Diaginal Secundarop(Baixo-Esquerda + Cima-Direita)
-*/
   private checkWin(board: number[][],row: number,col: number,player: number): boolean
   {
     const directions = [
@@ -157,6 +146,73 @@ Diaginal Secundarop(Baixo-Esquerda + Cima-Direita)
     return false;
   }
   
+
+
+StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game: GameState) => void)
+{
+  //Se ja tiver um timer para esta saula, nao duplica
+  this.CancelForfeitTimer(roomId);
+
+  const timer = setTimeout(() =>{
+    const game = this.activeGames.get(roomId);
+    if(!game || game.isGameOver)
+        return;
+  
+  const winnerId = game.player1Id === disconnectedPlayerId ? game.player2Id : game.player1Id;
+  game.isGameOver = true;
+  game.winnerId = winnerId;
+
+  this.activeGames.delete(roomId);
+  this.forfeitTimers.delete(roomId);
+  onForfeit(game);
+  },FORFEIT_GRACE_PERIOD_MS);
+  this.forfeitTimers.set(roomId,timer);
 }
+
+  CancelForfeitTimer(roomId: string) {
+    const timer = this.forfeitTimers.get(roomId);
+    if (timer) {
+      clearTimeout(timer);
+      this.forfeitTimers.delete(roomId);
+    }
+  }
+
+async finalizeGame(game: GameState): Promise<void> {
+    this.CancelForfeitTimer(game.roomId);
+    this.activeGames.delete(game.roomId);
+
+    if (game.winnerId === null) {
+      // empate: ambos ganham um draw
+      await this.prisma.user.updateMany({
+        where: { id: { in: [game.player1Id, game.player2Id] } },
+        data: { draws: { increment: 1 } },
+      });
+      return;
+    }
+
+    const loserId = game.winnerId === game.player1Id ? game.player2Id : game.player1Id;
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: game.winnerId },
+        data: { wins: { increment: 1 } },
+      }),
+      this.prisma.user.update({
+        where: { id: loserId },
+        data: { losses: { increment: 1 } },
+      }),
+    ]);
+  }
+}
+
+/*
+Em ves de verificar o board todo podemos so verificar quando uma ficha cair verificar para os 4 lados possivels
+Horizontal (Esquerda + Direita)
+Vertical (Apenas para baixo pois nao ha fichas por cima da que acabou de cair)
+Diaginal Principal(Cima-Esquerda + baixo-Direita)
+Diaginal Secundarop(Baixo-Esquerda + Cima-Direita)
+*/
+
+
 
 

@@ -3,8 +3,5 @@ import { GameService } from './game.service';
 
 @Controller('game')
 export class GameController {
-
     constructor(private readonly GameService: GameService) {}
-
-
 }
