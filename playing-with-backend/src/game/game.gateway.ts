@@ -231,11 +231,4 @@ private spectators = new Set<string>();
   }
 }
 
-/*
-GameGateway vai ficar sempre a esuta de mudanças por parte do player e vai rencaminhar a tarefa 
 
-  Emit function Parametros
-  1 - Nome do evento
-  2 - O que vai enviar
-
-*/
