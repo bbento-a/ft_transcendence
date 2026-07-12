@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
+import { GameState } from './game.types';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
 import { finished } from 'stream';
@@ -54,6 +55,20 @@ private spectators = new Set<string>();
     }
   }
 
+private async endGame(roomId: string, finalState: GameState, customMessage?: string) {
+  const msg = customMessage ?? (finalState.winnerId
+        ? `Player ${finalState.winnerId} wins!`
+        : 'Game ended in a Draw!');
+
+  this.server.to(roomId).emit('gameOver',{
+    winner: finalState.winnerId,
+    board: finalState.board,
+    message: msg
+  });
+
+  this.server.in(roomId).socketsLeave(roomId);
+  await this.gameService.finalizeGame(finalState);
+}
     async handleConnection(client: Socket) {
     const userId = await this.authenticateSocket(client);
     if (!userId) {
@@ -99,15 +114,8 @@ private spectators = new Set<string>();
 
       //Nao consegui voltar a tempo oh nao gg brother
       this.gameService.StartForfeitTimer(game.roomId,userId,async (finishedGame) => {
-        this.server.to(finishedGame.roomId).emit('gameOver',{
-          winner: finishedGame.winnerId,
-          board: finishedGame.board,
-          message: `Player ${userId} did not reconnect in time. Forfeit.`,
-        });
-        this.server.in(finishedGame.roomId).socketsLeave(finishedGame.roomId);
-        await this.gameService.finalizeGame(finishedGame);
-      });
-
+      await this.endGame(finishedGame.roomId, finishedGame, `Player ${userId} did not reconnect in time. Forfeit.`);
+});
   }
 
   @SubscribeMessage('LookforMatch')
@@ -162,73 +170,103 @@ private spectators = new Set<string>();
     }
   }
 
-  @SubscribeMessage('playerMove')
-  async handleMove(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: {roomId: string,column: number}
-  ){
+  
+@SubscribeMessage('playerMove')
+async handleMove(
+  @ConnectedSocket() client: Socket,
+  @MessageBody() data: {roomId: string,column: number}
+){
 
-    const userId = client.data.userId;
-    if (this.spectators.has(userId))
-    {
-      client.emit('warning','Spectators cannot play.');
-      return;
-    }
-    if(data.column < 0 || data.column > 6)
-    {
-      client.emit('warning','Invalid column');
-      return;
-    }
-
-    //Vamos fazer o nosso movimento
-    const updatedState = this.gameService.MakeMove(data.roomId,userId,data.column);
-    if(updatedState)
-    {
-      //Jodada foi valida vamos atualizar o tabuleiro para os dois besties
-      this.server.to(data.roomId).emit('gameStateUpdated',updatedState);
-
-      //Vamos ver se a jogada que foi feita acaba o jogo
-      if(updatedState.isGameOver)
-      {
-
-        //Como WInnerId pode ser NULL caso o jogo termine em empatado
-        const msg = updatedState.winnerId 
-              ? `Player ${updatedState.winnerId} wins!` 
-              : 'Game ended in a Draw!';
-
-        this.server.to(data.roomId).emit('gameOver',{
-          winner: updatedState.winnerId,
-          board: updatedState.board,
-          message: msg
-        });
-
-           this.server.in(data.roomId).socketsLeave(data.roomId);
-            await this.gameService.finalizeGame(updatedState);
-      }
-    }else{
-      client.emit('warning','Invalid Play or its nor your turn to play');
-    }
+  const userId = client.data.userId;
+  if (this.spectators.has(userId))
+  {
+    client.emit('warning','Spectators cannot play.');
+    return;
+  }
+  if(data.column < 0 || data.column > 6)
+  {
+    client.emit('warning','Invalid column');
+    return;
   }
 
-  @SubscribeMessage('joinSpectator')
-  spectateGame(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() roomId: string
-  ){
-    const game = this.gameService.GetStateOfGame(roomId);
-    if(!game){
-      client.emit('warning','match does not exists or its already over');
-      return;
+  //Vamos fazer o nosso movimento
+  const updatedState = this.gameService.MakeMove(data.roomId,userId,data.column);
+  if(updatedState)
+  {
+    //Jodada foi valida vamos atualizar o tabuleiro para os dois besties
+    this.server.to(data.roomId).emit('gameStateUpdated',updatedState);
+
+    if(updatedState.isGameOver)
+    {
+      await this.endGame(data.roomId, updatedState);
     }
+    else if(updatedState.player2Id === 'AI' && updatedState.currentPlayer === 2)
+    {
+      //Jogo continua e agora e a vez da IA jogar
+      const afterAIMove = this.gameService.PlayerAIMove(data.roomId);
 
-    this.spectators.add(client.data.userId);
-    client.join(roomId);
-    console.log(`Spectator ${client.data.userId} started watching in this room: ${roomId}`);
+      if(afterAIMove)
+      {
+        this.server.to(data.roomId).emit('gameStateUpdated',afterAIMove);
 
-    // O spectator vai recever o estado do board para conseguir ver as alteracoes
-    client.emit('gameStateUpdated', game);
-    client.emit('statusWait', `You are watching a game between ${game.player1Id} and ${game.player2Id}`);
+        if(afterAIMove.isGameOver)
+        {
+          await this.endGame(data.roomId, afterAIMove);
+        }
+      }
+    }
+  }else{
+    client.emit('warning','Invalid Play or its nor your turn to play');
   }
 }
 
+  @SubscribeMessage('playVsAI')
+  StartAIGame(@ConnectedSocket() client: Socket)
+  {
+    const userId = client.data.userId;
 
+    if(this.gameService.GetGameByPlayerId(userId))
+    {
+      client.emit('warning', 'Already in an active game.');  
+      return;
+    }
+
+  const RoomName = `room-${this.RoomCounter}`;
+  this.RoomCounter++;
+
+  const initialState = this.gameService.InitNewGame(RoomName,userId,'AI');
+  client.join(RoomName);
+
+  client.emit('MatchFound', {
+      room: RoomName,
+      message: 'Playing against AI',
+      state: initialState,
+    });
+  }
+
+
+
+    @SubscribeMessage('joinSpectator')
+    spectateGame(
+      @ConnectedSocket() client: Socket,
+      @MessageBody() roomId: string
+    ){
+      const game = this.gameService.GetStateOfGame(roomId);
+      if(!game){
+        client.emit('warning','match does not exists or its already over');
+        return;
+      }
+
+      this.spectators.add(client.data.userId);
+      client.join(roomId);
+      console.log(`Spectator ${client.data.userId} started watching in this room: ${roomId}`);
+
+      // O spectator vai recever o estado do board para conseguir ver as alteracoes
+      client.emit('gameStateUpdated', game);
+      client.emit('statusWait', `You are watching a game between ${game.player1Id} and ${game.player2Id}`);
+    }
+  }
+
+
+  
+  

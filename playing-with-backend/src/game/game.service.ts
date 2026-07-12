@@ -3,8 +3,10 @@ import { GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
 import { count } from 'console';
+import { ConnectFourAI } from './game.ai';
 
 const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
+const AI_PLAYER_ID = 'AI';
 
 @Injectable()
 export class GameService
@@ -12,6 +14,7 @@ export class GameService
   //Mapa que contem os jogos ativos Key: Sala, Value: Estado do jogo
   private activeGames = new Map<string,GameState>();
   private forfeitTimers = new Map<string, NodeJS.Timeout>();
+  private readonly ai = new ConnectFourAI(); //instancia 
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -106,6 +109,21 @@ MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
   return game;
 }
 
+
+
+PlayerAIMove(roomId: string): GameState | undefined
+{
+  const game = this.activeGames.get(roomId);
+
+  if(!game || game.isGameOver)
+    return undefined;
+
+  if(game.player2Id != AI_PLAYER_ID || game.currentPlayer !== 2)
+    return undefined;
+  const column = this.ai.getBestMove(game.board,2,6);
+  return this.MakeMove(roomId,AI_PLAYER_ID,column);
+}
+
 //Se a linha estiver toda preenchida nao ha mais jogadas 
 private checkDraw(board: number[][]): boolean
 {
@@ -177,41 +195,48 @@ StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game:
     }
   }
 
+
+
 async finalizeGame(game: GameState): Promise<void> {
     this.CancelForfeitTimer(game.roomId);
     this.activeGames.delete(game.roomId);
 
     if (game.winnerId === null) {
-      // empate: ambos ganham um draw
-      await this.prisma.user.updateMany({
-        where: { id: { in: [game.player1Id, game.player2Id] } },
-        data: { draws: { increment: 1 } },
-      });
+      // empate: ambos ganham um draw, exceto a IA :( ja nem ia se pode ser
+      const realPlayerIds = [game.player1Id, game.player2Id].filter(id => id !== AI_PLAYER_ID);
+      if (realPlayerIds.length > 0) {
+        await this.prisma.user.updateMany({
+          where: { id: { in: realPlayerIds } },
+          data: { draws: { increment: 1 } },
+        });
+      }
       return;
     }
 
     const loserId = game.winnerId === game.player1Id ? game.player2Id : game.player1Id;
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: game.winnerId },
-        data: { wins: { increment: 1 } },
-      }),
-      this.prisma.user.update({
-        where: { id: loserId },
-        data: { losses: { increment: 1 } },
-      }),
-    ]);
-  }
-}
+    const updates = [];
+    if (game.winnerId !== AI_PLAYER_ID) {
+      updates.push(
+        this.prisma.user.update({
+          where: { id: game.winnerId },
+          data: { wins: { increment: 1 } },
+        }),
+      );
+    }
+    if (loserId !== AI_PLAYER_ID) {
+      updates.push(
+        this.prisma.user.update({
+          where: { id: loserId },
+          data: { losses: { increment: 1 } },
+        }),
+      );
+    }
 
-/*
-Em ves de verificar o board todo podemos so verificar quando uma ficha cair verificar para os 4 lados possivels
-Horizontal (Esquerda + Direita)
-Vertical (Apenas para baixo pois nao ha fichas por cima da que acabou de cair)
-Diaginal Principal(Cima-Esquerda + baixo-Direita)
-Diaginal Secundarop(Baixo-Esquerda + Cima-Direita)
-*/
+    if (updates.length > 0) {
+      await this.prisma.$transaction(updates);
+    }
+  }
 
 
 
