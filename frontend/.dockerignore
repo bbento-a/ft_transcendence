@@ -1,0 +1,10 @@
+app/node_modules
+app/.next
+app/out
+app/.git
+app/.env
+app/.env.*
+app/README.md
+app/coverage
+**/*.log
+.DS_Store

@@ -1,0 +1,12 @@
+app/node_modules
+app/dist
+app/.git
+app/.env
+app/.env.*
+app/Makefile
+app/docker-compose.yml
+app/README.md
+app/coverage
+app/test
+**/*.log
+.DS_Store
