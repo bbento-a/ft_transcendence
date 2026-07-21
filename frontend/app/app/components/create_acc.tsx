@@ -1,3 +1,5 @@
+"use client";
+
 import styles from "./css_modules/create_acc.module.css"
 import Image from "next/image"
 import Link from "next/link"
@@ -10,7 +12,7 @@ export default function create_acc() {
 			<div className={styles.description}>Create an account and log in to start playing!</div>
 		</div>
 		<div>
-			<form action="" className={styles.form}>
+			<form action="" method="Post" onSubmit={} className={styles.form}>
 				<input className={styles.button} type="username" placeholder="Username"/>
 				<input className={styles.button} type="email" placeholder="Email"/>
 				<input className={styles.button} type="password" placeholder="Password"/>
