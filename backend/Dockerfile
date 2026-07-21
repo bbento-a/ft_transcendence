@@ -32,18 +32,24 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY app/package.json app/package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
+
+# Only the *generated* Prisma client needs copying. The @prisma/* packages
+# themselves are already installed by `npm ci` above, since `prisma` is a
+# production dependency — copying them again would duplicate ~170MB.
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY app/prisma ./prisma
 COPY app/prisma.config.ts ./prisma.config.ts
 
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN addgroup -S nest && adduser -S nest -G nest && chown -R nest:nest /app
+# No `chown -R /app`: it would rewrite every file's metadata and make Docker
+# store a second full copy of node_modules (~400MB) in a new layer. The app
+# only needs to READ these files, and the default permissions already allow it.
+RUN addgroup -S nest && adduser -S nest -G nest
 USER nest
 
 EXPOSE 3000
