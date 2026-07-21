@@ -1,18 +1,3 @@
-/* .frameParent {
-	width: 100%;
-	height: 100vh;
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 20px 50px;
-	box-sizing: border-box;
-	text-align: center;
-	color: #ecffe9;
-	font-size: x-large;
-	font-family: Quicksand;
-} */
 .pageWrapper {
 	width: 100vw;
 	height: 76vh;
@@ -24,18 +9,36 @@
 	color: #ecffe9;
 	max-width: 100%;
 	min-width: 0;
-	gap: 10px;
+	gap: 0px;
 }
 .wrapperFrame {
-	width: 100%;
+	width: 95%;
+	height: 76vh;
+	position: absolute;
+	align-self: center;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+	justify-content: center;
+}
+.wrapperScroll {
+	width: auto;
 	height: 100%;
 	align-self: center;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
 	padding: 10px 10px;
+	gap: 20px;
+	overflow-y: auto;
+	z-index: 3;
+	scrollbar-width: none;
+}
+.wrapperScroll::-webkit-scrollbar{
+	display: none;
 }
 .textWrapper {
 	width: 50vw;
@@ -66,18 +69,15 @@
 	align-items: flex-end;
 }
 .buttonWrapper {
-	align-self: stretch;
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	justify-content: flex-end;
+	position: fixed;
+	bottom: 12%;
+	right: 20px;
 	padding: 5px;
+	z-index: 2;
 }
 .gameroomIcon {
 	width: 70px;
 	height: 70px;
 	position: relative;
-	object-fit: cover;
-	
+	object-fit: cover;	
 }

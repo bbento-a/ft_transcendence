@@ -13,6 +13,7 @@
   	font-size: 40px;
   	color: #ecffe9;
   	font-family: Quicksand;
+	z-index: 3;
 }
 .leftWrapper {
   	align-self: stretch;
