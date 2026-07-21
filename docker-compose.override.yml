@@ -20,10 +20,8 @@ services:
       - ./backend/app:/app  # live source from the host
       - /app/node_modules   # anonymous volume: shields the image's copy
     entrypoint: ["/bin/sh", "-c"]
-    command: >
-      npx prisma generate &&
-      npx prisma migrate deploy &&
-      npm run start:dev
+    command:
+      - "npx prisma generate && npx prisma migrate deploy && npm run start:dev"
 
   frontend:
     build:
@@ -35,7 +33,8 @@ services:
       - ./frontend/app:/app
       - /app/node_modules
     entrypoint: ["/bin/sh", "-c"]
-    command: npm run dev -- -H 0.0.0.0 -p 3000
+    command:
+      - "npm run dev -- -H 0.0.0.0 -p 3000"
 
   nginx:
     volumes:

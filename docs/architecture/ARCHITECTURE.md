@@ -393,6 +393,8 @@ break the build if missing.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| **Code edits do not appear in the browser** | running `make up` — production bakes the code into the image | `make down && make dev` |
+| Dev container restart-loops printing npm/npx **help text** | `command:` in the override was split on whitespace; `sh -c` ran only the first word | keep the command a single quoted string |
 | Backend crash-loops on first run | Postgres still initialising | already handled by the healthcheck |
 | `password authentication failed` after changing `.env` | Postgres bakes credentials into the volume on **first** boot only | `make fclean && make up` |
 | Module not found after adding a dependency | anonymous `node_modules` volume is stale | `make re` |

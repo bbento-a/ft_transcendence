@@ -40,6 +40,11 @@ cache makes repeat runs cheap.
 | `down` | Stop and remove containers and networks. Volume kept. |
 | `stop` / `start` | Pause and resume without removing anything. |
 
+> **Use `dev` while writing code.** Under `up`, the source is compiled *into*
+> the image, so editing a file changes nothing until you rebuild — the usual
+> symptom is "I changed the page and the browser still shows the old one".
+> Switch with `make down && make dev`.
+
 ### Environment
 
 | Target | Does |
@@ -61,11 +66,57 @@ cache makes repeat runs cheap.
 
 ### Cleaning
 
-| Target | Containers | Networks | **DB volume** | Images |
-|---|:---:|:---:|:---:|:---:|
-| `clean` | removed | removed | **kept** | kept |
-| `fclean` | removed | removed | **destroyed** | removed |
-| `re` | `fclean` then `up` | | | |
+| Target | Containers | Networks | **DB volume** | Images | Host artifacts |
+|---|:---:|:---:|:---:|:---:|:---:|
+| `clean` | removed | removed | **kept** | kept | kept |
+| `clean-artifacts` | — | — | — | — | **removed** |
+| `fclean` | removed | removed | **destroyed** | removed | **removed** |
+| `re` | `fclean` then `up` | | | | |
+
+### Host artifacts
+
+Dev mode bind-mounts the source into the containers, so `next dev` and
+`nest start:dev` write their output **into your project folder**, not into
+Docker:
+
+```
+frontend/app/.next                      dev build cache (grows to ~100MB)
+frontend/app/next-env.d.ts              types Next generates
+backend/app/dist                        compiled output
+backend/app/tsconfig.build.tsbuildinfo  incremental build state
+```
+
+`docker compose down` cannot remove these — they are host files, not Docker
+resources. `clean-artifacts` deletes them, and `fclean` does the same after its
+Docker teardown.
+
+Use `clean-artifacts` on its own when the frontend renders something that no
+longer matches the source: a stale `.next` is the usual cause. Note it **stops
+the stack** before deleting, then leaves it down — run `make dev` afterwards.
+
+**Why it exists separately from `fclean`.** `fclean` would also fix a stale
+cache, but it destroys the database volume and all built images as collateral:
+
+| | Database | Images | Back up in |
+|---|---|---|---|
+| `clean-artifacts` + `dev` | **kept** | **kept** | ~20s |
+| `fclean` + `dev` | wiped | rebuilt | ~2min |
+
+So when you have test users or games you do not want to lose, this is the
+non-destructive option.
+
+> **Both targets must stop the containers first.** In dev mode `next dev` and
+> `nest start:dev` watch the bind-mounted source, so deleting `.next` or `dist`
+> while they are running makes them regenerate it within seconds and the clean
+> appears to do nothing. This is also why `fclean` does *not* declare
+> `clean-artifacts` as a prerequisite: Make runs prerequisites **before** the
+> recipe, which would delete the files while the dev servers were still alive.
+> The removal has to happen after `docker compose down`.
+
+**`node_modules` is deliberately left alone.** In this setup it is either an
+empty mountpoint created by the anonymous volume (0 bytes, harmless) or a real
+install someone made on the host so their editor can resolve imports. Deleting
+it gains no space and costs a reinstall.
 
 ---
 

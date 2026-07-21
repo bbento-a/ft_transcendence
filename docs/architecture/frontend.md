@@ -181,11 +181,17 @@ proxies. Hardcoding `http://localhost:3000` would bypass the proxy and fail.
       - ./frontend/app:/app
       - /app/node_modules
     entrypoint: ["/bin/sh", "-c"]
-    command: npm run dev -- -H 0.0.0.0 -p 3000
+    command:
+      - "npm run dev -- -H 0.0.0.0 -p 3000"
 ```
 
 `-H 0.0.0.0` is required for the same reason as `HOSTNAME` in production:
 `next dev` binds localhost by default and would be unreachable from nginx.
+
+> **The command must stay a single quoted string.** Compose splits an unquoted
+> `command:` on whitespace, and `sh -c` runs only its first argument — so
+> `command: npm run dev -- -H 0.0.0.0 -p 3000` executes bare `npm` and the
+> container restart-loops while printing npm's help text.
 
 Hot reload uses a WebSocket, which is why `location /` in
 [nginx.conf](nginx.md) carries the upgrade headers too — without them HMR

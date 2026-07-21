@@ -266,16 +266,20 @@ are skipped entirely:
       - ./backend/app:/app
       - /app/node_modules
     entrypoint: ["/bin/sh", "-c"]
-    command: >
-      npx prisma generate &&
-      npx prisma migrate deploy &&
-      npm run start:dev
+    command:
+      - "npx prisma generate && npx prisma migrate deploy && npm run start:dev"
 ```
 
 The entrypoint must be overridden because `tools/entrypoint.sh` is only copied into the
 `runtime` stage. `prisma generate` is re-run because dev never reaches the
 builder stage and the anonymous volume needs the client generated into it —
 skipping it gives `@prisma/client did not initialize yet`.
+
+> **The command must stay a single string.** `sh -c` runs only its *first*
+> argument as the script, and Compose splits an unquoted `command:` on
+> whitespace. Written as `command: >` or bare, the container executes just
+> `npx` and exits — the logs show a usage/help dump rather than an error, which
+> makes it easy to misread. Keeping it as one quoted list item avoids the split.
 
 ---
 
