@@ -1,0 +1,75 @@
+# ||  --- SERVICES ---  ||
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    image: transcendence-backend
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
+      PORT: 3000
+    networks:
+      - frontend_net
+      - backend_net
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+
+  frontend:
+    build: ./frontend
+    image: transcendence-frontend
+    container_name: frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    networks:
+      - frontend_net
+    expose:
+      - "3000"
+
+  nginx:
+    build: ./nginx
+    image: transcendence-nginx
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    networks:
+      - frontend_net
+    depends_on:
+      - frontend
+      - backend
+
+# ||  --- NETWORKS ---  ||
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true    # no route to the internet at all
+
+# ||  --- VOLUMES ---  ||
+volumes:
+  pg_data:

@@ -1,0 +1,46 @@
+.languagesWidget {
+  	width: 210px;
+  	height: 200px;
+  	position: absolute;
+	right: -10;
+	margin-top: 280px;
+  	border-radius: 30px;
+  	background-color: #dafdd4;
+  	border: 1px solid #243119;
+  	box-sizing: border-box;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: center;
+  	padding: 20px;
+  	text-align: left;
+  	font-size: 16px;
+  	color: #243119;
+  	font-family: Quicksand;
+	z-index: 10;
+}
+.buttonWrapper {
+  	width: 100%;
+  	flex: 1;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: center;
+  	justify-content: center;
+  	gap: 12px;
+  	flex-shrink: 0;
+}
+.button {
+  	width: 180px;
+  	height: 45px;
+  	border-radius: 15px;
+  	background-color: #ecffe9;
+  	border: 1px solid #243119;
+  	box-sizing: border-box;
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 10px;
+}
+.text {
+  	position: relative;
+  	font-weight: 600;
+}

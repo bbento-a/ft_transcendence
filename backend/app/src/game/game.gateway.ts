@@ -84,6 +84,7 @@ private async endGame(roomId: string, finalState: GameState, customMessage?: str
     const game = this.gameService.GetGameByPlayerId(userId);
     if (game && game.disconnectedPlayerId === userId) {
       this.gameService.CancelForfeitTimer(game.roomId);
+      game.disconnectedPlayerId = null;
       client.join(game.roomId);
       this.server.to(game.roomId).emit('opponentReconnected', `Player ${userId} reconnected.`);
       client.emit('gameStateUpdated', game);

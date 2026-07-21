@@ -1,0 +1,83 @@
+.pageWrapper {
+	width: 100vw;
+	height: 76vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 15px 5px;
+	box-sizing: border-box;
+	color: #ecffe9;
+	max-width: 100%;
+	min-width: 0;
+	gap: 0px;
+}
+.wrapperFrame {
+	width: 95%;
+	height: 76vh;
+	position: absolute;
+	align-self: center;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+	justify-content: center;
+}
+.wrapperScroll {
+	width: auto;
+	height: 100%;
+	align-self: center;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px 10px;
+	gap: 20px;
+	overflow-y: auto;
+	z-index: 3;
+	scrollbar-width: none;
+}
+.wrapperScroll::-webkit-scrollbar{
+	display: none;
+}
+.textWrapper {
+	width: 50vw;
+	height: 50vh;
+	align-self: center;
+	flex: 1;
+	display: flex;
+	text-align: center;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 10px;
+}
+.noGameRooms {
+	position: relative;
+	font-size: x-large;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	word-wrap: break-word;
+	flex-shrink: 0;
+	text-shadow: 0px 0px 15px #0a1b01;
+}
+.roomsSetting{
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: flex-end;
+}
+.buttonWrapper {
+	position: fixed;
+	bottom: 12%;
+	right: 20px;
+	padding: 5px;
+	z-index: 2;
+}
+.gameroomIcon {
+	width: 70px;
+	height: 70px;
+	position: relative;
+	object-fit: cover;	
+}

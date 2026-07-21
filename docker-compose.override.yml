@@ -1,0 +1,49 @@
+# ============================================================
+#  DEV OVERRIDE
+#
+#  Compose loads this automatically on top of docker-compose.yml.
+#    make dev  -> base + this file   (hot reload, source mounted)
+#    make up   -> base only          (production images)
+#
+#  Everything here is development-only. Nothing in this file
+#  should ever be required for the production stack to work.
+# ============================================================
+services:
+
+  backend:
+    build:
+      context: ./backend
+      target: deps          # stop at the stage that only has node_modules
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend/app:/app  # live source from the host
+      - /app/node_modules   # anonymous volume: shields the image's copy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      npx prisma generate &&
+      npx prisma migrate deploy &&
+      npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend
+      target: deps
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend/app:/app
+      - /app/node_modules
+    entrypoint: ["/bin/sh", "-c"]
+    command: npm run dev -- -H 0.0.0.0 -p 3000
+
+  nginx:
+    volumes:
+      # Edit nginx.conf on the host, then: docker compose restart nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  db:
+    # Dev-only: expose Postgres to the host for GUI clients (TablePlus, DBeaver).
+    # Bound to 127.0.0.1 so it is never reachable from the LAN.
+    ports:
+      - "127.0.0.1:5432:5432"

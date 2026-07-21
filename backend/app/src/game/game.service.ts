@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
-import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
-import { count } from 'console';
 import { ConnectFourAI } from './game.ai';
 
 const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
@@ -68,9 +66,17 @@ MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
   const isPlayer1 = game.player1Id == playerId;
   const isPlayer2 = game.player2Id == playerId;
 
+  //Quem enviou nem sequer faz parte deste jogo, ignorar
+  if(!isPlayer1 && !isPlayer2)
+    return undefined;
+
   //Vamos ver de quem e a vez
   if((isPlayer1 && game.currentPlayer !== 1) || (isPlayer2 && game.currentPlayer !== 2))
     return undefined; // nao e a vez dele, vamos ignorar a jogada
+
+  //Coluna invalida
+  if(!Number.isInteger(column) || column < 0 || column > 6)
+    return undefined;
 
   /* GRAVIDADE DA WISH (Vamos encontrar a linha mais baixa disponivel na coluna selecionada)
   O tamanho do tabuleiro e de 6 linhas (0 a 5). Vamos começar a olhar de baixo(5) para cima(0)
@@ -108,8 +114,6 @@ MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
   }
   return game;
 }
-
-
 
 PlayerAIMove(roomId: string): GameState | undefined
 {
@@ -164,8 +168,6 @@ private checkDraw(board: number[][]): boolean
     return false;
   }
   
-
-
 StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game: GameState) => void)
 {
   //Se ja tiver um timer para esta saula, nao duplica
@@ -195,49 +197,51 @@ StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game:
     }
   }
 
-
-
 async finalizeGame(game: GameState): Promise<void> {
     this.CancelForfeitTimer(game.roomId);
     this.activeGames.delete(game.roomId);
 
-    if (game.winnerId === null) {
-      // empate: ambos ganham um draw, exceto a IA :( ja nem ia se pode ser
-      const realPlayerIds = [game.player1Id, game.player2Id].filter(id => id !== AI_PLAYER_ID);
-      if (realPlayerIds.length > 0) {
-        await this.prisma.user.updateMany({
-          where: { id: { in: realPlayerIds } },
-          data: { draws: { increment: 1 } },
-        });
+    try {
+      if (game.winnerId === null) {
+        // empate: ambos ganham um draw, exceto a IA :( ja nem ia se pode ser
+        const realPlayerIds = [game.player1Id, game.player2Id].filter(id => id !== AI_PLAYER_ID);
+        if (realPlayerIds.length > 0) {
+          await this.prisma.user.updateMany({
+            where: { id: { in: realPlayerIds } },
+            data: { draws: { increment: 1 } },
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    const loserId = game.winnerId === game.player1Id ? game.player2Id : game.player1Id;
+      const loserId = game.winnerId === game.player1Id ? game.player2Id : game.player1Id;
 
-    const updates = [];
-    if (game.winnerId !== AI_PLAYER_ID) {
-      updates.push(
-        this.prisma.user.update({
-          where: { id: game.winnerId },
-          data: { wins: { increment: 1 } },
-        }),
-      );
-    }
-    if (loserId !== AI_PLAYER_ID) {
-      updates.push(
-        this.prisma.user.update({
-          where: { id: loserId },
-          data: { losses: { increment: 1 } },
-        }),
-      );
-    }
+      const updates: any[] = [];
+      if (game.winnerId !== AI_PLAYER_ID) {
+        updates.push(
+          this.prisma.user.update({
+            where: { id: game.winnerId },
+            data: { wins: { increment: 1 } },
+          }),
+        );
+      }
+      if (loserId !== AI_PLAYER_ID) {
+        updates.push(
+          this.prisma.user.update({
+            where: { id: loserId },
+            data: { losses: { increment: 1 } },
+          }),
+        );
+      }
 
-    if (updates.length > 0) {
-      await this.prisma.$transaction(updates);
+      if (updates.length > 0) {
+        await this.prisma.$transaction(updates);
+      }
+    } catch (error) {
+      console.error(`[Game] Failed to persist result for room ${game.roomId}:`, error);
     }
   }
-
+}
 
 
 
