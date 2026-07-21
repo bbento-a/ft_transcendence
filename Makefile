@@ -109,15 +109,33 @@ nginx-test:
 #  Cleaning
 # ==========================================================
 
+# Build artifacts the dev containers write into the source tree through the
+# bind mounts. They live on the host, not in Docker, so `docker compose down`
+# never touches them.
+ARTIFACTS = frontend/app/.next \
+            frontend/app/next-env.d.ts \
+            backend/app/dist \
+            backend/app/tsconfig.build.tsbuildinfo
+
 # Containers and networks go, database volume stays
 clean:
 	$(COMPOSE) down --remove-orphans
 
-# Everything goes, including the database volume and built images.
+# Host-side build artifacts only.
+clean-artifacts:
+	@$(COMPOSE) down --remove-orphans >/dev/null 2>&1 || true
+	@rm -rf $(ARTIFACTS)
+	@echo ">> Removed host build artifacts (.next, dist, next-env.d.ts)"
+
+# Everything goes: containers, networks, database volume, images, and the
+# build artifacts left on the host by dev mode.
 fclean:
 	$(COMPOSE) down -v --rmi all --remove-orphans
+	@rm -rf $(ARTIFACTS)
+	@echo ">> Removed host build artifacts (.next, dist, next-env.d.ts)"
 
 re: fclean up
 
 .PHONY: all up dev down stop start setup ps logs logs-backend logs-frontend \
-        logs-nginx psql shell-backend shell-frontend nginx-test clean fclean re
+        logs-nginx psql shell-backend shell-frontend nginx-test clean \
+        clean-artifacts fclean re
