@@ -154,7 +154,7 @@ clean:
 	$(COMPOSE) down --remove-orphans
 
 fclean:
-	$(COMPOSE) down -v --rmi local --remove-orphans
+	$(COMPOSE) down -v --rmi all --remove-orphans
 ```
 
 `clean` is the everyday reset: recycle containers, keep users and games.
@@ -164,8 +164,15 @@ fclean:
 - a stale `node_modules` anonymous volume after a dependency change
 - a `POSTGRES_PASSWORD` that no longer matches an already-initialised volume
 
-`--rmi local` removes only images this project built. `--remove-orphans` clears
-containers from services deleted out of the compose file.
+**`--rmi all`, not `--rmi local`.** This is a trap worth knowing: `local` only
+removes images that have *no* custom name, and every service here sets
+`image: transcendence-*`. With `local`, all three images were silently left
+behind and `fclean` did not do what it claimed. `all` still touches only images
+referenced by *this* compose file — `postgres:15-alpine` is removed too and
+re-pulled on the next `make up`, but nothing else on the machine is affected.
+
+`--remove-orphans` clears containers from services deleted out of the compose
+file.
 
 **`.env` is deliberately kept** by `fclean`. Deleting it would rotate every
 secret on a command whose purpose is resetting containers.

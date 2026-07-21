@@ -115,7 +115,7 @@ clean:
 
 # Everything goes, including the database volume and built images.
 fclean:
-	$(COMPOSE) down -v --rmi local --remove-orphans
+	$(COMPOSE) down -v --rmi all --remove-orphans
 
 re: fclean up
 
