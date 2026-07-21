@@ -282,17 +282,35 @@ docker compose logs -f db
 `make psql` reads credentials from the container's own environment, so no
 secrets are hardcoded in the Makefile.
 
-In **dev only**, the override publishes the port for GUI clients:
+### The port cannot be published, in any mode
+
+An earlier version of the dev override tried to expose Postgres to the host for
+GUI clients such as TablePlus or DBeaver:
 
 ```yaml
   db:
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5432:5432"   # does nothing
 ```
 
-The explicit `127.0.0.1` matters — without it Docker binds `0.0.0.0` and the
-database is on the LAN again. Because this lives in the override,
-**production still exposes nothing**.
+**This silently does nothing.** `db` is attached only to `backend_net`, which is
+`internal: true`. An internal network has no gateway, so Docker has no route to
+carry host traffic into it. Compose accepts the `ports:` entry, the container
+starts without complaint, and the mapping is simply never created:
+
+```sh
+docker inspect db --format '{{json .NetworkSettings.Ports}}'
+# {"5432/tcp":[]}          <- requested, never bound
+```
+
+`docker compose ps` also shows `5432/tcp` with no host mapping, and connecting
+from the host gives `Connection refused`.
+
+Publishing it would require giving `backend_net` a gateway — i.e. removing the
+isolation the whole topology is built on. Not worth it for GUI convenience.
+
+**Use `make psql` instead**, or `make shell-backend` to reach the database from
+inside the network.
 
 ---
 

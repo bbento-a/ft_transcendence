@@ -40,9 +40,3 @@ services:
     volumes:
       # Edit nginx.conf on the host, then: docker compose restart nginx
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-
-  db:
-    # Dev-only: expose Postgres to the host for GUI clients (TablePlus, DBeaver).
-    # Bound to 127.0.0.1 so it is never reachable from the LAN.
-    ports:
-      - "127.0.0.1:5432:5432"

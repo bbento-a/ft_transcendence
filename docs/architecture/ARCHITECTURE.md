@@ -298,8 +298,13 @@ make up   →  docker compose -f docker-compose.yml up -d --build   (base only)
 | Command | `node dist/main` / `node server.js` | `nest start:dev` / `next dev` |
 | `NODE_ENV` | `production` | `development` |
 | Hot reload | no | yes |
-| Postgres on host | not published | `127.0.0.1:5432` |
+| Postgres on host | not published | **not published either** — see below |
 | nginx.conf | baked into image | live-mounted, `:ro` |
+
+Postgres is unreachable from the host in *both* modes. It sits only on
+`backend_net`, and an `internal: true` network has no gateway for Docker to
+publish through — a `ports:` entry there is accepted and silently ignored. Use
+`make psql`. Full explanation in [database.md](database.md#access).
 
 ### The `node_modules` problem
 

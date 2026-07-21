@@ -36,7 +36,7 @@ cache makes repeat runs cheap.
 |---|---|
 | `all` → `up` | Default. |
 | `up` | Production stack: built images, no source mounts, only `:443` published. |
-| `dev` | Dev stack: hot reload, source mounted, Postgres on `127.0.0.1:5432`. |
+| `dev` | Dev stack: hot reload, source mounted from the host. |
 | `down` | Stop and remove containers and networks. Volume kept. |
 | `stop` / `start` | Pause and resume without removing anything. |
 
