@@ -3,8 +3,50 @@
 import styles from "./css_modules/create_acc.module.css"
 import Image from "next/image"
 import Link from "next/link"
+import React,{ useState ,ChangeEvent} from "react";
+import { useRouter } from "next/navigation";
 
 export default function create_acc() {
+	
+	const [user,setUser] = useState({
+		username:"",email:"",password:""
+	})
+	const [errors,setErrors] = useState<string[]>([])
+	
+	const router = useRouter();
+
+	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{
+		const name = e.currentTarget.name;
+		const value = e.currentTarget.value;
+
+		setUser({...user,[name]:value});
+	}
+
+	const postData = async (e: React.SubmitEvent<HTMLFormElement>)=>{
+		//Faz com que a info em ves de ser enviada pelo url seja enviada diretamente para o lado do backebd
+		e.preventDefault();
+		setErrors([]);
+
+		const res = await fetch('/api/auth/register',{
+			method: "POST",
+			headers:{
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(user),
+		});
+
+		const data = await res.json();
+
+		if(res.status === 201)
+		{
+			router.push("/gamerooms");
+			window.alert('Registration done correctely');
+		}else{
+			// ValidationPipe devolve message como array; ConflictException devolve uma string
+			setErrors(Array.isArray(data.message) ? data.message : [data.message]);
+		}
+	}
+
   return (
 		<div className={styles.createAccWidget}>
 		<div className={styles.mainText}>
@@ -12,13 +54,18 @@ export default function create_acc() {
 			<div className={styles.description}>Create an account and log in to start playing!</div>
 		</div>
 		<div>
-			<form action="" method="Post" onSubmit={} className={styles.form}>
-				<input className={styles.button} type="username" placeholder="Username"/>
-				<input className={styles.button} type="email" placeholder="Email"/>
-				<input className={styles.button} type="password" placeholder="Password"/>
+			<form action="" method="Post" className={styles.form} onSubmit={postData}>
+				<input className={styles.button} type="text" name="username" placeholder="Username" value={user.username} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder="Email" value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder="Password" value={user.password} onChange={handleInputs}/>
 				<button className={styles.buttonDark} type="submit">Enter</button>
 			</form>
 		</div>
+		{errors.length > 0 &&
+			<div className={styles.errorWrapper}>
+				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
+			</div>
+		}
 		<div className={styles.authText}>
 			<div className={styles.text}>or create through</div>
 		</div>
