@@ -1,0 +1,68 @@
+.container
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	padding: 20px;
+}
+
+.status
+{
+	font-size: 24px;
+	font-weight: bold;
+	color: navy;
+}
+
+.reset
+{
+	padding: 10px 24px;
+	font-size: 16px;
+	font-weight: bold;
+	color: white;
+	background-color: navy;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.reset:hover
+{
+	background-color: #001a66;
+}
+
+.board
+{
+	box-sizing: border-box;
+	width: 630px;
+	height: 540px;
+
+	background-color: blue;
+	border: 10px solid navy;
+
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	grid-template-rows: repeat(6, 1fr);
+	gap: 5px;
+	padding: 5px;
+	overflow: hidden;
+}
+
+.tile{
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	background-color: white;
+	border-radius: 50%;
+	border: 5px solid navy;
+	cursor: pointer;
+}
+
+.red-piece{
+	background-color: red;
+}
+
+.yellow-piece{
+	background-color: yellow;
+}

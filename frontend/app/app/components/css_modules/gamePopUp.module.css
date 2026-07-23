@@ -1,0 +1,46 @@
+.popup {
+	width: 210px;
+	height: 130px;
+	position: absolute;
+	right: 0;
+	bottom: 80;
+	border-radius: 30px;
+	background-color: #dafdd4;
+	border: 1px solid #243119;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+	text-align: left;
+	font-size: 16px;
+	color: #243119;
+	font-family: Quicksand;
+}
+.buttonWrapper {
+	width: 200px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+.button {
+	width: 180px;
+	height: 40px;
+	border-radius: 15px;
+	background-color: #ecffe9;
+	border: 1px solid #243119;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px;
+	flex-shrink: 0;
+}
+.text {
+	position: relative;
+	font-weight: 600;
+}
