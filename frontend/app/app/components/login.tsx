@@ -34,16 +34,21 @@ export default function login() {
 		setErrors([]);
 		setIsSubmitting(true);
 
-		const result = await apiPost('/auth/login', user);
+		try {
+			const result = await apiPost('/auth/login', user);
 
-		if(result.ok)
-		{
-			await refresh();//Vai guardar o user
-			router.push("/gamerooms");
-		}else{
+			if(result.ok)
+			{
+				await refresh();//Vai guardar o user
+				router.push("/gamerooms");
+				return;//sai com o botao ainda desativado, a pagina esta a mudar
+			}
 			setErrors(result.errors);
-			setIsSubmitting(false);
+		} catch {
+			setErrors(["Something went wrong, please try again."]);
 		}
+		//so chega aqui se o login falhou, ent o botao volta a ficar clicavel
+		setIsSubmitting(false);
 	}
 
 

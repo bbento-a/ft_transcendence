@@ -1,10 +1,11 @@
 "use client";
 
+import type { Ref } from "react";
 import styles from "./css_modules/profileMenu.module.css"
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/AuthContext";
 
-export default function profileMenu()
+export default function profileMenu({ ref }: { ref?: Ref<HTMLDivElement> })
 {
 	const { user, logout } = useUser();
 	const router = useRouter();
@@ -15,7 +16,7 @@ export default function profileMenu()
 	}
 
 	return(
-		<div className={styles.profileWidget}>
+		<div ref={ref} className={styles.profileWidget}>
 			<div className={styles.textWrapper}>
 				<div className={styles.header}>{user?.username}</div>
 			</div>

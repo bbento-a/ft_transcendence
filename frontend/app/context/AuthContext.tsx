@@ -17,14 +17,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
-    // se 200, guarda o user; se 401 (sem cookie valido) 
+    // se 200, guarda o user; se 401 (sem cookie valido) fica null
+	// nunca atira: quem chama isto faz await antes de navegar, e uma excecao
+	// aqui deixava o ecra preso no estado de submit
 	const refresh = async () => {
-		const res = await fetch('/api/auth/me');
-		setUser(res.ok ? await res.json() : null);
+		try {
+			const res = await fetch('/api/auth/me');
+			setUser(res.ok ? await res.json() : null);
+		} catch {
+			setUser(null);
+		}
 	};
 
+	// mesmo que o pedido falhe limpamos o user, senao ficava logado na UI
 	const logout = async () => {
-		await fetch('/api/auth/logout', { method: 'POST' });
+		try {
+			await fetch('/api/auth/logout', { method: 'POST' });
+		} catch {
+			// o cookie pode nao ter sido limpo, mas localmente saimos na mesma
+		}
 		setUser(null);
 	};
 

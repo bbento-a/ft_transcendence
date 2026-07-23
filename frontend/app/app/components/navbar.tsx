@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import styles from "./css_modules/navbar.module.css"
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUser } from "@/context/AuthContext";
+import useClickOutside from "../hooks/useClickOutside";
 
 import LanguagesWidget from "./lgsWidget";
 import ProfileMenu from "./profileMenu";
@@ -28,7 +29,21 @@ export default function NavBar()
 	const toggled = openMenu === "lang";
 	const profMenu = openMenu === "profile";
 
-	
+	const langBtnRef = useRef<HTMLButtonElement>(null);
+	const langMenuRef = useRef<HTMLDivElement>(null);
+	const profBtnRef = useRef<HTMLButtonElement>(null);
+	const profMenuRef = useRef<HTMLDivElement>(null);
+
+	useClickOutside([langBtnRef, langMenuRef], () => setOpenMenu(null), toggled);
+	useClickOutside([profBtnRef, profMenuRef], () => setOpenMenu(null), profMenu);
+
+	// sem isto o menu de perfil ficava aberto depois do logout e aparecia na pagina de login
+	useEffect(() => {
+		if (!logged)
+			setOpenMenu((open) => (open === "profile" ? null : open));
+	}, [logged]);
+
+
 	return (
 		<nav>
 		<div className={styles.navBarWrapper}>
@@ -39,17 +54,17 @@ export default function NavBar()
 				<div className={styles.wawaText}>wawa</div>
 			</div>
 			<div className={styles.rightWrapper}>
-					<button onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>
+					<button ref={langBtnRef} onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>
 						<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
 					</button>
-					{toggled && <LanguagesWidget></LanguagesWidget>}
+					{toggled && <LanguagesWidget ref={langMenuRef}></LanguagesWidget>}
 					{
 						logged &&
-							<button onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
+							<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
 								<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/profile.svg"/>
 							</button>
 					}
-					{profMenu && <ProfileMenu></ProfileMenu>}
+					{logged && profMenu && <ProfileMenu ref={profMenuRef}></ProfileMenu>}
 
 			</div>
 		</div>
