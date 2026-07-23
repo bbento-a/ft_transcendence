@@ -1,8 +1,8 @@
 "use client";
 
-import styles from "./css_modules/create_acc.module.css"
-import Image from "next/image"
-import Link from "next/link"
+import styles from "./css_modules/create_acc.module.css";
+import Image from "next/image";
+import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +11,7 @@ export default function create_acc() {
 	const [user,setUser] = useState({
 		username:"",email:"",password:""
 	})
-	const [errors,setErrors] = useState<string[]>([])
+	const [errors,setErrors] = useState<string[]>([]);
 	
 	const router = useRouter();
 
@@ -40,7 +40,6 @@ export default function create_acc() {
 		if(res.status === 201)
 		{
 			router.push("/gamerooms");
-			window.alert('Registration done correctely');
 		}else{
 			// ValidationPipe devolve message como array; ConflictException devolve uma string
 			setErrors(Array.isArray(data.message) ? data.message : [data.message]);
