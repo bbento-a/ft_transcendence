@@ -1,10 +1,13 @@
-// "use client";
+"use client";
 import styles from "./page.module.css"
 import Image from "next/image"
+import { useState } from "react"
 
-import GameroomWidget from "../components/gameroomWidget";
+import GameroomWidget from "../components/gameroomWidget"
+import GamePopUp from "../components/gamePopUp"
 
 export default function Home() {
+	const [toggled, setToggle] = useState(false);
 	let gamerooms = 4;
 
   return (
@@ -41,9 +44,12 @@ export default function Home() {
 		{/* ^^^ this is just for testing ^^^ */}
 
 		</div>
-			<div className={styles.buttonWrapper}>
+		<div className={styles.buttonWrapper}>
+			{ toggled && <GamePopUp></GamePopUp>}
+			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
-			</div>
+			</button>
+		</div>
 	</div>
   )
 }
