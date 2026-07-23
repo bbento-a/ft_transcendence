@@ -6,9 +6,10 @@ import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
+import { useUser } from "@/context/AuthContext";
 
 export default function create_acc() {
-	
+
 	const [user,setUser] = useState({
 		username:"",email:"",password:""
 	})
@@ -16,6 +17,7 @@ export default function create_acc() {
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useRouter();
+	const { refresh } = useUser();
 
 	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{
 		const name = e.currentTarget.name;
@@ -35,6 +37,7 @@ export default function create_acc() {
 
 		if(result.ok)
 		{
+			await refresh();//Vai guardar o user
 			router.push("/gamerooms");
 		}else{
 			setErrors(result.errors);

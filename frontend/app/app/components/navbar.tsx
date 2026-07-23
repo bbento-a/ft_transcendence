@@ -3,6 +3,7 @@
 import Image from "next/image";
 import styles from "./css_modules/navbar.module.css"
 import { useState } from 'react';
+import { useUser } from "@/context/AuthContext";
 
 import LanguagesWidget from "./lgsWidget";
 import ProfileMenu from "./profileMenu";
@@ -12,7 +13,7 @@ export default function NavBar()
 
 	/*
 		Chat sejam bem vindos ao fix de hoje !!
-		Ent Pelos visto use state pode ter mais que um valor bue nice néé, o fixe disto e que ele so pode conter um 
+		Ent Pelos visto use state pode ter mais que um valor bue nice néé, o fixe disto e que ele so pode conter um
 		valor de cada vez na mesma ent se ele for language nao pode ser profile
 
 		Inicialmente ele começa como nulo e depois vamos verificar o valor dele GG Sigam-me para mais tutoriais como este
@@ -21,7 +22,8 @@ export default function NavBar()
 	*/
 
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
-	const [logged, setDisplayLog] = useState(true); // connect w backend by fetch tokens (I think)
+	const { user } = useUser();
+	const logged = !!user;
 
 	const toggled = openMenu === "lang";
 	const profMenu = openMenu === "profile";

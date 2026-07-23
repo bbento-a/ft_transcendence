@@ -6,6 +6,7 @@ import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
+import { useUser } from "@/context/AuthContext";
 
 export default function login() {
 
@@ -17,6 +18,7 @@ export default function login() {
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useRouter();
+	const { refresh } = useUser();
 
 	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{
 		const name = e.currentTarget.name;
@@ -36,6 +38,7 @@ export default function login() {
 
 		if(result.ok)
 		{
+			await refresh();//Vai guardar o user
 			router.push("/gamerooms");
 		}else{
 			setErrors(result.errors);
