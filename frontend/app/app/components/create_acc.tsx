@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
+import { apiPost } from "../lib/api";
 
 export default function create_acc() {
 	
@@ -12,13 +13,15 @@ export default function create_acc() {
 		username:"",email:"",password:""
 	})
 	const [errors,setErrors] = useState<string[]>([]);
-	
+	const [isSubmitting,setIsSubmitting] = useState(false);
+
 	const router = useRouter();
 
 	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{
 		const name = e.currentTarget.name;
 		const value = e.currentTarget.value;
 
+		setErrors([]);
 		setUser({...user,[name]:value});
 	}
 
@@ -26,23 +29,16 @@ export default function create_acc() {
 		//Faz com que a info em ves de ser enviada pelo url seja enviada diretamente para o lado do backebd
 		e.preventDefault();
 		setErrors([]);
+		setIsSubmitting(true);
 
-		const res = await fetch('/api/auth/register',{
-			method: "POST",
-			headers:{
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(user),
-		});
+		const result = await apiPost('/auth/register', user);
 
-		const data = await res.json();
-
-		if(res.status === 201)
+		if(result.ok)
 		{
 			router.push("/gamerooms");
 		}else{
-			// ValidationPipe devolve message como array; ConflictException devolve uma string
-			setErrors(Array.isArray(data.message) ? data.message : [data.message]);
+			setErrors(result.errors);
+			setIsSubmitting(false);
 		}
 	}
 
@@ -54,10 +50,10 @@ export default function create_acc() {
 		</div>
 		<div>
 			<form action="" method="Post" className={styles.form} onSubmit={postData}>
-				<input className={styles.button} type="text" name="username" placeholder="Username" value={user.username} onChange={handleInputs}/>
-				<input className={styles.button} type="email" name="email" placeholder="Email" value={user.email} onChange={handleInputs}/>
-				<input className={styles.button} type="password" name="password" placeholder="Password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit">Enter</button>
+				<input className={styles.button} type="text" name="username" placeholder="Username" autoComplete="username" value={user.username} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="new-password" value={user.password} onChange={handleInputs}/>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{isSubmitting ? "Creating..." : "Enter"}</button>
 			</form>
 		</div>
 		{errors.length > 0 &&
