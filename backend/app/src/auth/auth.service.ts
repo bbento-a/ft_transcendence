@@ -14,6 +14,11 @@ export class AuthService {
               private jwtService: JwtService,
               ) {}
 
+  private async signToken(user: { id: string; username: string }) {
+    const payload = { sub: user.id, username: user.username };
+    return this.jwtService.signAsync(payload);
+  }
+
   async login(dto: LoginDto)
   {
     //Checar Email
@@ -41,10 +46,8 @@ export class AuthService {
     }
 
     //Esta tudo o User existe
-    const payload = {sub: user.id, username: user.username};
-
     return{
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: await this.signToken(user),
     };
   }
 
@@ -82,6 +85,7 @@ export class AuthService {
         username: newUser.username,
         email: newUser.email,
       },
+      access_token: await this.signToken(newUser),
     };
   }
 }
