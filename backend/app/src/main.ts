@@ -6,6 +6,10 @@ import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // atras do nginx: sem isto o req.ip seria sempre o IP do proprio nginx,
+  // e o rate limit passava a ser partilhado por todos os utilizadores
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());
 
