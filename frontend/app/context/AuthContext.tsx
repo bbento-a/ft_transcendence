@@ -19,7 +19,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     // se 200, guarda o user; se 401 (sem cookie valido) fica null
 	// nunca atira: quem chama isto faz await antes de navegar, e uma excecao
-	// aqui deixava o ecra preso no estado de submit
+	// deixava o ecra preso no estado de submit
 	const refresh = async () => {
 		try {
 			const res = await fetch('/api/auth/me');

@@ -6,6 +6,7 @@ import { useRef, useState } from "react"
 import GameroomWidget from "../components/gameroomWidget"
 import GamePopUp from "../components/gamePopUp"
 import useClickOutside from "../hooks/useClickOutside"
+import RequireAuth from "../components/requireAuth"
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
@@ -15,6 +16,7 @@ export default function Home() {
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
   return (
+	<RequireAuth>
 	<div className={styles.pageWrapper}>
 		<div className={styles.wrapperScroll}>
 
@@ -55,5 +57,6 @@ export default function Home() {
 			</button>
 		</div>
 	</div>
+	</RequireAuth>
   )
 }
