@@ -86,6 +86,17 @@
 	align-items: center;
 	justify-content: center;
 }
+.errorWrapper {
+	width: 300px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.errorText {
+	font-size: 13px;
+	font-weight: 600;
+	color: #b3261e;
+}
 .authWrapper {
 	align-self: stretch;
 	height: 100px;

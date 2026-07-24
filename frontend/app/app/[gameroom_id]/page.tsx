@@ -1,6 +1,7 @@
 "use client";
 import styles from "./page.module.css"
 import { useState } from "react";
+import RequireAuth from "../components/requireAuth";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -112,7 +113,7 @@ export default function Page() {
 	}
 
 	return (
-
+		<RequireAuth>
 		<div className={styles.container}>
 			<div className={styles.status}>{statusText()}</div>
 
@@ -133,5 +134,6 @@ export default function Page() {
 				Reiniciar
 			</button>
 		</div>
+		</RequireAuth>
 	)
 }

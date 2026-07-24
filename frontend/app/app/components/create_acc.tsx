@@ -1,8 +1,55 @@
-import styles from "./css_modules/create_acc.module.css"
-import Image from "next/image"
-import Link from "next/link"
+"use client";
+
+import styles from "./css_modules/create_acc.module.css";
+import Image from "next/image";
+import Link from "next/link";
+import React,{ useState ,ChangeEvent} from "react";
+import { useRouter } from "next/navigation";
+import { apiPost } from "../lib/api";
+import { useUser } from "@/context/AuthContext";
 
 export default function create_acc() {
+
+	const [user,setUser] = useState({
+		username:"",email:"",password:""
+	})
+	const [errors,setErrors] = useState<string[]>([]);
+	const [isSubmitting,setIsSubmitting] = useState(false);
+
+	const router = useRouter();
+	const { refresh } = useUser();
+
+	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{
+		const name = e.currentTarget.name;
+		const value = e.currentTarget.value;
+
+		setErrors([]);
+		setUser({...user,[name]:value});
+	}
+
+	const postData = async (e: React.SubmitEvent<HTMLFormElement>)=>{
+		//Faz com que a info em ves de ser enviada pelo url seja enviada diretamente para o lado do backebd
+		e.preventDefault();
+		setErrors([]);
+		setIsSubmitting(true);
+
+		try {
+			const result = await apiPost('/auth/register', user);
+
+			if(result.ok)
+			{
+				await refresh();//Vai guardar o user
+				router.push("/gamerooms");
+				return;//sai com o botao ainda desativado, a pagina esta a mudar
+			}
+			setErrors(result.errors);
+		} catch {
+			setErrors(["Something went wrong, please try again."]);
+		}
+		//so chega aqui se o registo falhou, ent o botao volta a ficar clicavel
+		setIsSubmitting(false);
+	}
+
   return (
 		<div className={styles.createAccWidget}>
 		<div className={styles.mainText}>
@@ -10,13 +57,18 @@ export default function create_acc() {
 			<div className={styles.description}>Create an account and log in to start playing!</div>
 		</div>
 		<div>
-			<form action="" className={styles.form}>
-				<input className={styles.button} type="username" placeholder="Username"/>
-				<input className={styles.button} type="email" placeholder="Email"/>
-				<input className={styles.button} type="password" placeholder="Password"/>
-				<button className={styles.buttonDark} type="submit">Enter</button>
+			<form action="" method="Post" className={styles.form} onSubmit={postData}>
+				<input className={styles.button} type="text" name="username" placeholder="Username" autoComplete="username" value={user.username} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="new-password" value={user.password} onChange={handleInputs}/>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{isSubmitting ? "Creating..." : "Enter"}</button>
 			</form>
 		</div>
+		{errors.length > 0 &&
+			<div className={styles.errorWrapper}>
+				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
+			</div>
+		}
 		<div className={styles.authText}>
 			<div className={styles.text}>or create through</div>
 		</div>

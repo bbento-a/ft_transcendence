@@ -1,16 +1,22 @@
 "use client";
 import styles from "./page.module.css"
 import Image from "next/image"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 import GameroomWidget from "../components/gameroomWidget"
 import GamePopUp from "../components/gamePopUp"
+import useClickOutside from "../hooks/useClickOutside"
+import RequireAuth from "../components/requireAuth"
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
-	let gamerooms = 3;
+	const popupRef = useRef<HTMLDivElement>(null);
+	let gamerooms = 4;
+
+	useClickOutside([popupRef], () => setToggle(false), toggled);
 
   return (
+	<RequireAuth>
 	<div className={styles.pageWrapper}>
 		<div className={styles.wrapperScroll}>
 
@@ -44,12 +50,13 @@ export default function Home() {
 		{/* ^^^ this is just for testing ^^^ */}
 
 		</div>
-		<div className={styles.buttonWrapper}>
+		<div ref={popupRef} className={styles.buttonWrapper}>
 			{ toggled && <GamePopUp></GamePopUp>}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
 			</button>
 		</div>
 	</div>
+	</RequireAuth>
   )
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 
 import NavBar from "./components/navbar"
 import Footer from "./components/footer"
+import { UserProvider } from "@/context/AuthContext"
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -23,11 +24,13 @@ export default function RootLayout({
     <html lang="en"
       className={`${quicksand.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <NavBar></NavBar>
-        <div className='background-image'>
-        {children}
-        </div>
-        <Footer></Footer>
+        <UserProvider>
+          <NavBar></NavBar>
+          <div className='background-image'>
+          {children}
+          </div>
+          <Footer></Footer>
+        </UserProvider>
       </body>
     </html>
   );
