@@ -21,8 +21,8 @@ export class AuthService {
 
   async login(dto: LoginDto)
   {
-    //Checar Email
-    const user = await this.prisma.user.findUnique({where: {email: dto.email}});
+    //Checar Email (normalizado para minusculas, tal como no register)
+    const user = await this.prisma.user.findUnique({where: {email: dto.email.toLowerCase()}});
 
     //Email nao existe na base de dados
     if(!user)

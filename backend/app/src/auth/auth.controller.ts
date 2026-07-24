@@ -45,7 +45,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('Logout')
+  @Post('logout')
   logout(@Res({passthrough: true}) res: Response)
   {
     //Sobrescrevemos a cookie com informaçao do passado assim o bro vai de arrasta
