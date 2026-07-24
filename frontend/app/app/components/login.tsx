@@ -21,10 +21,10 @@ export default function login() {
 		</div>
 			<div className={styles.auths}>
 				<button className={styles.buttonAuth}>
-					<Image width={78} height={78} sizes="100vw" alt="" src="/42Logo.svg" />
+					<Image width={60} height={60} sizes="100vw" alt="" src="/42Logo.svg" />
 				</button>
 				<button className={styles.buttonAuth}>
-					<Image width={50} height={50} sizes="100vw" alt="" src="/googleLogo.svg"/>
+					<Image width={40} height={40} sizes="100vw" alt="" src="/googleLogo.svg"/>
 				</button>
 			</div>
 			<div className={styles.authText}>

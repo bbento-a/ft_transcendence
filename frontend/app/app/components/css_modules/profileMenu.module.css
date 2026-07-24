@@ -17,8 +17,8 @@
 	text-align: center;
 	font-size: 30px;
 	color: #243119;
-	font-family: Quicksand;
 	z-index: 11;
+	box-shadow: 0px 0px 10px rgba(10, 27, 1, 0.5);
 }
 .textWrapper {
 	align-self: stretch;

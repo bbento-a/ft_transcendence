@@ -1,20 +1,16 @@
 .pageWrapper {
 	width: 100vw;
-	height: 76vh;
+	height: 80vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 15px 5px;
-	box-sizing: border-box;
+	padding: 5px;
 	color: #ecffe9;
-	max-width: 100%;
-	min-width: 0;
-	gap: 0px;
+	box-sizing: border-box;
 }
 .wrapperFrame {
-	width: 95%;
-	height: 76vh;
-	position: absolute;
+	width: 100%;
+	height: 100%;
 	align-self: center;
 	flex: 1;
 	display: flex;
@@ -31,7 +27,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 10px 10px;
+	padding: 10px;
 	gap: 20px;
 	overflow-y: auto;
 	z-index: 3;
@@ -50,7 +46,7 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 10px 10px;
+	padding: 10px;
 }
 .noGameRooms {
 	position: relative;
@@ -70,8 +66,8 @@
 }
 .buttonWrapper {
 	position: fixed;
-	bottom: 12%;
-	right: 20px;
+	bottom: 7%;
+	right: 10px;
 	padding: 5px;
 	z-index: 3;
 }
@@ -80,4 +76,18 @@
 	height: 70px;
 	position: relative;
 	object-fit: cover;	
+}
+
+@media (max-width: 430px) {
+	.pageWrapper {
+		padding: 0px;
+	}
+	.textWrapper {
+		width: 0;
+		height: 0;
+		gap: 0;
+	}
+	.wrapperScroll {
+		padding: 0;		
+	}
 }

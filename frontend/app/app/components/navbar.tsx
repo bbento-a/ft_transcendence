@@ -9,10 +9,11 @@ import ProfileMenu from "./profileMenu";
 
 export default function NavBar()
 {
-	const [toggled, setToggle] = useState(false);
-	const [logged, setDisplayLog] = useState(false); // connect w backend by fetch tokens (I think)
-	const [profMenu, setProfMenu] = useState(false); // for profile menu
+	const [logged, setDisplayLog] = useState(true); // connect w backend by fetch tokens (I think)
 
+	const [openMenu, setOpenMenu] = useState<"lang" | "prof" | null>(null);
+	const toggleLang = openMenu === "lang";
+	const toggleProf = openMenu === "prof";
 	
 	return (
 		<nav>
@@ -24,17 +25,17 @@ export default function NavBar()
 				<div className={styles.wawaText}>wawa</div>
 			</div>
 			<div className={styles.rightWrapper}>
-					<button onClick={() => setToggle(!toggled)} className={styles.buttonIcon}>
-						<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
+					<button onClick={() => setOpenMenu(toggleLang ? null : "lang")} className={styles.buttonIcon}>
+						<Image className={styles.imageIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
 					</button>
-					{toggled && <LanguagesWidget></LanguagesWidget>}
+					{toggleLang && <LanguagesWidget></LanguagesWidget>}
 					{
 						logged &&
-							<button onClick={() => setProfMenu(!profMenu)} className={styles.buttonIcon}>
-								<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/profile.svg"/>
+							<button onClick={() => setOpenMenu(toggleProf ? null : "prof")} className={styles.buttonIcon}>
+								<Image className={styles.imageIcon} width={50} height={50} sizes="100vw" alt="" src="/profile.svg"/>
 							</button>
 					}
-					{profMenu && <ProfileMenu></ProfileMenu>}
+					{toggleProf && <ProfileMenu></ProfileMenu>}
 
 			</div>
 		</div>

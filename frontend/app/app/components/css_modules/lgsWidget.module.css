@@ -2,7 +2,7 @@
   	width: 210px;
   	height: 200px;
   	position: absolute;
-	right: -10;
+	right: -5;
 	margin-top: 280px;
   	border-radius: 30px;
   	background-color: #dafdd4;
@@ -15,8 +15,8 @@
   	text-align: left;
   	font-size: 16px;
   	color: #243119;
-  	font-family: Quicksand;
 	z-index: 10;
+	box-shadow: 0px 0px 10px rgba(10, 27, 1, 0.5);
 }
 .buttonWrapper {
   	width: 100%;

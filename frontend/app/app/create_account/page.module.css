@@ -7,7 +7,6 @@
 	justify-content: center;
 	padding: 40px 40px;
 	box-sizing: border-box;
-	gap: 20px;
 }
 .contentWrapper {
 	height: 116.4px;
@@ -18,4 +17,15 @@
 	position: absolute;
 	width: 483px;
 	height: 116.4px;
+}
+@media (max-width: 1000px) {
+
+	.contentWrapper {
+		height: 0;
+		width: 0;
+		position: relative;
+	}
+	.frameIcon {
+		display: none;
+	}
 }

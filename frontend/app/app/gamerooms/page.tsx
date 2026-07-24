@@ -8,7 +8,7 @@ import GamePopUp from "../components/gamePopUp"
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
-	let gamerooms = 4;
+	let gamerooms = 3;
 
   return (
 	<div className={styles.pageWrapper}>
