@@ -17,7 +17,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60, //1 hora
+      maxAge: 1000 * 60 * 60 * 24, //24 horas, igual ao expiresIn do JWT
     });
 
     return body;
@@ -31,7 +31,7 @@ export class AuthController {
       httpOnly: true,//nao deixa o js ler no frontend
       secure: true, // so envia em https
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60, //1 hora
+      maxAge: 1000 * 60 * 60 * 24, //24 horas, igual ao expiresIn do JWT
     });
 
     return { message: 'Login successful' };
@@ -51,7 +51,7 @@ export class AuthController {
     //Sobrescrevemos a cookie com informaçao do passado assim o bro vai de arrasta
     res.cookie('access_token','',{
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: 'lax',
       expires: new Date(0),
     });
