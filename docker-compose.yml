@@ -30,14 +30,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
       PORT: 3000
-      # OAuth (Google + 42). Real client IDs/secrets come from the registered
-      # apps; placeholders in .env let the backend boot with OAuth non-functional.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
-      42_CLIENT_ID: ${42_CLIENT_ID}
-      42_CLIENT_SECRET: ${42_CLIENT_SECRET}
-      42_CALLBACK_URL: ${42_CALLBACK_URL}
+      42_CLIENT_ID: ${FT_CLIENT_ID}
+      42_CLIENT_SECRET: ${FT_CLIENT_SECRET}
+      42_CALLBACK_URL: ${FT_CALLBACK_URL}
     networks:
       - frontend_net
       - backend_net
