@@ -11,22 +11,32 @@ export type OAuthRequest = Request & {
   user?: OAuthProfile;
 };
 
+// Where the browser lands after a successful OAuth login.
+const OAUTH_SUCCESS_REDIRECT = '/gamerooms';
+
+// Session length; kept in one place so every auth path issues the same cookie.
+const COOKIE_MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24h, matches the JWT expiry
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  // Single source of truth for the auth cookie. Register, login and both OAuth
+  // callbacks all use this, so the flags and lifetime can never drift apart.
+  private setAuthCookie(res: Response, token: string) {
+    res.cookie('access_token', token, {
+      httpOnly: true,   // JS cannot read it (XSS protection)
+      secure: true,     // HTTPS only
+      sameSite: 'lax',
+      maxAge: COOKIE_MAX_AGE_MS,
+    });
+  }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const { access_token, ...body } = await this.authService.register(dto);
-
-    res.cookie('access_token', access_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24, //24 horas, igual ao expiresIn do JWT
-    });
-
+    this.setAuthCookie(res, access_token);
     return body;
   }
 
@@ -34,14 +44,7 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { access_token } = await this.authService.login(dto);
-
-    res.cookie('access_token', access_token, {
-      httpOnly: true,//nao deixa o js ler no frontend
-      secure: true, // so envia em https
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24, //24 horas, igual ao expiresIn do JWT
-    });
-
+    this.setAuthCookie(res, access_token);
     return { message: 'Login successful' };
   }
 
@@ -56,14 +59,15 @@ export class AuthController {
   @Post('logout')
   logout(@Res({passthrough: true}) res: Response)
   {
-    //Sobrescrevemos a cookie com informaçao do passado assim o bro vai de arrasta
-    res.cookie('access_token','',{
+    // Overwrite the cookie with one that has already expired. The flags must
+    // match setAuthCookie or the browser will not consider it the same cookie.
+    res.cookie('access_token', '', {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       expires: new Date(0),
     });
-    return {message: 'Logout efetuado com sucesso familia'};
+    return { message: 'Logout efetuado com sucesso familia' };
   }
 
   @Get('google')
@@ -73,21 +77,18 @@ export class AuthController {
     return;
   }
 
+  // Google redirects the browser here after consent. We set the same auth cookie
+  // as login/register, then REDIRECT the browser to the app — returning JSON
+  // here would just show the user a raw JSON page.
   @Get('google/redir')
   @UseGuards(AuthGuard('google'))
-  async googleLoginRedirect(@Req() req: OAuthRequest, @Res({ passthrough: true }) res: Response) {
+  async googleLoginRedirect(@Req() req: OAuthRequest, @Res() res: Response) {
     if (!req.user)
       throw new UnauthorizedException('Missing OAuth user');
-    const result = await this.authService.googleLogin(req.user);
+    const { access_token } = await this.authService.googleLogin(req.user);
 
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60,
-    });
-
-    return { message: 'Google login successful' };
+    this.setAuthCookie(res, access_token);
+    res.redirect(OAUTH_SUCCESS_REDIRECT);
   }
 
   @Get('42')
@@ -99,18 +100,12 @@ export class AuthController {
 
   @Get('42/redir')
   @UseGuards(AuthGuard('42'))
-  async fortyTwoLoginRedirect(@Req() req: OAuthRequest, @Res({ passthrough: true }) res: Response) {
+  async fortyTwoLoginRedirect(@Req() req: OAuthRequest, @Res() res: Response) {
     if (!req.user)
       throw new UnauthorizedException('Missing OAuth user');
-    const result = await this.authService.fortyTwoLogin(req.user);
+    const { access_token } = await this.authService.fortyTwoLogin(req.user);
 
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60,
-    });
-
-    return { message: '42 login successful' };
+    this.setAuthCookie(res, access_token);
+    res.redirect(OAUTH_SUCCESS_REDIRECT);
   }
 }
