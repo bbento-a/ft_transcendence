@@ -1,0 +1,6 @@
+GOOGLE_CLIENT_ID=851913200257-e6iosrqvvfbgdqkadrfmfhn9d2nuom3v.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_CALLBACK_URL=https://localhost/api/auth/google/redir
+FT_CLIENT_ID=u-s4t2ud-270be928076ec81a67163ce71faaed93a6b343a3a46746cf67533d8524ca59be
+FT_CLIENT_SECRET=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
+FT_CALLBACK_URL=https://localhost/api/auth/42/redir
