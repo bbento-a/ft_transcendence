@@ -8,6 +8,15 @@ import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
 import { useUser } from "@/context/AuthContext";
 
+
+const loginGoogle = () => {
+    window.location.assign("/api/auth/google");
+};
+
+const login42 = () => {
+    window.location.assign("/api/auth/42");
+};
+
 export default function login() {
 
 	const [user,setUser] = useState({
@@ -74,10 +83,10 @@ export default function login() {
 			<div className={styles.text}>or log through</div>
 		</div>
 			<div className={styles.auths}>
-				<button className={styles.buttonAuth}>
+				<button className={styles.buttonAuth} type="button" onClick={login42}>
 					<Image width={60} height={60} sizes="100vw" alt="" src="/42Logo.svg" />
 				</button>
-				<button className={styles.buttonAuth}>
+				<button className={styles.buttonAuth} type="button" onClick={loginGoogle}>
 					<Image width={40} height={40} sizes="100vw" alt="" src="/googleLogo.svg"/>
 				</button>
 			</div>

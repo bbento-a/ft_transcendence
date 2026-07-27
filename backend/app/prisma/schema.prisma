@@ -21,7 +21,9 @@ model User {
   username      String   @unique
   email         String   @unique
   
-
+  googleId      String?  @unique
+  fortyTwoId    String?  @unique
+  
   password      String?  
 
   //provider      String?  @default("local")

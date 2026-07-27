@@ -4,7 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
-
+import { OAuthProfile } from './types/oauth-profile.type';
+import { UpdateUserDto } from './dto/updateUser.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -86,6 +87,144 @@ export class AuthService {
         email: newUser.email,
       },
       access_token: await this.signToken(newUser),
+    };
+  }
+
+  async googleLogin(profile: OAuthProfile) {
+    return this.findOrCreateOAuthUser({
+      provider: 'google',
+      providerId: profile.id,
+      email: profile.email,
+      username: profile.name,
+      avatarUrl: profile.picture,
+    });
+  }
+
+  async fortyTwoLogin(profile: OAuthProfile) {
+    return this.findOrCreateOAuthUser({
+      provider: '42',
+      providerId: profile.id,
+      email: profile.email,
+      username: profile.name,
+      avatarUrl: profile.picture,
+    });
+  }
+
+  private async findOrCreateOAuthUser(input: {
+    provider: 'google' | '42';
+    providerId: string;
+    email?: string;
+    username?: string;
+    avatarUrl?: string;
+  }) {
+    let user = input.provider === 'google'
+    ? await this.prisma.user.findUnique({ where: { googleId: input.providerId } })
+    : await this.prisma.user.findUnique({ where: { fortyTwoId: input.providerId } });
+  
+    if (!user && input.email) {
+      user = await this.prisma.user.findUnique({
+        where: { email: input.email.toLowerCase() },
+      });
+    }
+  
+    if (!user) {
+      const baseUsername =
+        input.username?.trim() ||
+        input.email?.split('@')[0] ||
+        `${input.provider}_${input.providerId.slice(0, 8)}`;
+    
+      const username = await this.makeUniqueUsername(baseUsername);
+      const email =
+        input.email?.toLowerCase() ||
+        `${input.providerId}@${input.provider}.oauth`;
+    
+      user = await this.prisma.user.create({
+        data: {
+          username,
+          email,
+          googleId: input.provider === 'google' ? input.providerId : null,
+          fortyTwoId: input.provider === '42' ? input.providerId : null,
+          avatarUrl: input.avatarUrl,
+          password: null,
+        },
+      });
+    } else {
+      const updateData: { googleId?: string; fortyTwoId?: string; avatarUrl?: string } = {};
+    
+      if (input.provider === 'google' && !user.googleId) updateData.googleId = input.providerId;
+      if (input.provider === '42' && !user.fortyTwoId) updateData.fortyTwoId = input.providerId;
+      if (input.avatarUrl && !user.avatarUrl) updateData.avatarUrl = input.avatarUrl;
+    
+      if (Object.keys(updateData).length) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: updateData,
+        });
+      }
+    }
+  
+    return this.signOAuthToken(user.id, user.username);
+  }
+
+  private async makeUniqueUsername(base: string) {
+    let username = base.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    if (!username) username = 'user';
+  
+    let i = 0;
+    while (await this.prisma.user.findUnique({ where: { username } })) {
+      i += 1;
+      username = `${base}_${i}`.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    }
+  
+    return username;
+  }
+
+  async getMe(userId: string) {
+    return this.prisma.user.findUnique({where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatarUrl: true,
+      },
+    })
+  }
+
+  async updateUserData(userId: string, dto: UpdateUserDto) {
+    const data: any = {};
+  
+    if (dto.username) {
+      const clean = dto.username.trim().replace(/\s+/g, '_').toLowerCase();
+    
+      const taken = await this.prisma.user.findUnique({ where: { username: clean } });
+      if (taken && taken.id !== userId) {
+        throw new ConflictException('Username already in use.');
+      }
+    
+      data.username = clean;
+    }
+  
+    if (dto.avatarUrl) {
+      data.avatarUrl = dto.avatarUrl;
+    }
+  
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatarUrl: true,
+      },
+    });
+  }
+  private async signOAuthToken(userId: string, username: string) {
+    return {
+      access_token: await this.jwtService.signAsync({
+        sub: userId,
+        username,
+      }),
     };
   }
 }
