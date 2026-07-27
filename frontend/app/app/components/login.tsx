@@ -40,6 +40,9 @@ export default function login() {
 	const postData = async (e: React.SubmitEvent<HTMLFormElement>)=>{
 		//Faz com que a info em ves de ser enviada pelo url seja enviada diretamente para o lado do backebd
 		e.preventDefault();
+		// sem isto, spammar Enter disparava um pedido por cada submit em vez de esperar o anterior acabar
+		if (isSubmitting)
+			return;
 		setErrors([]);
 		setIsSubmitting(true);
 
