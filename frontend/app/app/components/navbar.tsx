@@ -57,7 +57,7 @@ export default function NavBar()
 					<button ref={langBtnRef} onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>
 						<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
 					</button>
-					{toggled && <LanguagesWidget ref={langMenuRef}></LanguagesWidget>}
+					{toggled && <LanguagesWidget></LanguagesWidget>}
 					{
 						logged &&
 							<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>

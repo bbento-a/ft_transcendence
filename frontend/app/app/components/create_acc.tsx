@@ -64,17 +64,20 @@ export default function create_acc() {
 				<input className={styles.button} type="text" name="username" placeholder="Username" autoComplete="username" value={user.username} onChange={handleInputs}/>
 				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
 				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="new-password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{isSubmitting ? "Creating..." : "Enter"}</button>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{"Create"}</button>
 			</form>
 		</div>
+		<div className={styles.errorSpace}>
 		{errors.length > 0 &&
 			<div className={styles.errorWrapper}>
 				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
 			</div>
 		}
-		<div className={styles.authText}>
-			<div className={styles.text}>or create through</div>
 		</div>
+		<div className={styles.authWrapper}>
+			<div className={styles.authText}>
+				<div className={styles.text}>or create through</div>
+			</div>
 			<div className={styles.auths}>
 				<button className={styles.buttonAuth}>
 					<Image width={60} height={60} sizes="100vw" alt="" src="/42Logo.svg" />
@@ -86,6 +89,7 @@ export default function create_acc() {
 			<div className={styles.authText}>
 				<div className={styles.text}>Already have an account? Log in <Link href="/log_in" color="#ffffff"><u><b>here</b></u></Link></div>
 			</div>
+		</div>
 	</div>
   )
 }

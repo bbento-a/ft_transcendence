@@ -76,12 +76,6 @@
 	color: #dafdd4;
 	padding: 10px;
 }
-
-
-
-
-
-
 .buttonText {
 	position: relative;
 	font-weight: 600;
@@ -127,7 +121,7 @@
 	align-items: center;
 	padding: 7px;
 	margin: 5px 0px;
-	font-weight: 400;
+	font-weight: 500;
 }
 .confirmButton {
 	width: 100%;

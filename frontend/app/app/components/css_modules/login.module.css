@@ -33,7 +33,7 @@
 	position: relative;
 	font-weight: 600;
 	color: #426340;
-	font-size: medium;
+	font-size: small;
 	word-wrap: break-word;
 	display: inline-block;
 	flex-shrink: 0;
@@ -60,6 +60,7 @@
 	display: flex;
 	align-items: center;
 	padding: 7px;
+	font-weight: 500;
 }
 .text {
 	position: relative;
@@ -89,8 +90,6 @@
 .errorWrapper {
 	position: absolute;
 	display: flex;
-	/* bottom: 150px; */
-	/* right: 370px; */
 	width: 300px;
 	flex-direction: column;
 }
@@ -100,7 +99,6 @@
 	height: 5px;
 	display: flex;
 	align-items: center;
-	/* justify-content: center; */
 }
 .errorText {
 	font-size: x-small;

@@ -14,6 +14,9 @@ export default function profileMenu({ ref }: { ref?: Ref<HTMLDivElement> })
 		await logout();
 		router.push("/log_in");
 	}
+	const routerSettings = async () => {
+		router.push("/settings");
+	}
 
 	return(
 		<div ref={ref} className={styles.profileWidget}>
@@ -21,7 +24,7 @@ export default function profileMenu({ ref }: { ref?: Ref<HTMLDivElement> })
 				<div className={styles.header}>{user?.username}</div>
 			</div>
 			<div className={styles.buttonWrapper}>
-				<button className={styles.button}>
+				<button className={styles.button} onClick={routerSettings}>
 					<div className={styles.text}>Settings</div>
 				</button>
 				<button className={styles.buttonDark} onClick={handleLogout}>

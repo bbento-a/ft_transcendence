@@ -21,7 +21,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 10px;
+	gap: 5px;
 }
 .title {
 	align-self: stretch;
@@ -33,7 +33,7 @@
 	position: relative;
 	font-weight: 600;
 	color: #426340;
-	font-size: large;
+	font-size: small;
 	word-wrap: break-word;
 	display: inline-block;
 	flex-shrink: 0;
@@ -60,6 +60,7 @@
 	display: flex;
 	align-items: center;
 	padding: 7px;
+	font-weight: 500;
 }
 .text {
 	position: relative;
@@ -87,25 +88,29 @@
 	justify-content: center;
 }
 .errorWrapper {
-	width: 300px;
+	position: absolute;
 	display: flex;
+	width: 300px;
 	flex-direction: column;
-	gap: 4px;
+}
+.errorSpace{
+	position: relative;
+	width: 100%;
+	height: 70px;
+	display: flex;
+	align-items: center;
 }
 .errorText {
-	font-size: 13px;
+	font-size: x-small;
 	font-weight: 600;
 	color: #b3261e;
 }
 .authWrapper {
-	align-self: stretch;
-	height: 100px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: space-between;
-	gap: 20px;
-	color: #000000;
+	gap: 10px;
 }
 .auths {
 	width: 280px;

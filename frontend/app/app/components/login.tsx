@@ -74,7 +74,7 @@ export default function login() {
 			<form action="" method="Post" className={styles.loginForm} onSubmit={postData}>
 				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
 				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="current-password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{/*isSubmitting ? "Entering..." :*/ "Enter"}</button>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{"Log in"}</button>
 			</form>
 		</div>
 		<div className={styles.errorSpace}>
