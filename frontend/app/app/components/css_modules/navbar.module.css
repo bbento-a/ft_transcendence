@@ -41,11 +41,11 @@
 	flex: 1;
 	align-items: center;
 	justify-content: flex-end;
-	gap: 1px;
+	gap: 3px;
 	box-sizing: border-box;
 }
 .buttonIcon{
-	width: 3.2rem;
+	width: 2.5rem;
 	height: auto;
 	position: relative;
 	display: flex;
@@ -54,7 +54,7 @@
 }
 .imageIcon {
 	scale: 0.;
-  	height: 2.5rem;
+  	height: 2.2rem;
   	width: auto;
   	position: relative;
   	object-fit: cover;

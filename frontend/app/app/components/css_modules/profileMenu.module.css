@@ -1,10 +1,10 @@
 .profileWidget {
-	width: 230px;
-	height: 200px;
+	width: 160px;
+	height: 170px;
 	position: absolute;
 	right: -5px;
-	margin-top: 280px;
-	border-radius: 30px;
+	margin-top: 240px;
+	border-radius: 25px;
 	background-color: #dafdd4;
 	border: 1px solid #243119;
 	box-sizing: border-box;
@@ -12,17 +12,17 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: space-between;
-	padding: 20px;
-	gap: 20px;
+	padding: 10px;
+	gap: 10px;
 	text-align: center;
-	font-size: 30px;
+	font-size: x-large;
 	color: #243119;
 	z-index: 11;
 	box-shadow: 0px 0px 10px rgba(10, 27, 1, 0.5);
 }
 .textWrapper {
 	align-self: stretch;
-	height: 58px;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -48,15 +48,15 @@
 	justify-content: center;
 	gap: 10px;
 	text-align: left;
-	font-size: 16px;
+	font-size: medium;
 }
 .text {
 	position: relative;
 	font-weight: 600;
 }
 .button {
-	width: 182px;
-	height: 45px;
+	width: 140px;
+	height: 40px;
 	border-radius: 15px;
 	background-color: #ecffe9;
 	border: 1px solid #243119;
@@ -68,8 +68,8 @@
 	flex-shrink: 0;
 }
 .buttonDark {
-	width: 182px;
-	height: 45px;
+	width: 140px;
+	height: 40px;
 	border-radius: 15px;
 	background-color: #426340;
 	border: 1px solid #243119;

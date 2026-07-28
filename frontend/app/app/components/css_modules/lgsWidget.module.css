@@ -1,19 +1,19 @@
 .languagesWidget {
-  	width: 210px;
-  	height: 200px;
+  	width: 150px;
+  	height: 140px;
   	position: absolute;
 	right: -5;
-	margin-top: 280px;
-  	border-radius: 30px;
+	margin-top: 210px;
+  	border-radius: 25px;
   	background-color: #dafdd4;
   	border: 1px solid #243119;
   	box-sizing: border-box;
   	display: flex;
   	flex-direction: column;
   	align-items: center;
-  	padding: 20px;
+  	padding: 10px;
   	text-align: left;
-  	font-size: 16px;
+  	font-size:small;
   	color: #243119;
 	z-index: 10;
 	box-shadow: 0px 0px 10px rgba(10, 27, 1, 0.5);
@@ -25,12 +25,12 @@
   	flex-direction: column;
   	align-items: center;
   	justify-content: center;
-  	gap: 12px;
+  	gap: 5px;
   	flex-shrink: 0;
 }
 .button {
-  	width: 180px;
-  	height: 45px;
+  	width: 130px;
+  	height: 35px;
   	border-radius: 15px;
   	background-color: #ecffe9;
   	border: 1px solid #243119;
