@@ -74,17 +74,20 @@ export default function login() {
 			<form action="" method="Post" className={styles.loginForm} onSubmit={postData}>
 				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
 				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="current-password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{isSubmitting ? "Entering..." : "Enter"}</button>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{/*isSubmitting ? "Entering..." :*/ "Enter"}</button>
 			</form>
 		</div>
+		<div className={styles.errorSpace}>
 		{errors.length > 0 &&
 			<div className={styles.errorWrapper}>
 				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
 			</div>
 		}
-		<div className={styles.authText}>
-			<div className={styles.text}>or log through</div>
 		</div>
+		<div className={styles.authWrapper}>
+			<div className={styles.authText}>
+				<div className={styles.text}>or log through</div>
+			</div>
 			<div className={styles.auths}>
 				<button className={styles.buttonAuth} type="button" onClick={login42}>
 					<Image width={60} height={60} sizes="100vw" alt="" src="/42Logo.svg" />
@@ -96,6 +99,7 @@ export default function login() {
 			<div className={styles.authText}>
 				<div className={styles.text}>No account yet? Create an account <Link href="/create_account" color="#ffffff"><u><b>here</b></u></Link></div>
 			</div>
+		</div>
 	</div>
   )
 }

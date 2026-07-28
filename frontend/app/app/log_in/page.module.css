@@ -7,19 +7,14 @@
 	justify-content: center;
 	padding: 40px 40px;
 	box-sizing: border-box;
-}
-.contentWrapper {
-	height: 116.4px;
-	width: 714px;
-	position: relative;
+	gap: 200px;
 }
 .frameIcon {
-	position: absolute;
-	/* width: 483px; */
-	max-width: 100%;
-	height: auto;
+	position: relative;
+	width: 480px;
+	height: 116px;
 }
-@media (max-width: 1000px) {
+@media (max-width: 1070px) {
 
 	.contentWrapper {
 		height: 0;
