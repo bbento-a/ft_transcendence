@@ -1,7 +1,8 @@
 "use client";
 import styles from "./page.module.css"
+import Image from "next/image";
 import { useState } from "react";
-import RequireAuth from "../components/requireAuth";
+import { useRouter } from "next/navigation";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -61,6 +62,7 @@ export default function Page() {
 	const [currentPlayer, setCurrentPlayer] = useState(PLAYER_RED);
 	const [winner, setWinner] = useState<string | null>(null);
 	const [isDraw, setIsDraw] = useState(false);
+	const router = useRouter();
 
 	const gameOver = winner !== null || isDraw;
 
@@ -106,14 +108,18 @@ export default function Page() {
 
 	function statusText() {
 		if (winner)
-			return `Vencedor: ${winner === PLAYER_RED ? "Vermelho" : "Amarelo"}!`;
+			return `Winner: ${winner === PLAYER_RED ? "Red" : "Yellow"}!`;
 		if (isDraw)
-			return "Empate!";
-		return `Vez do jogador: ${currentPlayer === PLAYER_RED ? "Vermelho" : "Amarelo"}`;
+			return "Draw!";
+		return `${currentPlayer === PLAYER_RED ? "Red" : "Yellow"}'s Turn`;
 	}
 
 	return (
-		<RequireAuth>
+	<div className={styles.pageWrapper}>
+		<div className={styles.sides}>
+			<div className={styles.playerText}>Player1</div>
+
+		</div>
 		<div className={styles.container}>
 			<div className={styles.status}>{statusText()}</div>
 
@@ -130,10 +136,18 @@ export default function Page() {
 				)}
 			</div>
 
-			<button className={styles.reset} onClick={resetGame}>
-				Reiniciar
+			{/* <button className={styles.reset} onClick={resetGame}>
+				Restart
+			</button> */}
+		</div>
+		<div className={styles.sides}>
+			<div className={styles.playerText}>Player2</div>
+		</div>
+		<div className={styles.buttonWrapper}>
+			<button onClick={() => {router.push("/gamerooms")}}>
+				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
-		</RequireAuth>
+	</div>
 	)
 }
