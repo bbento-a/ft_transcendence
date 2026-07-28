@@ -25,12 +25,30 @@ up: $(ENV_FILE)
 	@echo ""
 
 # Development stack: hot reload, source mounted, db reachable on 127.0.0.1:5432
-dev: $(ENV_FILE)
+dev: $(ENV_FILE) host-modules
 	$(COMPOSE) up -d --build
 	@echo ""
 	@echo "  Dev stack running at https://localhost"
 	@echo "  Hot reload is on. After changing package.json, run: make re"
 	@echo ""
+
+# Populate the HOST node_modules so your editor (VS Code) can resolve imports and
+# types. Docker does NOT use these -- node_modules is dockerignored, and the dev
+# container uses its own copy via an anonymous volume. These exist only for the
+# editor, to get rid of the red underlines on every import/JSX tag.
+#
+# Runs in a container (no host Node needed) AS YOUR HOST USER, so the files are
+# owned by you -- this also avoids the root-owned node_modules problem on Linux
+# that otherwise needs a `sudo chown`. Skips a folder already populated, so it is
+# a fast no-op on repeat runs / after the first `make dev`.
+host-modules:
+	@for d in frontend/app backend/app; do \
+		if [ -z "$$(ls -A $$d/node_modules 2>/dev/null)" ]; then \
+			echo ">> Populating $$d/node_modules for the editor (one-time)..."; \
+			docker run --rm -u "$$(id -u):$$(id -g)" -e HOME=/tmp \
+				-v "$$(pwd)/$$d":/app -w /app node:20-alpine npm ci; \
+		fi; \
+	done
 
 down:
 	$(COMPOSE) down
@@ -136,6 +154,6 @@ fclean:
 
 re: fclean up
 
-.PHONY: all up dev down stop start setup ps logs logs-backend logs-frontend \
-        logs-nginx psql shell-backend shell-frontend nginx-test clean \
-        clean-artifacts fclean re
+.PHONY: all up dev down stop start setup host-modules ps logs logs-backend \
+        logs-frontend logs-nginx psql shell-backend shell-frontend nginx-test \
+        clean clean-artifacts fclean re
