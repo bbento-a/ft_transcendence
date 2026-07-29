@@ -127,5 +127,24 @@
   "profile": {
     "settings": "Settings",
     "logout": "Log out"
+  },
+  "settings": {
+    "changepfp": "Change Profile Image",
+    "username": "Username:",
+    "email": "Email:",
+    "changeusername": "Change Username:",
+    "changeemail": "Change Email:",
+    "currentpassword": "Current Password:",
+    "changepassword": "New Password: ",
+    "confirmpassword": "Confirm Password:",
+    "save": "Save Changes",
+    "newusername": "New Username",
+    "newemail": "New Email",
+    "newpassword": "New Password",
+    "currentpasswordplaceholder": "Current Password",
+    "confirmpasswordplaceholder": "Confirm New Password",
+    "success": "Profile updated successfully.",
+    "passwordmismatch": "Passwords do not match.",
+    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here."
   }
 }

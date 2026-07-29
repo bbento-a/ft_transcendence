@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
-export default function profileMenu({ ref }: { ref?: Ref<HTMLDivElement> })
+export default function profileMenu({ ref, onClose }: { ref?: Ref<HTMLDivElement>; onClose?: () => void })
 {
 	const t = useTranslations("profile");
 
@@ -18,6 +18,7 @@ export default function profileMenu({ ref }: { ref?: Ref<HTMLDivElement> })
 		router.push("/log_in");
 	}
 	const routerSettings = async () => {
+		onClose?.();
 		router.push("/settings");
 	}
 
