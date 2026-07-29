@@ -127,5 +127,18 @@
   "profile": {
     "settings": "Definições",
     "logout": "Terminar sessão"
+  },
+  "settings": {
+    "changepfp": "Alterar imagem de perfil",
+    "username": "Nome de utilizador:",
+    "email": "Email:",
+    "changeusername": "Alterar nome de utilizador:",
+    "changeemail": "Alterar email:",
+    "changepassword": "Nova palavra-passe:",
+    "confirmpassword": "Confirmar palavra-passe:",
+    "save": "Guardar alterações",
+    "newusername": "Novo nome de utilizador",
+    "newemail": "Novo email",
+    "newpassword": "Nova palavra-passe"
   }
 }
