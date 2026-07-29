@@ -34,9 +34,9 @@ export default function Page() {
 
 	function tileClassName(cell: number) {
 		if (cell === 1)
-			return `${styles.tile} ${styles["red-piece"]}`;
+			return `${styles.tile} ${styles["light-piece"]}`;
 		if (cell === 2)
-			return `${styles.tile} ${styles["yellow-piece"]}`;
+			return `${styles.tile} ${styles["dark-piece"]}`;
 		return styles.tile;
 	}
 
@@ -52,6 +52,17 @@ export default function Page() {
 		return `${state.currentPlayer === 1 ? "Red" : "Yellow"}'s Turn`;
 	}
 
+	function turnImage(){
+		if (state === null)
+			return
+		else if (state.currentPlayer === 1)
+			return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceLighter.svg" />
+		return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceDark.svg" />
+	}
+	// function resetGame(){
+	// 	return 1
+	// }
+
 	return (
 	<div className={styles.pageWrapper}>
 		<div className={styles.sides}>
@@ -59,7 +70,11 @@ export default function Page() {
 
 		</div>
 		<div className={styles.container}>
-			<div className={styles.status}>{statusText()}</div>
+			<div className={styles.status}>
+				{turnImage()}
+				<div className={styles.statusText}>{statusText()}</div>
+				{turnImage()}
+			</div>
 
 			<div className={styles.board} id="board">
 				{board.map((row, r) =>
@@ -73,8 +88,8 @@ export default function Page() {
 					))
 				)}
 			</div>
-
-			{/* <button className={styles.reset} onClick={resetGame}>
+{/* 
+			<button className={styles.reset} onClick={resetGame()}>
 				Restart
 			</button> */}
 		</div>
