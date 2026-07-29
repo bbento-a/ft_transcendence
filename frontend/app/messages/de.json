@@ -134,11 +134,17 @@
     "email": "E-Mail:",
     "changeusername": "Benutzernamen ändern:",
     "changeemail": "E-Mail ändern:",
+    "currentpassword": "Aktuelles Passwort:",
     "changepassword": "Neues Passwort:",
     "confirmpassword": "Passwort bestätigen:",
     "save": "Änderungen speichern",
     "newusername": "Neuer Benutzername",
     "newemail": "Neue E-Mail",
-    "newpassword": "Neues Passwort"
+    "newpassword": "Neues Passwort",
+    "currentpasswordplaceholder": "Aktuelles Passwort",
+    "confirmpasswordplaceholder": "Neues Passwort bestätigen",
+    "success": "Profil erfolgreich aktualisiert.",
+    "passwordmismatch": "Die Passwörter stimmen nicht überein.",
+    "oauthpasswordnote": "Dein Passwort wird von deinem Login-Anbieter (Google/42) verwaltet und kann hier nicht geändert werden."
   }
 }

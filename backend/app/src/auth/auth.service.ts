@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
@@ -180,34 +180,75 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    return this.prisma.user.findUnique({where: { id: userId },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         username: true,
         email: true,
         avatarUrl: true,
+        password: true,
       },
-    })
+    });
+
+    if (!user) return null;
+
+    // Nunca devolver o hash; so dizemos ao frontend se existe password local
+    // para ele poder desativar a mudanca de password nas contas so-OAuth.
+    const { password, ...rest } = user;
+    return { ...rest, hasPassword: !!password };
   }
 
   async updateUserData(userId: string, dto: UpdateUserDto) {
     const data: any = {};
-  
+
     if (dto.username) {
       const clean = dto.username.trim().replace(/\s+/g, '_').toLowerCase();
-    
+
       const taken = await this.prisma.user.findUnique({ where: { username: clean } });
       if (taken && taken.id !== userId) {
         throw new ConflictException('Username already in use.');
       }
-    
+
       data.username = clean;
     }
-  
+
+    if (dto.email) {
+      // Normalize email to avoid duplicate accounts differing only in case
+      const email = dto.email.toLowerCase();
+
+      const taken = await this.prisma.user.findUnique({ where: { email } });
+      if (taken && taken.id !== userId) {
+        throw new ConflictException('Email already in use.');
+      }
+
+      data.email = email;
+    }
+
+    if (dto.newPassword) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required to set a new password.');
+      }
+
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+      // OAuth-only accounts have no password to verify against
+      if (!user?.password) {
+        throw new UnauthorizedException('Invalid credentials.');
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials.');
+      }
+
+      data.password = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+    }
+
     if (dto.avatarUrl) {
       data.avatarUrl = dto.avatarUrl;
     }
-  
+
     return this.prisma.user.update({
       where: { id: userId },
       data,
