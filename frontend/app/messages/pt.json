@@ -1,0 +1,131 @@
+{
+  "login": {
+    "title": "Iniciar sessão",
+    "description": "Entre com a sua conta para começar a jogar!",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "submit": "Entrar",
+    "orThrough": "ou entrar através de",
+    "noAccount": "Ainda não tem conta? Crie uma conta ",
+    "here": "aqui"
+  },
+  "footer": {
+    "terms": "Termos e condições",
+    "privacyPolicy": "Política de Privacidade"
+  },
+  "createAcc": {
+    "title": "Criar conta",
+    "description": "Crie uma conta e inicie sessão para começar a jogar!",
+    "username": "Nome de utilizador",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "submit": "Criar",
+    "orCreateThrough": "ou criar através de",
+    "alreadyHaveAccount": "Já tem uma conta? Inicie sessão ",
+    "here": "aqui"
+  },
+  "terms": {
+    "title": "Termos e Condições",
+    "lastUpdated": "Última atualização: 27 de julho de 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Aceitação dos Termos",
+        "body": "Ao aceder ou utilizar este website e os seus serviços, concorda em ficar vinculado a estes Termos e Condições. Se não concordar, não deve utilizar o serviço."
+      },
+      "use": {
+        "title": "Utilização do Serviço",
+        "body": "Concorda em utilizar o serviço apenas para fins legais e de forma a não infringir os direitos de terceiros, perturbar o serviço ou interferir com a experiência de outros utilizadores."
+      },
+      "accounts": {
+        "title": "Contas",
+        "body": "É responsável por manter a confidencialidade das credenciais da sua conta e por toda a atividade realizada na sua conta. Deve fornecer informações verdadeiras e completas ao criar uma conta."
+      },
+      "content": {
+        "title": "Conteúdo do Utilizador",
+        "body": "Se enviar conteúdo, continua a ser responsável por ele. Concede-nos uma licença não exclusiva, mundial e livre de royalties para usar, mostrar e armazenar o seu conteúdo conforme necessário para operar o serviço."
+      },
+      "ip": {
+        "title": "Propriedade Intelectual",
+        "body": "Todo o software, design, logótipos, texto, gráficos e outros materiais fornecidos através do serviço são propriedade nossa ou dos nossos licenciadores e estão protegidos pelas leis de propriedade intelectual aplicáveis."
+      },
+      "prohibited": {
+        "title": "Conduta Proibida",
+        "body": "Não pode tentar invadir, fazer engenharia reversa, enviar spam, copiar, abusar ou fazer uso indevido do serviço. Reservamo-nos o direito de suspender ou terminar o acesso em caso de violação."
+      },
+      "termination": {
+        "title": "Cancelamento",
+        "body": "Podemos suspender ou terminar o seu acesso a qualquer momento, com ou sem aviso, se acreditarmos que violou estes Termos ou se for necessário proteger o serviço ou outros utilizadores."
+      },
+      "disclaimer": {
+        "title": "Isenção de Responsabilidade",
+        "body": "O serviço é fornecido “tal como está” e “conforme disponível”, sem garantias de qualquer tipo. Não garantimos que o serviço seja sempre seguro, livre de erros ou ininterrupto."
+      },
+      "liability": {
+        "title": "Limitação de Responsabilidade",
+        "body": "Na medida máxima permitida por lei, não somos responsáveis por quaisquer danos indiretos, incidentais, especiais ou consequenciais resultantes da utilização do serviço."
+      },
+      "changes": {
+        "title": "Alterações a Estes Termos",
+        "body": "Podemos atualizar estes Termos de tempos a tempos. Quando o fizermos, alteraremos a data de “Última atualização” acima. A utilização contínua do serviço significa que aceita os Termos atualizados."
+      },
+      "law": {
+        "title": "Lei Aplicável",
+        "body": "Estes Termos são regidos pelas leis do país ou região onde o serviço é operado, sem considerar princípios de conflito de leis."
+      }
+    }
+  },
+  "privacyPolicy": {
+    "title": "Política de Privacidade",
+    "lastUpdated": "Última atualização: 28 de julho de 2026",
+    "sections": {
+      "intro": {
+        "title": "Visão Geral",
+        "body": "A WawaConnect respeita a sua privacidade e está comprometida em proteger os seus dados pessoais em conformidade com as leis de proteção de dados aplicáveis, incluindo o RGPD e a legislação portuguesa."
+      },
+      "controller": {
+        "title": "Quem Somos",
+        "body": "A WawaConnect é uma plataforma de jogo online. Para questões sobre esta Política de Privacidade ou sobre os seus dados pessoais, pode contactar-nos através do email de suporte ou contacto indicado no website."
+      },
+      "data": {
+        "title": "Dados que Recolhemos",
+        "body": "Recolhemos as informações que fornece ao criar ou usar uma conta, incluindo o seu endereço de email, nome de utilizador, palavra-passe encriptada, avatar, ID de login do Google, ID de login da 42 e dados relacionados com o jogo, como estatísticas. Também utilizamos cookies necessários para autenticação, preferências e funcionamento do site."
+      },
+      "use": {
+        "title": "Como Utilizamos os Dados",
+        "body": "Utilizamos os seus dados para criar e gerir a sua conta, autenticar o acesso através de email/palavra-passe, Google ou 42, mostrar o seu perfil, acompanhar o seu progresso e estatísticas de jogo e fornecer e melhorar o serviço. Não armazenamos endereços IP para rastreamento ou profiling."
+      },
+      "legalBasis": {
+        "title": "Base Legal",
+        "body": "Tratamos os seus dados porque é necessário para prestar o serviço que solicitou, gerir a sua conta e manter o funcionamento da plataforma. Os cookies essenciais são usados apenas para manter o website a funcionar corretamente."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "body": "A WawaConnect utiliza cookies para manter os utilizadores com sessão iniciada, suportar funções essenciais da sessão e guardar preferências relevantes do site. Não usamos cookies para recolher dados pessoais desnecessários nem para partilhar a sua atividade com terceiros."
+      },
+      "retention": {
+        "title": "Retenção de Dados",
+        "body": "Mantemos os seus dados pessoais enquanto a sua conta estiver ativa ou durante o tempo necessário para prestar o serviço, manter o histórico de jogo e cumprir obrigações legais. Como a eliminação de conta ainda não está disponível, os seus dados permanecem armazenados enquanto a conta existir."
+      },
+      "sharing": {
+        "title": "Partilha de Dados",
+        "body": "Não vendemos, alugamos nem partilhamos os seus dados pessoais com terceiros, exceto pelos serviços de autenticação necessários para permitir o login com Google ou 42 e pela infraestrutura necessária para operar a plataforma."
+      },
+      "rights": {
+        "title": "Os Seus Direitos",
+        "body": "Ao abrigo da lei aplicável, pode ter o direito de aceder, corrigir ou solicitar informações sobre os seus dados pessoais e sobre a forma como são tratados. Pode contactar-nos se os seus dados estiverem incorretos ou se quiser exercer os seus direitos de privacidade."
+      },
+      "security": {
+        "title": "Segurança",
+        "body": "Adotamos medidas técnicas e organizacionais razoáveis para proteger os seus dados. As palavras-passe são armazenadas em formato encriptado e não em texto simples."
+      },
+      "changes": {
+        "title": "Alterações a esta Política",
+        "body": "Podemos atualizar esta Política de Privacidade de tempos a tempos. Se fizermos alterações, atualizaremos a data de “Última atualização” nesta página."
+      }
+    }
+  },
+  "profile": {
+    "settings": "Definições",
+    "logout": "Terminar sessão"
+  }
+}

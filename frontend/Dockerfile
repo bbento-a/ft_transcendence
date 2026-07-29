@@ -7,7 +7,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
-RUN npm ci
+RUN npm install
 
 
 # ============================================================

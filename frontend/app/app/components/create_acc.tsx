@@ -7,8 +7,11 @@ import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
 import { useUser } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
+
 
 export default function create_acc() {
+	const t = useTranslations("createAcc");
 
 	const [user,setUser] = useState({
 		username:"",email:"",password:""
@@ -56,15 +59,15 @@ export default function create_acc() {
   return (
 		<div className={styles.createAccWidget}>
 		<div className={styles.mainText}>
-			<div className={styles.title}>Create account</div>
-			<div className={styles.description}>Create an account and log in to start playing!</div>
+			<div className={styles.title}>{t("title")}</div>
+			<div className={styles.description}>{t("description")}</div>
 		</div>
 		<div>
 			<form action="" method="Post" className={styles.form} onSubmit={postData}>
-				<input className={styles.button} type="text" name="username" placeholder="Username" autoComplete="username" value={user.username} onChange={handleInputs}/>
-				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
-				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="new-password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{"Create"}</button>
+				<input className={styles.button} type="text" name="username" placeholder={t("username")} autoComplete="username" value={user.username} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="new-password" value={user.password} onChange={handleInputs}/>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{t("submit")}</button>
 			</form>
 		</div>
 		<div className={styles.errorSpace}>
@@ -76,7 +79,7 @@ export default function create_acc() {
 		</div>
 		<div className={styles.authWrapper}>
 			<div className={styles.authText}>
-				<div className={styles.text}>or create through</div>
+				<div className={styles.text}>{t("orCreateThrough")}</div>
 			</div>
 			<div className={styles.auths}>
 				<button className={styles.buttonAuth}>
@@ -87,7 +90,7 @@ export default function create_acc() {
 				</button>
 			</div>
 			<div className={styles.authText}>
-				<div className={styles.text}>Already have an account? Log in <Link href="/log_in" color="#ffffff"><u><b>here</b></u></Link></div>
+				<div className={styles.text}>{t("alreadyHaveAccount")} <Link href="/log_in"><u><b>{t("here")}</b></u></Link></div>
 			</div>
 		</div>
 	</div>

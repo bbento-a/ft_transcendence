@@ -5,6 +5,7 @@ import styles from "./css_modules/navbar.module.css"
 import { useEffect, useRef, useState } from 'react';
 import { useUser } from "@/context/AuthContext";
 import useClickOutside from "../hooks/useClickOutside";
+import Link from "next/link";
 
 import LanguagesWidget from "./lgsWidget";
 import ProfileMenu from "./profileMenu";
@@ -48,10 +49,19 @@ export default function NavBar()
 		<nav>
 		<div className={styles.navBarWrapper}>
 			<div className={styles.leftWrapper}>
-				<div className={styles.wawaIcon}>
-					<Image className={styles.wawaIcon} width={60 * 4} height={60} sizes="100vw" alt="" src="/wawaIcon.svg" />
-				</div>
-				<div className={styles.wawaText}>wawa</div>
+				<Link href="/" className={styles.wawaIcon}>
+				  <Image
+				    className={styles.wawaIcon}
+				    width={60}
+				    height={60}
+				    sizes="100vw"
+				    alt=""
+				    src="/wawaIcon.svg"
+				  />
+				</Link>
+				<Link href="/" className={styles.wawaText}>
+				  wawa
+				</Link>
 			</div>
 			<div className={styles.rightWrapper}>
 					<button ref={langBtnRef} onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>

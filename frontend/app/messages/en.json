@@ -1,0 +1,131 @@
+{
+  "login": {
+    "title": "Log in",
+    "description": "Enter with your account to start playing!",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Enter",
+    "orThrough": "or log through",
+    "noAccount": "No account yet? Create an account ",
+    "here": "here"
+  },
+  "footer": {
+    "terms": "Terms of condition",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "createAcc": {
+    "title": "Create account",
+    "description": "Create an account and log in to start playing!",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Create",
+    "orCreateThrough": "or create through",
+    "alreadyHaveAccount": "Already have an account? Log in ",
+    "here": "here"
+  },
+  "terms": {
+    "title": "Terms and Conditions",
+    "lastUpdated": "Last updated: July 27, 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "body": "By accessing or using this website and its services, you agree to be bound by these Terms and Conditions. If you do not agree, you must not use the service."
+      },
+      "use": {
+        "title": "Use of the Service",
+        "body": "You agree to use the service only for lawful purposes and in a way that does not infringe the rights of others, disrupt the service, or interfere with other users’ experience."
+      },
+      "accounts": {
+        "title": "Accounts",
+        "body": "You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account. You must provide accurate and complete information when creating an account."
+      },
+      "content": {
+        "title": "User Content",
+        "body": "If you submit content, you remain responsible for it. You grant us a non-exclusive, worldwide, royalty-free license to use, display, and store your content as needed to operate the service."
+      },
+      "ip": {
+        "title": "Intellectual Property",
+        "body": "All software, design, logos, text, graphics, and other materials provided through the service are owned by us or our licensors and are protected by applicable intellectual property laws."
+      },
+      "prohibited": {
+        "title": "Prohibited Conduct",
+        "body": "You may not attempt to hack, reverse engineer, spam, scrape, abuse, or otherwise misuse the service. We reserve the right to suspend or terminate access for violations."
+      },
+      "termination": {
+        "title": "Termination",
+        "body": "We may suspend or terminate your access at any time, with or without notice, if we believe you have violated these Terms or if we need to protect the service or other users."
+      },
+      "disclaimer": {
+        "title": "Disclaimers",
+        "body": "The service is provided “as is” and “as available” without warranties of any kind. We do not guarantee that the service will always be secure, error-free, or uninterrupted."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "body": "To the fullest extent permitted by law, we are not liable for any indirect, incidental, special, or consequential damages resulting from your use of the service."
+      },
+      "changes": {
+        "title": "Changes to These Terms",
+        "body": "We may update these Terms from time to time. When we do, we will revise the “Last updated” date above. Continued use of the service means you accept the updated Terms."
+      },
+      "law": {
+        "title": "Governing Law",
+        "body": "These Terms are governed by the laws of the country or region where the service is operated, without regard to conflict of law principles."
+      }
+    }
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: July 28, 2026",
+    "sections": {
+      "intro": {
+        "title": "Overview",
+        "body": "WawaConnect respects your privacy and is committed to protecting your personal data in accordance with applicable data protection laws, including the GDPR and Portuguese law."
+      },
+      "controller": {
+        "title": "Who We Are",
+        "body": "WawaConnect is an online game platform. For questions about this Privacy Policy or your personal data, you can contact us through the support or contact email provided on the website."
+      },
+      "data": {
+        "title": "Data We Collect",
+        "body": "We collect the information you provide when creating or using an account, including your email address, username, hashed password, avatar, Google login ID, 42 login ID, and gameplay-related data such as game stats. We also use cookies needed for authentication, preferences, and site functionality."
+      },
+      "use": {
+        "title": "How We Use Data",
+        "body": "We use your data to create and manage your account, authenticate you through email/password, Google, or 42 login, display your profile, keep track of your game progress and stats, and provide and improve the service. We do not store IP addresses for tracking or profiling."
+      },
+      "legalBasis": {
+        "title": "Legal Basis",
+        "body": "We process your data because it is necessary to provide the service you requested, to manage your account, and to maintain the functionality of the platform. Essential cookies are used only to keep the website working properly."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "body": "WawaConnect uses cookies to keep users signed in, support essential session functions, and remember relevant site preferences. We do not use cookies to collect unnecessary personal data or to share your activity with third parties."
+      },
+      "retention": {
+        "title": "Data Retention",
+        "body": "We keep your personal data for as long as your account remains active or as long as needed to provide the service, maintain game history, and comply with legal obligations. Since account deletion is not available yet, your data remains stored while the account exists."
+      },
+      "sharing": {
+        "title": "Sharing of Data",
+        "body": "We do not sell, rent, or share your personal data with third parties, except for the authentication services required to let you log in with Google or 42 and for the infrastructure needed to run the platform."
+      },
+      "rights": {
+        "title": "Your Rights",
+        "body": "Under applicable law, you may have rights to access or correct your personal data and to request information about how it is processed. You can contact us if your information is incorrect or if you want to exercise your privacy rights."
+      },
+      "security": {
+        "title": "Security",
+        "body": "We take reasonable technical and organizational measures to protect your data. Passwords are stored in hashed form and not in plain text."
+      },
+      "changes": {
+        "title": "Changes to This Policy",
+        "body": "We may update this Privacy Policy from time to time. If we make changes, we will update the \"Last updated\" date on this page."
+      }
+    }
+  },
+  "profile": {
+    "settings": "Settings",
+    "logout": "Log out"
+  }
+}

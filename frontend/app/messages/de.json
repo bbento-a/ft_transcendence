@@ -1,0 +1,131 @@
+{
+  "login": {
+    "title": "Anmelden",
+    "description": "Melde dich mit deinem Konto an, um zu spielen!",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Eintreten",
+    "orThrough": "oder anmelden über",
+    "noAccount": "Noch kein Konto? Konto erstellen ",
+    "here": "hier"
+  },
+  "footer": {
+    "terms": "Nutzungsbedingungen",
+    "privacyPolicy": "Datenschutzerklärung"
+  },
+  "createAcc": {
+    "title": "Konto erstellen",
+    "description": "Erstelle ein Konto und melde dich an, um zu spielen!",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Erstellen",
+    "orCreateThrough": "oder erstellen über",
+    "alreadyHaveAccount": "Bereits ein Konto? Anmelden ",
+    "here": "hier"
+  },
+  "terms": {
+    "title": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert: 27. Juli 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Akzeptanz der Bedingungen",
+        "body": "Durch den Zugriff auf diese Website und ihre Dienste oder deren Nutzung erklärst du dich mit diesen Nutzungsbedingungen einverstanden. Wenn du nicht einverstanden bist, darfst du den Dienst nicht nutzen."
+      },
+      "use": {
+        "title": "Nutzung des Dienstes",
+        "body": "Du verpflichtest dich, den Dienst nur für rechtmäßige Zwecke zu nutzen und dabei nicht die Rechte anderer zu verletzen, den Dienst nicht zu stören oder die Erfahrung anderer Nutzer zu beeinträchtigen."
+      },
+      "accounts": {
+        "title": "Konten",
+        "body": "Du bist dafür verantwortlich, die Vertraulichkeit deiner Zugangsdaten zu wahren und für sämtliche Aktivitäten über dein Konto. Bei der Kontoerstellung musst du genaue und vollständige Angaben machen."
+      },
+      "content": {
+        "title": "Nutzerinhalte",
+        "body": "Wenn du Inhalte einreichst, bleibst du dafür verantwortlich. Du gewährst uns eine nicht-exklusive, weltweite, gebührenfreie Lizenz, deine Inhalte zu verwenden, anzuzeigen und zu speichern, soweit dies für den Betrieb des Dienstes erforderlich ist."
+      },
+      "ip": {
+        "title": "Geistiges Eigentum",
+        "body": "Alle über den Dienst bereitgestellten Software-, Design-, Logo-, Text-, Grafik- und sonstigen Materialien gehören uns oder unseren Lizenzgebern und sind durch die geltenden Gesetze zum geistigen Eigentum geschützt."
+      },
+      "prohibited": {
+        "title": "Verbotenes Verhalten",
+        "body": "Du darfst nicht versuchen, den Dienst zu hacken, zurückzuentwickeln, Spam zu versenden, Daten zu scrapen, ihn zu missbrauchen oder anderweitig unsachgemäß zu nutzen. Wir behalten uns das Recht vor, den Zugang bei Verstößen zu sperren oder zu beenden."
+      },
+      "termination": {
+        "title": "Beendigung",
+        "body": "Wir können deinen Zugang jederzeit mit oder ohne Vorankündigung aussetzen oder beenden, wenn wir glauben, dass du gegen diese Bedingungen verstoßen hast oder wenn dies zum Schutz des Dienstes oder anderer Nutzer erforderlich ist."
+      },
+      "disclaimer": {
+        "title": "Haftungsausschlüsse",
+        "body": "Der Dienst wird „wie besehen“ und „wie verfügbar“ ohne jegliche Gewährleistungen bereitgestellt. Wir garantieren nicht, dass der Dienst immer sicher, fehlerfrei oder unterbrechungsfrei ist."
+      },
+      "liability": {
+        "title": "Haftungsbeschränkung",
+        "body": "Soweit gesetzlich zulässig, haften wir nicht für indirekte, beiläufige, besondere oder Folgeschäden, die aus deiner Nutzung des Dienstes entstehen."
+      },
+      "changes": {
+        "title": "Änderungen dieser Bedingungen",
+        "body": "Wir können diese Bedingungen von Zeit zu Zeit aktualisieren. Wenn wir dies tun, ändern wir das Datum „Zuletzt aktualisiert“ oben. Die fortgesetzte Nutzung des Dienstes bedeutet, dass du die aktualisierten Bedingungen akzeptierst."
+      },
+      "law": {
+        "title": "Anwendbares Recht",
+        "body": "Diese Bedingungen unterliegen den Gesetzen des Landes oder der Region, in dem bzw. der der Dienst betrieben wird, ohne Berücksichtigung von Kollisionsnormen."
+      }
+    }
+  },
+  "privacyPolicy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert: 28. Juli 2026",
+    "sections": {
+      "intro": {
+        "title": "Überblick",
+        "body": "WawaConnect respektiert deine Privatsphäre und verpflichtet sich, deine personenbezogenen Daten gemäß den geltenden Datenschutzgesetzen, einschließlich der DSGVO und portugiesischem Recht, zu schützen."
+      },
+      "controller": {
+        "title": "Wer wir sind",
+        "body": "WawaConnect ist eine Online-Spieleplattform. Bei Fragen zu dieser Datenschutzerklärung oder zu deinen personenbezogenen Daten kannst du uns über die auf der Website angegebene Support- oder Kontakt-E-Mail erreichen."
+      },
+      "data": {
+        "title": "Daten, die wir erfassen",
+        "body": "Wir erfassen die Informationen, die du bei der Erstellung oder Nutzung eines Kontos angibst, einschließlich deiner E-Mail-Adresse, deines Benutzernamens, deines gehashten Passworts, deines Avatars, deiner Google-Login-ID, deiner 42-Login-ID und spielbezogener Daten wie Statistiken. Wir verwenden außerdem Cookies, die für Authentifizierung, Einstellungen und die Funktionalität der Website erforderlich sind."
+      },
+      "use": {
+        "title": "Wie wir Daten verwenden",
+        "body": "Wir verwenden deine Daten, um dein Konto zu erstellen und zu verwalten, dich per E-Mail/Passwort, Google oder 42 zu authentifizieren, dein Profil anzuzeigen, deinen Spielverlauf und deine Statistiken zu speichern und den Dienst bereitzustellen und zu verbessern. Wir speichern keine IP-Adressen zu Tracking- oder Profiling-Zwecken."
+      },
+      "legalBasis": {
+        "title": "Rechtsgrundlage",
+        "body": "Wir verarbeiten deine Daten, weil dies erforderlich ist, um den von dir angeforderten Dienst bereitzustellen, dein Konto zu verwalten und die Funktionalität der Plattform sicherzustellen. Notwendige Cookies werden nur verwendet, damit die Website ordnungsgemäß funktioniert."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "body": "WawaConnect verwendet Cookies, um Nutzer angemeldet zu halten, wesentliche Sitzungsfunktionen zu unterstützen und relevante Website-Einstellungen zu speichern. Wir verwenden keine Cookies, um unnötige personenbezogene Daten zu sammeln oder deine Aktivitäten mit Dritten zu teilen."
+      },
+      "retention": {
+        "title": "Datenspeicherung",
+        "body": "Wir speichern deine personenbezogenen Daten so lange, wie dein Konto aktiv ist oder wie es erforderlich ist, um den Dienst bereitzustellen, die Spielhistorie zu führen und rechtliche Verpflichtungen zu erfüllen. Da das Löschen von Konten derzeit nicht möglich ist, bleiben deine Daten gespeichert, solange das Konto besteht."
+      },
+      "sharing": {
+        "title": "Weitergabe von Daten",
+        "body": "Wir verkaufen, vermieten oder teilen deine personenbezogenen Daten nicht mit Dritten, außer den Authentifizierungsdiensten, die für die Anmeldung über Google oder 42 erforderlich sind, sowie der Infrastruktur, die zum Betrieb der Plattform notwendig ist."
+      },
+      "rights": {
+        "title": "Deine Rechte",
+        "body": "Nach geltendem Recht hast du möglicherweise das Recht, auf deine personenbezogenen Daten zuzugreifen, sie zu berichtigen oder Informationen darüber anzufordern, wie sie verarbeitet werden. Du kannst uns kontaktieren, wenn deine Daten falsch sind oder wenn du deine Datenschutzrechte ausüben möchtest."
+      },
+      "security": {
+        "title": "Sicherheit",
+        "body": "Wir ergreifen angemessene technische und organisatorische Maßnahmen, um deine Daten zu schützen. Passwörter werden in gehashter Form und nicht im Klartext gespeichert."
+      },
+      "changes": {
+        "title": "Änderungen an dieser Richtlinie",
+        "body": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren. Wenn wir Änderungen vornehmen, aktualisieren wir das Datum „Zuletzt aktualisiert“ auf dieser Seite."
+      }
+    }
+  },
+  "profile": {
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  }
+}
