@@ -74,7 +74,7 @@ export default function NavBar()
 								<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/profile.svg"/>
 							</button>
 					}
-					{logged && profMenu && <ProfileMenu ref={profMenuRef}></ProfileMenu>}
+					{logged && profMenu && <ProfileMenu ref={profMenuRef} onClose={() => setOpenMenu(null)}></ProfileMenu>}
 
 			</div>
 		</div>
