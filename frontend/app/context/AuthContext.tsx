@@ -17,14 +17,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
-    // se 200, guarda o user; se 401 (sem cookie valido) fica null
+    // se 200, guarda o user; se 401/403 (sessao invalida) fica null.
+	// noutros erros (429 do throttle, 5xx, rede)
+	// limpar o user aqui escondia o icone de perfil e esvaziava as paginas
+	// protegidas so porque um pedido falhou temporariamente.
 	// nunca atira: quem chama isto faz await antes de navegar, e uma excecao
 	// deixava o ecra preso no estado de submit
 	const refresh = async () => {
+		let res: Response;
 		try {
-			const res = await fetch('/api/auth/me');
-			setUser(res.ok ? await res.json() : null);
+			res = await fetch('/api/auth/me');
 		} catch {
+			return; // rede em baixo, mantemos o que tinhamos
+		}
+
+		if (res.ok) {
+			try {
+				setUser(await res.json());
+			} catch {
+				setUser(null); // corpo vazio/invalido, tratamos como sem sessao
+			}
+			return;
+		}
+
+		if (res.status === 401 || res.status === 403) {
 			setUser(null);
 		}
 	};

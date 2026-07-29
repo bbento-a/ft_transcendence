@@ -46,6 +46,9 @@ export default function create_acc() {
 			{
 				await refresh();//Vai guardar o user
 				router.push("/gamerooms");
+				// limpa o router cache do estado de convidado; sem isto paginas
+				// prefetched antes do registo (ex.: "/") continuavam a mostrar login
+				router.refresh();
 				return;//sai com o botao ainda desativado, a pagina esta a mudar
 			}
 			setErrors(result.errors);

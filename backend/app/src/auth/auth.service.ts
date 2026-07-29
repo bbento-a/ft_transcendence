@@ -191,7 +191,10 @@ export class AuthService {
       },
     });
 
-    if (!user) return null;
+    // Token assinado por nos mas o user ja nao existe na BD (ex.: base de dados
+    // recriada). Devolver null dava 200 vazio e o frontend ficava numa sessao
+    // fantasma; 401 deixa o cliente limpar o cookie e voltar ao login.
+    if (!user) throw new UnauthorizedException('Session user no longer exists.');
 
     // Nunca devolver o hash; so dizemos ao frontend se existe password local
     // para ele poder desativar a mudanca de password nas contas so-OAuth.

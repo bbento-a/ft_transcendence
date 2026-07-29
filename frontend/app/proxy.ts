@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { isValidSessionToken } from "./app/lib/session";
 
 const GUEST_ONLY_ROUTES = ["/", "/log_in", "/create_account"];
 const PUBLIC_ROUTES = ["/terms", "/privacy"];
 
-async function hasValidSession(request: NextRequest): Promise<boolean> {
-	const token = request.cookies.get("access_token")?.value;
-	if (!token) return false;
-
-	const secret = process.env.JWT_SECRET;
-	if (!secret) {
-		throw new Error("JWT_SECRET não está definida no .env");
-	}
-
-	try {
-		await jwtVerify(token, new TextEncoder().encode(secret));
-		return true;
-	} catch {
-		return false;
-	}
+function hasValidSession(request: NextRequest): Promise<boolean> {
+	return isValidSessionToken(request.cookies.get("access_token")?.value);
 }
 
 export async function proxy(request: NextRequest) {

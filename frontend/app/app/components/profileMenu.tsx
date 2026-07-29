@@ -16,6 +16,9 @@ export default function profileMenu({ ref, onClose }: { ref?: Ref<HTMLDivElement
 	const handleLogout = async () => {
 		await logout();
 		router.push("/log_in");
+		// limpa o router cache do estado autenticado, senao paginas protegidas
+		// prefetched durante a sessao ainda apareciam depois do logout
+		router.refresh();
 	}
 	const routerSettings = async () => {
 		onClose?.();
