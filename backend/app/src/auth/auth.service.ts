@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
@@ -213,36 +213,46 @@ export class AuthService {
       data.username = clean;
     }
 
-    if (dto.email) {
-      // Normalize email to avoid duplicate accounts differing only in case
-      const email = dto.email.toLowerCase();
-
-      const taken = await this.prisma.user.findUnique({ where: { email } });
-      if (taken && taken.id !== userId) {
-        throw new ConflictException('Email already in use.');
-      }
-
-      data.email = email;
-    }
-
-    if (dto.newPassword) {
-      if (!dto.currentPassword) {
-        throw new BadRequestException('Current password is required to set a new password.');
-      }
-
+    if (dto.email || dto.newPassword) {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-      // OAuth-only accounts have no password to verify against
-      if (!user?.password) {
-        throw new UnauthorizedException('Invalid credentials.');
+      // Contas so-OAuth nao tem password local: email e password sao geridos
+      // pelo provider (Google/42), por isso nao deixamos mudar nenhum dos dois aqui.
+      const isOAuthOnly = !user?.password;
+
+      if (dto.email) {
+        if (isOAuthOnly) {
+          throw new ForbiddenException('Email is managed by your login provider.');
+        }
+
+        // Normalize email to avoid duplicate accounts differing only in case
+        const email = dto.email.toLowerCase();
+
+        const taken = await this.prisma.user.findUnique({ where: { email } });
+        if (taken && taken.id !== userId) {
+          throw new ConflictException('Email already in use.');
+        }
+
+        data.email = email;
       }
 
-      const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
-      if (!isCurrentPasswordValid) {
-        throw new UnauthorizedException('Invalid credentials.');
-      }
+      if (dto.newPassword) {
+        if (!dto.currentPassword) {
+          throw new BadRequestException('Current password is required to set a new password.');
+        }
 
-      data.password = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+        // OAuth-only accounts have no password to verify against
+        if (isOAuthOnly) {
+          throw new UnauthorizedException('Invalid credentials.');
+        }
+
+        const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user!.password!);
+        if (!isCurrentPasswordValid) {
+          throw new UnauthorizedException('Invalid credentials.');
+        }
+
+        data.password = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+      }
     }
 
     if (dto.avatarUrl) {

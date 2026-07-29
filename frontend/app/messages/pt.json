@@ -145,6 +145,6 @@
     "confirmpasswordplaceholder": "Confirmar nova palavra-passe",
     "success": "Perfil atualizado com sucesso.",
     "passwordmismatch": "As palavras-passe não coincidem.",
-    "oauthpasswordnote": "A tua palavra-passe é gerida pelo teu fornecedor de login (Google/42) e não pode ser alterada aqui."
+    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
   }
 }

@@ -145,6 +145,6 @@
     "confirmpasswordplaceholder": "Confirm New Password",
     "success": "Profile updated successfully.",
     "passwordmismatch": "Passwords do not match.",
-    "oauthpasswordnote": "Your password is managed by your login provider (Google/42) and can't be changed here."
+    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here."
   }
 }

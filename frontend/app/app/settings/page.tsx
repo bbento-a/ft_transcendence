@@ -12,8 +12,9 @@ export default function page() {
 
 	const { user, refresh } = useUser();
 
-	// Contas so-OAuth (Google/42) nao tem password local, entao nao ha o que mudar
-	const canChangePassword = !!user?.hasPassword;
+	// Contas so-OAuth (Google/42) nao tem password local; email e password
+	// sao geridos pelo provider, entao so deixamos mudar o username
+	const isLocalAccount = !!user?.hasPassword;
 
 	const [form, setForm] = useState({
 		username: "", email: "", currentPassword: "", newPassword: "", confirmPassword: ""
@@ -103,10 +104,10 @@ export default function page() {
 					<form className={styles.formGroup} onSubmit={postData}>
 						<label className={styles.formDescription} htmlFor="username">{t("changeusername")}</label>
 						<input className={styles.formField} id="username" type="text" name="username" placeholder={t("newusername")} autoComplete="username" value={form.username} onChange={handleInputs}/>
-						<label className={styles.formDescription} htmlFor="email">{t("changeemail")}</label>
-						<input className={styles.formField} id="email" type="email" name="email" placeholder={t("newemail")} autoComplete="email" value={form.email} onChange={handleInputs}/>
-						{canChangePassword ? (
+						{isLocalAccount ? (
 							<>
+								<label className={styles.formDescription} htmlFor="email">{t("changeemail")}</label>
+								<input className={styles.formField} id="email" type="email" name="email" placeholder={t("newemail")} autoComplete="email" value={form.email} onChange={handleInputs}/>
 								<label className={styles.formDescription} htmlFor="currentPassword">{t("currentpassword")}</label>
 								<input className={styles.formField} id="currentPassword" type="password" name="currentPassword" placeholder={t("currentpasswordplaceholder")} autoComplete="current-password" value={form.currentPassword} onChange={handleInputs}/>
 								<label className={styles.formDescription} htmlFor="newPassword">{t("changepassword")}</label>
@@ -115,7 +116,7 @@ export default function page() {
 								<input className={styles.formField} id="confirmPassword" type="password" name="confirmPassword" placeholder={t("confirmpasswordplaceholder")} autoComplete="new-password" value={form.confirmPassword} onChange={handleInputs}/>
 							</>
 						) : (
-							<div className={styles.oauthNote}>{t("oauthpasswordnote")}</div>
+							<div className={styles.oauthNote}>{t("oauthaccountnote")}</div>
 						)}
 							<button className={styles.confirmButton} type="submit" disabled={isSubmitting}>
 								<div className={styles.buttonText}>{t("save")}</div>
