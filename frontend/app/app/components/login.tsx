@@ -7,7 +7,7 @@ import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
 import { useUser } from "@/context/AuthContext";
-
+import { useTranslations } from "next-intl";
 
 const loginGoogle = () => {
     window.location.assign("/api/auth/google");
@@ -18,6 +18,7 @@ const login42 = () => {
 };
 
 export default function login() {
+	const t = useTranslations("login");
 
 	const [user,setUser] = useState({
 		email:"",password:""
@@ -67,14 +68,14 @@ export default function login() {
   return (
 	<div className={styles.logInWidget}>
 		<div className={styles.mainText}>
-			<div className={styles.title}>Log in</div>
-			<div className={styles.description}>Enter with your account to start playing!</div>
+			<div className={styles.title}>{t("title")}</div>
+			<div className={styles.description}>{t("description")}</div>
 		</div>
 		<div>
 			<form action="" method="Post" className={styles.loginForm} onSubmit={postData}>
-				<input className={styles.button} type="email" name="email" placeholder="Email" autoComplete="email" value={user.email} onChange={handleInputs}/>
-				<input className={styles.button} type="password" name="password" placeholder="Password" autoComplete="current-password" value={user.password} onChange={handleInputs}/>
-				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{"Log in"}</button>
+				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="current-password" value={user.password} onChange={handleInputs}/>
+				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{t("submit")}</button>
 			</form>
 		</div>
 		<div className={styles.errorSpace}>
@@ -86,7 +87,7 @@ export default function login() {
 		</div>
 		<div className={styles.authWrapper}>
 			<div className={styles.authText}>
-				<div className={styles.text}>or log through</div>
+				<div className={styles.text}>{t("orThrough")}</div>
 			</div>
 			<div className={styles.auths}>
 				<button className={styles.buttonAuth} type="button" onClick={login42}>
@@ -97,7 +98,7 @@ export default function login() {
 				</button>
 			</div>
 			<div className={styles.authText}>
-				<div className={styles.text}>No account yet? Create an account <Link href="/create_account" color="#ffffff"><u><b>here</b></u></Link></div>
+				<div className={styles.text}>{t("noAccount")}<Link href="/create_account" color="#ffffff"><u><b>{t("here")}</b></u></Link></div>
 			</div>
 		</div>
 	</div>
