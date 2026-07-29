@@ -11,29 +11,36 @@ export default function page() {
 					<div className={styles.buttonText}>Change Profile Image</div>
 				</button>
 			</div>
+
 			<div className={styles.infoGroup}>
-				<div className={styles.fieldDescription}>Username:
-					  <div className={styles.fieldInfo}>Wawazada1234</div>
+				<div className={styles.info}>
+					<div className={styles.fieldDescription}>Username:
+						<div className={styles.fieldInfo}>Wawazada1234</div>
+					</div>
 				</div>
-				<div className={styles.fieldDescription}>Email:
-					<div className={styles.fieldInfo}>Wawawawawawaawawa@wawaaa.com</div>
+				<div className={styles.info}>
+					<div className={styles.fieldDescription}>Email:
+						<div className={styles.fieldInfo}>Wawawawawawaawawa@wawaaa.com</div>
+					</div>
 				</div>
 			</div>
 		</div>
 			<div className={styles.pageGroup}>
-				<form action="">
-					<div className={styles.formDescription}>Change Username:</div>
-					<input className={styles.formField} type="user" placeholder="New Username"/>
-					<div className={styles.formDescription}>Change Email:</div>
-					<input className={styles.formField} type="email" placeholder="New Email"/>
-					<div className={styles.formDescription}>New Password:</div>
-					<input className={styles.formField} type="email" placeholder="New Password"/>
-					<div className={styles.formDescription}>Confirm Password:</div>
-					<input className={styles.formField} type="email" placeholder="Confirm Password"/>
-						<button className={styles.confirmButton} type="submit">
-							<div className={styles.buttonText}>Save Changes</div>
-						</button>
-				</form>
+				<div className={styles.formGroup}>
+					<form action=""className={styles.formGroup}>
+						<div className={styles.formDescription}>Change Username:</div>
+						<input className={styles.formField} type="user" placeholder="New Username"/>
+						<div className={styles.formDescription}>Change Email:</div>
+						<input className={styles.formField} type="email" placeholder="New Email"/>
+						<div className={styles.formDescription}>New Password:</div>
+						<input className={styles.formField} type="email" placeholder="New Password"/>
+						<div className={styles.formDescription}>Confirm Password:</div>
+						<input className={styles.formField} type="email" placeholder="Confirm Password"/>
+							<button className={styles.confirmButton} type="submit">
+								<div className={styles.buttonText}>Save Changes</div>
+							</button>
+					</form>
+				</div>
 			</div>
 		</div>
   )
