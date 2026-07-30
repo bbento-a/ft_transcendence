@@ -188,3 +188,38 @@
 	opacity: 0.7;
 	margin: 0 0 5px 0;
 }
+.buttonWrapper {
+	position: fixed;
+	top: 80px;
+	left: 20px;
+	padding: 5px;
+	z-index: 3;
+}
+.gameroomIcon {
+	width: 70px;
+	height: 70px;
+	position: relative;
+	object-fit: cover;	
+}
+@media (max-width: 1000px) {
+	.pageWrapper{
+		flex-direction: column;
+	}
+	.wrapperScroll {
+		width: auto;
+		height: 100%;
+		align-self: center;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10px;
+		gap: 20px;
+		overflow-y: auto;
+		z-index: 3;
+		scrollbar-width: none;
+	}
+	.wrapperScroll::-webkit-scrollbar{
+		display: none;
+	}
+}

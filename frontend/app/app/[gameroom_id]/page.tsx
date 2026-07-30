@@ -99,7 +99,7 @@ export default function Page() {
 			<div className={styles.playerText}>Player2</div>
 		</div>
 		<div className={styles.buttonWrapper}>
-			<button onClick={() => {router.push("/gamerooms")}}>
+			<button onClick={() => {router.back()}}>
 				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
