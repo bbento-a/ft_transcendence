@@ -66,6 +66,13 @@
 	justify-content: center;
 	padding: 10px;
 	flex-shrink: 0;
+	transition: background-color 0.2s ease;
+}
+.button:hover {
+  background-color: #c4c4c4;
+}
+.button:active {
+  background-color: #898989;
 }
 .buttonDark {
 	width: 140px;
@@ -80,4 +87,11 @@
 	padding: 10px;
 	flex-shrink: 0;
 	color: #dafdd4;
+	transition: background-color 0.2s ease;
+}
+.buttonDark:hover {
+  background-color: #2f472e;
+}
+.buttonDark:active {
+  background-color: #233522;
 }

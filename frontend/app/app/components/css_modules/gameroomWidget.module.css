@@ -77,6 +77,13 @@
 	min-height: 50px;
 	text-align: left;
 	color: #dafdd4;
+	transition: background-color 0.2s ease;
+}
+.buttonDark:hover {
+  background-color: #2f472e;
+}
+.buttonDark:active {
+  background-color: #233522;
 }
 .text {
 	position: relative;

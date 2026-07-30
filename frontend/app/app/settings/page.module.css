@@ -156,6 +156,14 @@
 	padding: 10px;
 	color: #dafdd4;
 }
+.profilePic {
+  width: 250px;
+  height: 250px;
+  border: 16px solid #426340;
+  border-radius: 50%;
+  object-fit: cover;
+  box-sizing: border-box;
+}
 .errorWrapper {
 	position: relative;
 	display: flex;

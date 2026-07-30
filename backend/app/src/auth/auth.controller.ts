@@ -12,6 +12,15 @@ export type OAuthRequest = Request & {
   user?: OAuthProfile;
 };
 
+type JwtUser = {
+	id: string;
+	username: string;
+};
+
+type AuthRequest = Request & {
+	user: JwtUser;
+};
+
 // Where the browser lands after a successful OAuth login.
 const OAUTH_SUCCESS_REDIRECT = '/gamerooms';
 

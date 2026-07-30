@@ -2,7 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type User = { id: string; username: string; email: string; hasPassword: boolean };
+type User = {
+	id: string;
+	username: string;
+	email: string;
+	avatarUrl: string | null;
+	hasPassword: boolean;
+};
 
 type UserContextType = {
 	user: User | null;

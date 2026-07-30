@@ -80,7 +80,13 @@ export default function page() {
   	<div className={styles.pageWrapper}>
 		<div className={styles.pageGroup}>
         	<div className={styles.profileGroup}>
-			    <Image className={styles.profileIcon} width={150} height={150} sizes="100vw" alt="" src="/profileDark.svg"></Image>
+			    <img
+					className={styles.profilePic}
+					src={user?.avatarUrl || "/profile.svg"}
+					alt="Profile picture"
+					width={250}
+					height={250}
+				/>
 				<button className={styles.buttonProfile}>
 					<div className={styles.buttonText}>{t("changepfp")}</div>
 				</button>

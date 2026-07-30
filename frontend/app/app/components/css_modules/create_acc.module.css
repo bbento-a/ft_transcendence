@@ -61,6 +61,13 @@
 	align-items: center;
 	padding: 7px;
 	font-weight: 500;
+	transition: background-color 0.2s ease;
+}
+.button:hover {
+  background-color: #c4c4c4;
+}
+.button:active {
+  background-color: #898989;
 }
 .text {
 	position: relative;
@@ -81,6 +88,13 @@
 	max-height: 75px;
 	font-weight: 600;
 	color: #dafdd4;
+	transition: background-color 0.2s ease;
+}
+.buttonDark:hover {
+  background-color: #2f472e;
+}
+.buttonDark:active {
+  background-color: #233522;
 }
 .authText {
 	display: flex;
@@ -130,4 +144,11 @@
 	align-items: center;
 	justify-content: center;
 	padding: 10px;
+	transition: background-color 0.2s ease;
+}
+.buttonAuth:hover {
+  background-color: #c4c4c4;
+}
+.buttonAuth:active {
+  background-color: #898989;
 }
