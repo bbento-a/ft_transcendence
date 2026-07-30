@@ -6,6 +6,7 @@ import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
+import { EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, firstEmptyField, pickError } from "../lib/formErrors";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +18,20 @@ const login42 = () => {
     window.location.assign("/api/auth/42");
 };
 
+/*
+Campos vazios primeiro, depois o formato de cada campo, e o "Invalid Credentials"
+em ultimo por ser o unico que sobra quando os campos estao bem preenchidos.
+Nao ha entrada para "email nao existe": o backend responde "Invalid Credentials"
+tanto para email inexistente como para password errada, de proposito.
+*/
+const ERROR_ORDER: RegExp[] = [
+	/^Email cannot be empty/,
+	/^Password cannot be empty/,
+	/email address/,
+	/^Password must/,
+	/^Invalid Credentials/,
+];
+
 export default function login() {
 	const t = useTranslations("login");
 
@@ -24,7 +39,8 @@ export default function login() {
 		email:"",password:""
 	})
 
-	const [errors,setErrors] = useState<string[]>([]);
+	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
+	const [error,setError] = useState<string | null>(null);
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useRouter();
@@ -34,7 +50,7 @@ export default function login() {
 		const name = e.currentTarget.name;
 		const value = e.currentTarget.value;
 
-		setErrors([]);
+		setError(null);
 		setUser({...user,[name]:value});
 	}
 
@@ -44,7 +60,18 @@ export default function login() {
 		// sem isto, spammar Enter disparava um pedido por cada submit em vez de esperar o anterior acabar
 		if (isSubmitting)
 			return;
-		setErrors([]);
+		setError(null);
+
+		// campos vazios nem chegam a ir ao backend, mostra logo o primeiro em falta
+		const missing = firstEmptyField([
+			{ value: user.email, message: EMPTY_EMAIL },
+			{ value: user.password, message: EMPTY_PASSWORD, trim: false },
+		]);
+		if (missing)
+		{
+			setError(missing);
+			return;
+		}
 		setIsSubmitting(true);
 
 		try {
@@ -59,9 +86,9 @@ export default function login() {
 				router.refresh();
 				return;//sai com o botao ainda desativado, a pagina esta a mudar
 			}
-			setErrors(result.errors);
+			setError(pickError(result.errors, ERROR_ORDER));
 		} catch {
-			setErrors(["Something went wrong, please try again."]);
+			setError(GENERIC_ERROR);
 		}
 		//so chega aqui se o login falhou, ent o botao volta a ficar clicavel
 		setIsSubmitting(false);
@@ -82,9 +109,9 @@ export default function login() {
 			</form>
 		</div>
 		<div className={styles.errorSpace}>
-		{errors.length > 0 &&
+		{error &&
 			<div className={styles.errorWrapper}>
-				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
+				<div className={styles.errorText}>{error}</div>
 			</div>
 		}
 		</div>
