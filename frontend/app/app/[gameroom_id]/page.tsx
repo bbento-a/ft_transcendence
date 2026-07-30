@@ -18,9 +18,14 @@ export default function Page() {
 	const router = useRouter();
 	const params = useParams();
 	const {
-		state, status, connected, inRoom, roomUnavailable, forfeitSecondsLeft,
+		state, status, connected, inRoom, roomUnavailable, forfeitSecondsLeft, myName,
 		playAI, enterRoom, leaveRoom, play,
 	} = useGameSocket();
+
+	// Once a game is running the server tells us both names. Before that the only
+	// person on this page is the host waiting for someone, so that side is us.
+	const leftName = state?.player1Name ?? myName ?? "Player1";
+	const rightName = state?.player2Name ?? "Player2";
 
 	const roomId = typeof params?.gameroom_id === "string" ? params.gameroom_id : null;
 
@@ -85,7 +90,7 @@ export default function Page() {
 	return (
 	<div className={styles.pageWrapper}>
 		<div className={styles.sides}>
-			<div className={styles.playerText}>{state?.player1Name ?? "Player1"}</div>
+			<div className={styles.playerText}>{leftName}</div>
 
 		</div>
 		<div className={styles.container}>
@@ -117,7 +122,7 @@ export default function Page() {
 			</button> */}
 		</div>
 		<div className={styles.sides}>
-			<div className={styles.playerText}>{state?.player2Name ?? "Player2"}</div>
+			<div className={styles.playerText}>{rightName}</div>
 		</div>
 		<div className={styles.buttonWrapper}>
 			<button onClick={handleBack}>

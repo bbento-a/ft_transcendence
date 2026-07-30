@@ -27,6 +27,9 @@ export function useGameSocket() {
   const [connected, setConnected] = useState(false);
   // Our own id, to know if we are player 1 or 2 (which drives "is it my turn").
   const [myId, setMyId] = useState<string | null>(null);
+  // Our own name. While a host waits there is no game yet and so no names from
+  // the server, but the person looking at that empty board is always the host.
+  const [myName, setMyName] = useState<string | null>(null);
 
   // Lobby: every open room, refreshed by the server whenever one changes.
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
@@ -48,7 +51,11 @@ export function useGameSocket() {
     // Who are we? The board only carries player ids, so we compare against ours.
     fetch("/api/auth/me", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setMyId(d.id))
+      .then((d) => {
+        if (!d) return;
+        setMyId(d.id);
+        setMyName(d.username);
+      })
       .catch(() => {});
 
     // No URL => same origin; nginx proxies /socket.io/. withCredentials sends
@@ -190,7 +197,7 @@ export function useGameSocket() {
   );
 
   return {
-    state, status, connected, isMyTurn, myPlayerNumber, canPlay, play, playAI,
+    state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
     rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeitSecondsLeft,
     getRooms, createRoom, enterRoom, leaveRoom,
     ROWS, COLS,
