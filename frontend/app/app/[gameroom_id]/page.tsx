@@ -62,10 +62,9 @@ export default function Page() {
 		if (state.isGameOver) {
 			if (state.winnerId === null)
 				return "Draw!";
-			// map the winner id to the colour (player1 = Red, player2 = Yellow)
-			return `Winner: ${state.winnerId === state.player1Id ? "Red" : "Yellow"}!`;
+			return `Winner: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
 		}
-		return `${state.currentPlayer === 1 ? "Red" : "Yellow"}'s Turn`;
+		return `${state.currentPlayer === 1 ? state.player1Name : state.player2Name}'s Turn`;
 	}
 
 	function turnImage(){
@@ -82,7 +81,7 @@ export default function Page() {
 	return (
 	<div className={styles.pageWrapper}>
 		<div className={styles.sides}>
-			<div className={styles.playerText}>Player1</div>
+			<div className={styles.playerText}>{state?.player1Name ?? "Player1"}</div>
 
 		</div>
 		<div className={styles.container}>
@@ -114,7 +113,7 @@ export default function Page() {
 			</button> */}
 		</div>
 		<div className={styles.sides}>
-			<div className={styles.playerText}>Player2</div>
+			<div className={styles.playerText}>{state?.player2Name ?? "Player2"}</div>
 		</div>
 		<div className={styles.buttonWrapper}>
 			<button onClick={handleBack}>

@@ -7,7 +7,9 @@ export interface GameState {
   roomId: string;
   board: number[][];      // 6 rows x 7 cols. 0 = empty, 1 = player1 (red), 2 = player2 (yellow)
   player1Id: string;
+  player1Name: string;    // shown on the left side of the board
   player2Id: string;      // 'AI' when playing the bot
+  player2Name: string;    // 'Bot' when playing the bot
   currentPlayer: number;  // 1 or 2 — whose turn it is
   isGameOver: boolean;
   winnerId: string | null;

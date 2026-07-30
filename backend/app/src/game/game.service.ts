@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GameState } from './game.types';
+import { GamePlayer, GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
@@ -22,13 +22,15 @@ export class GameService
     return Array.from({ length: 6 }, () => Array(7).fill(0));
   }
 
-  InitNewGame(roomId: string ,player1Id: string ,player2Id: string): GameState {
+  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer): GameState {
     const newGame: GameState = {
       board: this.createEmptyBoard(),
       roomId: roomId,
-      player1Id: player1Id,
-      player2Id: player2Id,
-      currentPlayer: 1, // player 1 vai começar sempre 
+      player1Id: player1.id,
+      player1Name: player1.name,
+      player2Id: player2.id,
+      player2Name: player2.name,
+      currentPlayer: 1, // player 1 vai começar sempre
       isGameOver:  false,
       winnerId: null,
     };

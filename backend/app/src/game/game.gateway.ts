@@ -22,6 +22,9 @@ const HOST_RECONNECT_GRACE_MS = 15_000;
 
 const AI_PLAYER_ID = 'AI';
 
+// Shown on the board's side panel, matching the "Play vs bot" wording.
+const AI_PLAYER_NAME = 'Bot';
+
 @WebSocketGateway({ cors: true })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -253,7 +256,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     room.guestName = username;
     room.status = 'playing';
 
-    const state = this.gameService.InitNewGame(room.id, room.hostId, userId);
+    const state = this.gameService.InitNewGame(
+      room.id,
+      { id: room.hostId, name: room.hostName },
+      { id: userId, name: username },
+    );
     client.join(room.id);
 
     this.server.to(room.id).emit('MatchFound', {
@@ -299,7 +306,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const roomId = `room-${this.roomCounter++}`;
-    const state = this.gameService.InitNewGame(roomId, userId, AI_PLAYER_ID);
+    const state = this.gameService.InitNewGame(
+      roomId,
+      { id: userId, name: client.data.username },
+      { id: AI_PLAYER_ID, name: AI_PLAYER_NAME },
+    );
     client.join(roomId);
 
     client.emit('MatchFound', {
