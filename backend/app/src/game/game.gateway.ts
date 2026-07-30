@@ -28,12 +28,19 @@ private spectators = new Set<string>();
   //Room Counter bom para manter track delas e dar lhes nomes
   private RoomCounter = 1;
 
+  //Tempo minimo que a IA "pensa" antes de jogar para a jogada nao ser instantanea
+  private static readonly AI_THINK_TIME_MS = 1000 * 1.3;
+
   //
   constructor(
     private readonly gameService: GameService,
     private readonly jwtService: JwtService,
   ){}
 
+
+  private sleep(ms: number): Promise<void>{
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
   private async authenticateSocket(client: Socket): Promise<string | null>{
     const rawCookie = client.handshake.headers.cookie;
@@ -204,6 +211,9 @@ async handleMove(
     else if(updatedState.player2Id === 'AI' && updatedState.currentPlayer === 2)
     {
       //Jogo continua e agora e a vez da IA jogar
+      //Espera antes de jogar para dar tempo ao jogador de respirar (enquanto isto corre a vez ainda e da IA, logo o jogador nao consegue jogar)
+      await this.sleep(GameGateway.AI_THINK_TIME_MS);
+
       const afterAIMove = this.gameService.PlayerAIMove(data.roomId);
 
       if(afterAIMove)
