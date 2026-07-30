@@ -41,18 +41,20 @@
 	font-weight: 600;
 	text-shadow: 0px 0px 10px #0a1b01;
 }
-.reset{
+.rematch{
 	padding: 10px 24px;
 	font-size: 16px;
 	font-weight: bold;
 	color: white;
-	background-color: navy;
+	background-color: #426340;
 	border: none;
 	border-radius: 8px;
 	cursor: pointer;
+	border: 1px solid rgb(10, 27, 1);
+	box-shadow: 0px 0px 4px black;
 }
-.reset:hover{
-	background-color: #001a66;
+.rematch:hover{
+	background-color: #243119;
 }
 
 .board{
@@ -106,6 +108,16 @@
 	height: auto;
 	position: relative;
 	object-fit: cover;	
+}
+.popUpWrapper{
+	position: absolute;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	
 }
 
 @media (max-width: 1190px) {

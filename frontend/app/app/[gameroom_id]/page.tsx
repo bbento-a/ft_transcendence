@@ -1,9 +1,11 @@
 "use client";
 import styles from "./page.module.css"
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
+
+import ExitPopUp from "../components/exitPopUp";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -17,6 +19,7 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	const router = useRouter();
 	const params = useParams();
+	const [togglePopUp, setTogglePopUp] = useState(false);
 	const { state, status, connected, playAI, findMatch, play } = useGameSocket();
 
 	// Start the game once connected. The route segment carries the mode:
@@ -67,7 +70,6 @@ export default function Page() {
 	<div className={styles.pageWrapper}>
 		<div className={styles.sides}>
 			<div className={styles.playerText}>Player1</div>
-
 		</div>
 		<div className={styles.container}>
 			<div className={styles.status}>
@@ -88,9 +90,9 @@ export default function Page() {
 					))
 				)}
 			</div>
-{/* 
-			<button className={styles.reset} onClick={resetGame()}>
-				Restart
+
+			{/* <button className={styles.rematch} onClick={resetGame()}>
+				Rematch
 			</button> */}
 		</div>
 		<div className={styles.sides}>
@@ -101,6 +103,12 @@ export default function Page() {
 				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
+		{
+			togglePopUp && 
+			<div className={styles.popUpWrapper}>
+				<ExitPopUp></ExitPopUp>
+			</div>
+		}
 	</div>
 	)
 }
