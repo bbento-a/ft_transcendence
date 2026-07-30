@@ -61,11 +61,37 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.data.userId = user.id;
     client.data.username = user.username;
     client.join(user.id); // personal channel, used to reach a user directly
+
+    // Still tied to a room (closed the tab, lost the network, crashed)? Point the
+    // lobby straight back at it, instead of leaving the player looking at their
+    // own game in the list with a "Spectate" button on it.
+    const roomId = this.findResumableRoom(user.id);
+    if (roomId) client.emit('resumeRoom', { roomId });
   }
 
-  handleDisconnect(client: Socket) {
+  // Where this user belongs right now: a lobby room they are host or guest of,
+  // or a private game vs the bot. Null when they are free to browse.
+  private findResumableRoom(userId: string): string | null {
+    const room = this.findRoomByUser(userId);
+    if (room) return room.id;
+
+    const game = this.gameService.GetGameByPlayerId(userId);
+    if (game && !game.isGameOver) return game.roomId;
+
+    return null;
+  }
+
+  async handleDisconnect(client: Socket) {
     const userId = client.data?.userId;
     if (!userId) return;
+
+    // Moving between pages closes one socket and opens another, and the two can
+    // be handled in either order. If this user still has a live socket they have
+    // not gone anywhere, so leaving now would start a forfeit against someone who
+    // is sitting right there. The socket being cleaned up has already left its
+    // rooms, so it cannot count itself here.
+    const otherSockets = await this.server.in(userId).fetchSockets();
+    if (otherSockets.length > 0) return;
 
     this.spectators.delete(userId);
 

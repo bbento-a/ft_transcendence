@@ -32,6 +32,9 @@ export function useGameSocket() {
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   // Id of a room we just created, so the lobby can navigate into it.
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  // A room we never really left (closed tab, lost connection). The lobby sends
+  // us back into it rather than listing it as somebody else's game.
+  const [resumeRoomId, setResumeRoomId] = useState<string | null>(null);
   // The room we asked for does not exist: the game page returns to the lobby.
   const [roomUnavailable, setRoomUnavailable] = useState(false);
   // True once the server confirms we are really inside a room. The board waits
@@ -105,6 +108,7 @@ export function useGameSocket() {
     // --- lobby ---
     socket.on("roomList", (list: RoomSummary[]) => setRooms(list));
     socket.on("roomCreated", (d: { roomId: string }) => setCreatedRoomId(d.roomId));
+    socket.on("resumeRoom", (d: { roomId: string }) => setResumeRoomId(d.roomId));
     socket.on("roomUnavailable", () => setRoomUnavailable(true));
 
     // Cleanup: React dev mode mounts twice; without this we leak sockets and
@@ -187,7 +191,7 @@ export function useGameSocket() {
 
   return {
     state, status, connected, isMyTurn, myPlayerNumber, canPlay, play, playAI,
-    rooms, createdRoomId, roomUnavailable, inRoom, forfeitSecondsLeft,
+    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeitSecondsLeft,
     getRooms, createRoom, enterRoom, leaveRoom,
     ROWS, COLS,
   };

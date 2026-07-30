@@ -15,7 +15,7 @@ export default function Home() {
 	const popupRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
-	const { rooms, connected, getRooms, createRoom, createdRoomId } = useGameSocket();
+	const { rooms, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
@@ -28,6 +28,12 @@ export default function Home() {
 	useEffect(() => {
 		if (createdRoomId) router.push(`/${createdRoomId}`);
 	}, [createdRoomId, router]);
+
+	// We are still in a game we never left, so go back to it. `replace` keeps the
+	// lobby out of the history: the game's back button must lead somewhere.
+	useEffect(() => {
+		if (resumeRoomId) router.replace(`/${resumeRoomId}`);
+	}, [resumeRoomId, router]);
 
   return (
 	<RequireAuth>
