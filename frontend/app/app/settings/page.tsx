@@ -80,30 +80,31 @@ export default function page() {
   	<div className={styles.pageWrapper}>
 		<div className={styles.pageGroup}>
         	<div className={styles.profileGroup}>
-			    <img
-					className={styles.profilePic}
+				<div className={styles.profileIcon}>
+			    <Image className={styles.profilePic}
 					src={user?.avatarUrl || "/profile.svg"}
 					alt="Profile picture"
 					width={250}
 					height={250}
 				/>
+				</div>
 				<button className={styles.buttonProfile}>
 					<div className={styles.buttonText}>{t("changepfp")}</div>
 				</button>
+				<div className={styles.infoGroup}>
+					<div className={styles.info}>
+						<div className={styles.fieldDescription}>{t("username")}
+							<div className={styles.fieldInfo}>{user?.username}</div>
+						</div>
+					</div>
+					<div className={styles.info}>
+						<div className={styles.fieldDescription}>{t("email")}
+							<div className={styles.fieldInfo}>{user?.email}</div>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			<div className={styles.infoGroup}>
-				<div className={styles.info}>
-					<div className={styles.fieldDescription}>{t("username")}
-						<div className={styles.fieldInfo}>{user?.username}</div>
-					</div>
-				</div>
-				<div className={styles.info}>
-					<div className={styles.fieldDescription}>{t("email")}
-						<div className={styles.fieldInfo}>{user?.email}</div>
-					</div>
-				</div>
-			</div>
 		</div>
 			<div className={styles.pageGroup}>
 				<div className={styles.formGroup}>
