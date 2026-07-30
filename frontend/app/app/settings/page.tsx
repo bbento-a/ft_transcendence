@@ -6,6 +6,28 @@ import React, { useState, ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
+import { GENERIC_ERROR, pickError } from "../lib/formErrors";
+
+/*
+Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos.
+Segue os campos de cima para baixo do form (username, email, password atual,
+password nova), e deixa para o fim o que so o servidor sabe: password atual
+errada e conflitos com outras contas.
+Ganha o primeiro match, por isso as regras estao presas ao verbo para nao
+apanharem tambem o "Username already in use.".
+*/
+const ERROR_ORDER: RegExp[] = [
+	/^Username cannot be empty/,
+	/^Username (must|cannot|can only)/,
+	/email address/,
+	/^Current password cannot be empty/,
+	/^Password (must|cannot)/,
+	/^Current password is required/,
+	/^Invalid credentials/,
+	/^Username already in use/,
+	/^Email already in use/,
+	/^Email is managed by your login provider/,
+];
 
 export default function page() {
 	const t = useTranslations("settings");
@@ -19,7 +41,8 @@ export default function page() {
 	const [form, setForm] = useState({
 		username: "", email: "", currentPassword: "", newPassword: "", confirmPassword: ""
 	});
-	const [errors, setErrors] = useState<string[]>([]);
+	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
+	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,7 +50,7 @@ export default function page() {
 		const name = e.currentTarget.name;
 		const value = e.currentTarget.value;
 
-		setErrors([]);
+		setError(null);
 		setSuccess(false);
 		setForm({ ...form, [name]: value });
 	}
@@ -37,11 +60,12 @@ export default function page() {
 		// sem isto, spammar Enter disparava um pedido por cada submit em vez de esperar o anterior acabar
 		if (isSubmitting)
 			return;
-		setErrors([]);
+		setError(null);
 		setSuccess(false);
 
+		// verificacao so do cliente, o backend nem conhece o campo de confirmacao
 		if (form.newPassword && form.newPassword !== form.confirmPassword) {
-			setErrors([t("passwordmismatch")]);
+			setError(t("passwordmismatch"));
 			return;
 		}
 
@@ -54,8 +78,11 @@ export default function page() {
 			payload.currentPassword = form.currentPassword;
 		}
 
-		if (Object.keys(payload).length === 0)
+		// sem isto o Save nao fazia nada visivel quando o form estava todo vazio
+		if (Object.keys(payload).length === 0) {
+			setError(t("nochanges"));
 			return;
+		}
 
 		setIsSubmitting(true);
 
@@ -69,9 +96,9 @@ export default function page() {
 				setIsSubmitting(false);
 				return;
 			}
-			setErrors(result.errors);
+			setError(pickError(result.errors, ERROR_ORDER));
 		} catch {
-			setErrors(["Something went wrong, please try again."]);
+			setError(GENERIC_ERROR);
 		}
 		setIsSubmitting(false);
 	}
@@ -128,9 +155,9 @@ export default function page() {
 								<div className={styles.buttonText}>{t("save")}</div>
 							</button>
 					</form>
-					{errors.length > 0 &&
+					{error &&
 						<div className={styles.errorWrapper}>
-							{errors.map((msg, i) => <div key={i} className={styles.errorText}>{msg}</div>)}
+							<div className={styles.errorText}>{error}</div>
 						</div>
 					}
 					{success &&
