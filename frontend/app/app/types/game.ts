@@ -28,6 +28,13 @@ export interface GameOverPayload {
   message: string;
 }
 
+// An opponent dropped out. They have `secondsLeft` to come back before the
+// server hands the win to whoever stayed.
+export interface OpponentDisconnectedPayload {
+  message: string;
+  secondsLeft: number;
+}
+
 // One box in the lobby. Mirror of the backend's RoomSummary.
 // Source of truth: backend/app/src/game/game.room.ts
 export interface RoomSummary {

@@ -18,7 +18,8 @@ export default function Page() {
 	const router = useRouter();
 	const params = useParams();
 	const {
-		state, status, connected, inRoom, roomUnavailable, playAI, enterRoom, leaveRoom, play,
+		state, status, connected, inRoom, roomUnavailable, forfeitSecondsLeft,
+		playAI, enterRoom, leaveRoom, play,
 	} = useGameSocket();
 
 	const roomId = typeof params?.gameroom_id === "string" ? params.gameroom_id : null;
@@ -64,6 +65,9 @@ export default function Page() {
 				return "Draw!";
 			return `Winner: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
 		}
+		// Someone dropped out: show how long they have left to come back.
+		if (forfeitSecondsLeft !== null)
+			return `Opponent disconnected — forfeit in ${forfeitSecondsLeft}s`;
 		return `${state.currentPlayer === 1 ? state.player1Name : state.player2Name}'s Turn`;
 	}
 

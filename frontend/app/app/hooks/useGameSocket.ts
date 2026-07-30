@@ -6,6 +6,7 @@ import type {
   GameState,
   MatchFoundPayload,
   GameOverPayload,
+  OpponentDisconnectedPayload,
   RoomSummary,
 } from "../types/game";
 
@@ -36,6 +37,9 @@ export function useGameSocket() {
   // True once the server confirms we are really inside a room. The board waits
   // for this, so a wrong URL never flashes a game on its way back to the lobby.
   const [inRoom, setInRoom] = useState(false);
+  // Seconds an absent opponent still has before forfeiting; null when nobody is
+  // missing. The server sets the starting value, we just count it down.
+  const [forfeitSecondsLeft, setForfeitSecondsLeft] = useState<number | null>(null);
 
   useEffect(() => {
     // Who are we? The board only carries player ids, so we compare against ours.
@@ -74,13 +78,20 @@ export function useGameSocket() {
     });
 
     socket.on("gameOver", (d: GameOverPayload) => {
+      setForfeitSecondsLeft(null);
       setState((prev) =>
         prev ? { ...prev, board: d.board, isGameOver: true, winnerId: d.winner } : prev
       );
     });
 
-    socket.on("opponentDisconnected", (msg: string) => setStatus(msg));
-    socket.on("opponentReconnected", (msg: string) => setStatus(msg));
+    socket.on("opponentDisconnected", (d: OpponentDisconnectedPayload) => {
+      setStatus(d.message);
+      setForfeitSecondsLeft(d.secondsLeft);
+    });
+    socket.on("opponentReconnected", (msg: string) => {
+      setStatus(msg);
+      setForfeitSecondsLeft(null); // they made it back, stop the clock
+    });
 
     // The opponent walked out. The room reopened around us, so we drop the
     // board and wait for someone new instead of leaving the page.
@@ -88,6 +99,7 @@ export function useGameSocket() {
       setInRoom(true);
       setState(null);
       setStatus(msg);
+      setForfeitSecondsLeft(null);
     });
 
     // --- lobby ---
@@ -102,6 +114,17 @@ export function useGameSocket() {
       socketRef.current = null;
     };
   }, []);
+
+  // Tick the forfeit clock down once a second. One timeout per second rather
+  // than an interval, so it stops cleanly the moment the count is cleared.
+  useEffect(() => {
+    if (forfeitSecondsLeft === null || forfeitSecondsLeft <= 0) return;
+    const timer = setTimeout(
+      () => setForfeitSecondsLeft((s) => (s === null ? null : s - 1)),
+      1000
+    );
+    return () => clearTimeout(timer);
+  }, [forfeitSecondsLeft]);
 
   // Which player are we in this match? 1, 2, or null.
   const myPlayerNumber =
@@ -164,7 +187,7 @@ export function useGameSocket() {
 
   return {
     state, status, connected, isMyTurn, myPlayerNumber, canPlay, play, playAI,
-    rooms, createdRoomId, roomUnavailable, inRoom,
+    rooms, createdRoomId, roomUnavailable, inRoom, forfeitSecondsLeft,
     getRooms, createRoom, enterRoom, leaveRoom,
     ROWS, COLS,
   };

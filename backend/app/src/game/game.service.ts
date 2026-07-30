@@ -3,7 +3,9 @@ import { GamePlayer, GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
-const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
+// Exported so the gateway can tell the players how long the grace period is,
+// instead of keeping a second copy of the number that could drift out of sync.
+export const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
 const AI_PLAYER_ID = 'AI';
 
 @Injectable()

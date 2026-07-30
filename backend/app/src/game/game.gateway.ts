@@ -8,7 +8,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { GameService } from './game.service';
+import { GameService, FORFEIT_GRACE_PERIOD_MS } from './game.service';
 import { GameState } from './game.types';
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
@@ -82,8 +82,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!game || game.isGameOver) return;
 
     game.disconnectedPlayerId = userId;
-    const opponentId = game.player1Id === userId ? game.player2Id : game.player1Id;
-    this.server.to(opponentId).emit('opponentDisconnected', 'Your opponent left. Waiting for reconnect...');
+
+    // Sent to the whole room, so spectators watch the clock run down too. The
+    // server owns the deadline; the page only renders it ticking.
+    this.server.to(game.roomId).emit('opponentDisconnected', {
+      message: 'Opponent disconnected.',
+      secondsLeft: Math.round(FORFEIT_GRACE_PERIOD_MS / 1000),
+    });
 
     this.gameService.StartForfeitTimer(game.roomId, userId, async (finishedGame) => {
       await this.endGame(finishedGame.roomId, finishedGame, 'Opponent did not reconnect in time. Forfeit.');
