@@ -17,17 +17,33 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	const router = useRouter();
 	const params = useParams();
-	const { state, status, connected, playAI, findMatch, play } = useGameSocket();
+	const {
+		state, status, connected, inRoom, roomUnavailable, playAI, enterRoom, leaveRoom, play,
+	} = useGameSocket();
 
-	// Start the game once connected. The route segment carries the mode:
-	//   /ai    -> play vs the bot        /match -> matchmaking with a person
+	const roomId = typeof params?.gameroom_id === "string" ? params.gameroom_id : null;
+
+	// Once connected, act on the route: /ai is the bot, anything else is a room
+	// id. The server decides what we become in that room (player or spectator).
 	const started = useRef(false);
 	useEffect(() => {
-		if (!connected || started.current) return;
+		if (!connected || started.current || !roomId) return;
 		started.current = true;
-		if (params?.gameroom_id === "ai") playAI();
-		else findMatch();
-	}, [connected, params, playAI, findMatch]);
+		if (roomId === "ai") playAI();
+		else enterRoom(roomId);
+	}, [connected, roomId, playAI, enterRoom]);
+
+	// No such room (a stale link or a hand-typed URL): back to the lobby.
+	useEffect(() => {
+		if (roomUnavailable) router.push("/gamerooms");
+	}, [roomUnavailable, router]);
+
+	// Back button: tell the server before leaving, so an empty room we hosted
+	// disappears from the lobby straight away instead of after the grace period.
+	function handleBack() {
+		if (roomId) leaveRoom(roomId);
+		router.push("/gamerooms");
+	}
 
 	// Server board when a match is live; empty board otherwise.
 	const board = state ? state.board : emptyBoard();
@@ -76,6 +92,9 @@ export default function Page() {
 				{turnImage()}
 			</div>
 
+			{/* Wait for the server to confirm the room before drawing the board,
+			    so a bad room id never flashes a game before redirecting. */}
+			{inRoom && (
 			<div className={styles.board} id="board">
 				{board.map((row, r) =>
 					row.map((cell, c) => (
@@ -88,6 +107,7 @@ export default function Page() {
 					))
 				)}
 			</div>
+			)}
 {/* 
 			<button className={styles.reset} onClick={resetGame()}>
 				Restart
@@ -97,7 +117,7 @@ export default function Page() {
 			<div className={styles.playerText}>Player2</div>
 		</div>
 		<div className={styles.buttonWrapper}>
-			<button onClick={() => {router.push("/gamerooms")}}>
+			<button onClick={handleBack}>
 				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>

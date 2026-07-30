@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import type { GameState, MatchFoundPayload, GameOverPayload } from "../types/game";
+import type {
+  GameState,
+  MatchFoundPayload,
+  GameOverPayload,
+  RoomSummary,
+} from "../types/game";
 
 const ROWS = 6;
 const COLS = 7;
@@ -22,6 +27,16 @@ export function useGameSocket() {
   // Our own id, to know if we are player 1 or 2 (which drives "is it my turn").
   const [myId, setMyId] = useState<string | null>(null);
 
+  // Lobby: every open room, refreshed by the server whenever one changes.
+  const [rooms, setRooms] = useState<RoomSummary[]>([]);
+  // Id of a room we just created, so the lobby can navigate into it.
+  const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  // The room we asked for does not exist: the game page returns to the lobby.
+  const [roomUnavailable, setRoomUnavailable] = useState(false);
+  // True once the server confirms we are really inside a room. The board waits
+  // for this, so a wrong URL never flashes a game on its way back to the lobby.
+  const [inRoom, setInRoom] = useState(false);
+
   useEffect(() => {
     // Who are we? The board only carries player ids, so we compare against ours.
     fetch("/api/auth/me", { credentials: "include" })
@@ -37,16 +52,22 @@ export function useGameSocket() {
     socket.on("connect", () => setConnected(true));
     socket.on("disconnect", () => setConnected(false));
 
-    socket.on("statusWait", (msg: string) => setStatus(msg));
+    // Waiting for an opponent, or watching a game: either way we are in a room.
+    socket.on("statusWait", (msg: string) => {
+      setInRoom(true);
+      setStatus(msg);
+    });
     socket.on("warning", (msg: string) => setStatus(msg));
 
     socket.on("MatchFound", (d: MatchFoundPayload) => {
+      setInRoom(true);
       roomRef.current = d.room;
       setState(d.state);
       setStatus("");
     });
 
     socket.on("gameStateUpdated", (s: GameState) => {
+      setInRoom(true);
       roomRef.current = s.roomId;
       setState(s);
       setStatus("");
@@ -61,8 +82,13 @@ export function useGameSocket() {
     socket.on("opponentDisconnected", (msg: string) => setStatus(msg));
     socket.on("opponentReconnected", (msg: string) => setStatus(msg));
 
+    // --- lobby ---
+    socket.on("roomList", (list: RoomSummary[]) => setRooms(list));
+    socket.on("roomCreated", (d: { roomId: string }) => setCreatedRoomId(d.roomId));
+    socket.on("roomUnavailable", () => setRoomUnavailable(true));
+
     // Cleanup: React dev mode mounts twice; without this we leak sockets and
-    // leave phantom players in the gateway's waitlist.
+    // leave phantom rooms behind in the gateway.
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -97,9 +123,19 @@ export function useGameSocket() {
 
   // --- actions ---
   const playAI = useCallback(() => socketRef.current?.emit("playVsAI"), []);
-  const findMatch = useCallback(() => socketRef.current?.emit("LookforMatch"), []);
-  const spectate = useCallback(
-    (roomId: string) => socketRef.current?.emit("joinSpectator", roomId),
+
+  // Lobby actions.
+  const getRooms = useCallback(() => socketRef.current?.emit("getRooms"), []);
+  const createRoom = useCallback(() => socketRef.current?.emit("createRoom"), []);
+
+  // The only way into a room. The server decides whether we return as a player,
+  // join as the opponent, or watch — so the caller does not have to know.
+  const enterRoom = useCallback(
+    (roomId: string) => socketRef.current?.emit("enterRoom", roomId),
+    []
+  );
+  const leaveRoom = useCallback(
+    (roomId: string) => socketRef.current?.emit("leaveRoom", roomId),
     []
   );
 
@@ -113,8 +149,9 @@ export function useGameSocket() {
   );
 
   return {
-    state, status, connected, isMyTurn, myPlayerNumber,
-    playAI, findMatch, play, spectate, canPlay,
+    state, status, connected, isMyTurn, myPlayerNumber, canPlay, play, playAI,
+    rooms, createdRoomId, roomUnavailable, inRoom,
+    getRooms, createRoom, enterRoom, leaveRoom,
     ROWS, COLS,
   };
 }

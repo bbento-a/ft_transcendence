@@ -25,3 +25,12 @@ export interface GameOverPayload {
   board: number[][];
   message: string;
 }
+
+// One box in the lobby. Mirror of the backend's RoomSummary.
+// Source of truth: backend/app/src/game/game.room.ts
+export interface RoomSummary {
+  id: string;
+  hostName: string;        // shown on the left of the box
+  guestName: string | null; // right side; null while the room waits
+  status: "waiting" | "playing";
+}
