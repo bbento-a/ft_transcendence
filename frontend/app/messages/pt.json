@@ -134,11 +134,17 @@
     "email": "Email:",
     "changeusername": "Alterar nome de utilizador:",
     "changeemail": "Alterar email:",
+    "currentpassword": "Palavra-passe atual:",
     "changepassword": "Nova palavra-passe:",
     "confirmpassword": "Confirmar palavra-passe:",
     "save": "Guardar alterações",
     "newusername": "Novo nome de utilizador",
     "newemail": "Novo email",
-    "newpassword": "Nova palavra-passe"
+    "newpassword": "Nova palavra-passe",
+    "currentpasswordplaceholder": "Palavra-passe atual",
+    "confirmpasswordplaceholder": "Confirmar nova palavra-passe",
+    "success": "Perfil atualizado com sucesso.",
+    "passwordmismatch": "As palavras-passe não coincidem.",
+    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
   }
 }

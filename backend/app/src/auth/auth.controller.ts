@@ -1,8 +1,9 @@
-import { Controller, Post, Body, Res, UseGuards, Get,Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Patch, Body, Res, UseGuards, Get,Req, UnauthorizedException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateUserDto } from './dto/updateUser.dto';
 import type { Request,Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { OAuthProfile } from './types/oauth-profile.type'
@@ -59,9 +60,15 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async getMe(@Req() req: AuthRequest) {
-    const user = await this.authService.getMe(req.user.id);
-    return user;
+  getProfile(@Req() req: Request) {
+    return this.authService.getMe((req.user as { id: string }).id);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('me')
+  updateProfile(@Req() req: Request, @Body() dto: UpdateUserDto) {
+    return this.authService.updateUserData((req.user as { id: string }).id, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))

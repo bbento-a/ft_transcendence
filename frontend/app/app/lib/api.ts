@@ -4,12 +4,12 @@ export type ApiResult<T> =
 
 const OFFLINE_ERROR = "Server unavailable, please try again in a moment.";
 
-export async function apiPost<T = unknown>(path: string, body: unknown): Promise<ApiResult<T>> {
+async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, body: unknown): Promise<ApiResult<T>> {
 	let res: Response;
 
 	try {
 		res = await fetch(`/api${path}`, {
-			method: "POST",
+			method,
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(body),
 		});
@@ -35,4 +35,12 @@ export async function apiPost<T = unknown>(path: string, body: unknown): Promise
 		return { ok: false, errors: data.message };
 
 	return { ok: false, errors: [data?.message ?? OFFLINE_ERROR] };
+}
+
+export function apiPost<T = unknown>(path: string, body: unknown): Promise<ApiResult<T>> {
+	return apiRequest<T>("POST", path, body);
+}
+
+export function apiPatch<T = unknown>(path: string, body: unknown): Promise<ApiResult<T>> {
+	return apiRequest<T>("PATCH", path, body);
 }

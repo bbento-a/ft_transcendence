@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Quicksand } from "next/font/google";
+import localFont from "next/font/local"; //em vez de fazer download no docker eu fiz e so vamos buscar a mao (../fonts/Quicksand-VariableFont_wght.ttf)
 import "./globals.css";
 
 import NavBar from "./components/navbar";
@@ -8,8 +8,13 @@ import { UserProvider } from "@/context/AuthContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 
-const quicksand = Quicksand({
-  subsets: ["latin"],
+
+/*
+  Muda se isto so pq e feito a mao ent tens q apontar para aonde esta e ya e isso
+ */
+const quicksand = localFont({ 
+  src: "../fonts/Quicksand-VariableFont_wght.ttf",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
