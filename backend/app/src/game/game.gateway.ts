@@ -31,8 +31,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // they are private, so they live only in GameService.
   private rooms = new Map<string, GameRoom>();
 
-  // Users currently watching a game. They receive board updates but cannot play.
-  private spectators = new Set<string>();
+  // Who is watching what: user id -> room id. They receive board updates but
+  // cannot play, and they are sent away when their room stops playing.
+  private spectators = new Map<string, string>();
 
   // Pending deletions for rooms whose host disconnected (see the grace constant).
   private hostGraceTimers = new Map<string, NodeJS.Timeout>();
@@ -177,18 +178,69 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.watchGame(client, room);
   }
 
-  // Back button. Only the host of an empty room needs handling: leaving mid-game
-  // disconnects the socket, which the forfeit logic already covers.
+  // Back button: a deliberate exit, unlike a dropped connection. Someone who
+  // merely reloads is handled by handleDisconnect's grace periods instead.
   @SubscribeMessage('leaveRoom')
   leaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
     const userId = client.data.userId;
+
     this.spectators.delete(userId);
     client.leave(roomId);
 
     const room = this.rooms.get(roomId);
-    if (room && room.status === 'waiting' && room.hostId === userId) {
-      this.closeRoom(room.id);
+    if (!room) {
+      // Private game vs the AI: drop it, or the player stays "busy" forever.
+      const game = this.gameService.GetStateOfGame(roomId);
+      if (game && game.player1Id === userId) this.gameService.AbandonGame(roomId);
+      return;
     }
+
+    const isPlayer = userId === room.hostId || userId === room.guestId;
+    if (!isPlayer) return; // a spectator walking out changes nothing for the room
+
+    // Nobody had joined yet, so the room leaves with its host.
+    if (room.status === 'waiting') {
+      this.closeRoom(room.id);
+      return;
+    }
+
+    this.resetRoom(room, userId);
+  }
+
+  // A player walked out of a live game. Nobody won, so no result is recorded:
+  // the game is dropped, anyone watching is sent back to the lobby, and the room
+  // reopens with whoever stayed as its host — free for anyone to join again.
+  private resetRoom(room: GameRoom, leaverId: string) {
+    this.gameService.AbandonGame(room.id);
+
+    for (const [watcherId, watchedRoomId] of this.spectators) {
+      if (watchedRoomId !== room.id) continue;
+      this.spectators.delete(watcherId);
+      this.server.to(watcherId).emit('roomUnavailable', 'The game ended.');
+    }
+
+    this.server.in(room.id).socketsLeave(room.id);
+
+    const stayingId = leaverId === room.hostId ? room.guestId : room.hostId;
+    const stayingName = leaverId === room.hostId ? room.guestName : room.hostName;
+    if (!stayingId || !stayingName) {
+      this.closeRoom(room.id);
+      return;
+    }
+
+    room.hostId = stayingId;
+    room.hostName = stayingName;
+    room.guestId = null;
+    room.guestName = null;
+    room.status = 'waiting';
+
+    // Whoever stayed keeps the room and waits in it, exactly like a fresh host.
+    this.server.in(stayingId).socketsJoin(room.id);
+    this.server
+      .to(stayingId)
+      .emit('gameAborted', 'Your opponent left. Waiting for a new opponent...');
+
+    this.broadcastRooms();
   }
 
   private startGame(client: Socket, room: GameRoom, userId: string, username: string) {
@@ -219,7 +271,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    this.spectators.add(client.data.userId);
+    this.spectators.set(client.data.userId, room.id);
     client.join(room.id);
     client.emit('gameStateUpdated', game);
     client.emit('statusWait', `Watching ${room.hostName} vs ${room.guestName}`);

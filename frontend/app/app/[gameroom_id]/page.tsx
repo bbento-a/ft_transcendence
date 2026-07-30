@@ -41,7 +41,7 @@ export default function Page() {
 	// Back button: tell the server before leaving, so an empty room we hosted
 	// disappears from the lobby straight away instead of after the grace period.
 	function handleBack() {
-		if (roomId) leaveRoom(roomId);
+		leaveRoom();
 		router.push("/gamerooms");
 	}
 

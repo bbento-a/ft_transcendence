@@ -197,6 +197,13 @@ StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game:
     }
   }
 
+  // Drop a game without recording a result. Somebody walked out, so there is no
+  // winner and no loser: unlike finalizeGame, nothing is written to the database.
+  AbandonGame(roomId: string) {
+    this.CancelForfeitTimer(roomId);
+    this.activeGames.delete(roomId);
+  }
+
 async finalizeGame(game: GameState): Promise<void> {
     this.CancelForfeitTimer(game.roomId);
     this.activeGames.delete(game.roomId);
