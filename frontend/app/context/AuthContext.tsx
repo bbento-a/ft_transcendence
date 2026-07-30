@@ -2,7 +2,12 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type User = { id: string; username: string };
+type User = {
+	id: string;
+	username: string;
+	email: string;
+	avatarUrl: string | null;
+};
 
 type UserContextType = {
 	user: User | null;
@@ -22,9 +27,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 	// deixava o ecra preso no estado de submit
 	const refresh = async () => {
 		try {
-			const res = await fetch('/api/auth/me');
-			setUser(res.ok ? await res.json() : null);
-		} catch {
+			const res = await fetch("/api/auth/me");
+			const text = await res.text();
+			if (!text) {
+				setUser(null);
+				return;
+			}
+			setUser(JSON.parse(text));
+		} catch (err) {
 			setUser(null);
 		}
 	};

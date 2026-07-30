@@ -180,14 +180,15 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    return this.prisma.user.findUnique({where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        avatarUrl: true,
-      },
-    })
+  	return this.prisma.user.findUnique({
+  		where: { id: userId },
+  		select: {
+  			id: true,
+  			username: true,
+  			email: true,
+  			avatarUrl: true,
+  		},
+  	});
   }
 
   async updateUserData(userId: string, dto: UpdateUserDto) {

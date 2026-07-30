@@ -23,10 +23,12 @@ export default function NavBar()
 		Peace
 	*/
 
+
+	
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
 	const { user } = useUser();
 	const logged = !!user;
-
+	
 	const toggled = openMenu === "lang";
 	const profMenu = openMenu === "profile";
 
@@ -64,22 +66,26 @@ export default function NavBar()
 				</Link>
 			</div>
 			<div className={styles.rightWrapper}>
-					<button ref={langBtnRef} onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>
-						<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
-					</button>
-					{toggled && <LanguagesWidget ref={langMenuRef}></LanguagesWidget>}
-					{
-						logged &&
-							<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
-								<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/profile.svg"/>
-							</button>
-					}
-					{logged && profMenu && <ProfileMenu ref={profMenuRef} onClose={() => setOpenMenu(null)}></ProfileMenu>}
-
+				<button ref={langBtnRef} onClick={() => setOpenMenu(toggled ? null : "lang")} className={styles.buttonIcon}>
+					<Image className={styles.languagesIcon} width={50} height={50} sizes="100vw" alt="" src="/languages.svg"/>
+				</button>
+				{toggled && <LanguagesWidget ref={langMenuRef}></LanguagesWidget>}
+				{
+					logged &&
+						<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
+							<img
+								className={styles.profilePic}
+								src={user?.avatarUrl || "/profile.svg"}
+								alt="Profile picture"
+								width={50}
+								height={50}
+							/>
+						</button>
+				}
+				{logged && profMenu && <ProfileMenu ref={profMenuRef} onClose={() => setOpenMenu(null)}></ProfileMenu>}
 			</div>
 		</div>
         </nav>
 	)
-
 }
 
