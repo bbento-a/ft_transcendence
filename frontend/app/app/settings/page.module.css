@@ -93,13 +93,6 @@
 .buttonText {
 	position: relative;
 	font-weight: 600;
-	transition: background-color 0.2s ease;
-}
-.buttonText:hover {
-  background-color: #c4c4c4;
-}
-.buttonText:active {
-  background-color: #898989;
 }
 .fieldContent {
 	position: absolute;
