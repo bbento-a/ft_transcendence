@@ -83,8 +83,8 @@ export class AuthController {
         filename: (req, file, cb) => {
           const user = req.user as JwtUser;
           const ext = file.originalname.split(".").pop();
-        
-          cb(null, `${user.id}.${ext}`);
+          
+          cb(null, `${user.id}${Date.now()}.${ext}`);
         },
       }),
     }),
