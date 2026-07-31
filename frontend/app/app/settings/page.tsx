@@ -39,9 +39,9 @@ export default function page() {
 	  fileInputRef.current?.click();
 	};
 
-	const handleFileChange = async (
-	  e: React.ChangeEvent<HTMLInputElement>
-	) => {
+	const [avatarVersion, setAvatarVersion] = useState(0);
+
+	const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
 	  const file = e.target.files?.[0];
 	  if (!file) return;
 
@@ -53,9 +53,11 @@ export default function page() {
 	    body: formData,
 	    credentials: "include",
 	  });
-	  if (res.ok) {
-	    await refresh();
-	  }
+
+	  if (!res.ok) return;
+
+	  await refresh();
+	  setAvatarVersion(v => v + 1);
 	};
 
 	// Contas so-OAuth (Google/42) nao tem password local; email e password
@@ -138,7 +140,7 @@ export default function page() {
 					  className={styles.profilePic}
 					  src={
 					    user?.avatarUrl
-					      ? `${user.avatarUrl}?v=${Date.now()}`
+					      ? `${user.avatarUrl}?v=${avatarVersion}`
 					      : "/profile.svg"
 					  }
 					  alt="Profile picture"

@@ -77,7 +77,6 @@ export default function NavBar()
 								className={styles.profilePic}
 								src={
 								    user?.avatarUrl
-								      ? `${user.avatarUrl}?v=${Date.now()}`
 								      : "/profile.svg"
 								  }
 								alt="Profile picture"
