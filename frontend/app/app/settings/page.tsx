@@ -1,13 +1,13 @@
 "use client";
 
 import styles from "./page.module.css"
-import Image from 'next/image'
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useRef, ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
 import { GENERIC_ERROR, pickError } from "../lib/formErrors";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 /*
 Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos.
@@ -32,8 +32,33 @@ const ERROR_ORDER: RegExp[] = [
 
 export default function page() {
 	const t = useTranslations("settings");
-
 	const { user, refresh } = useUser();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleButtonClick = () => {
+	  fileInputRef.current?.click();
+	};
+
+	const [avatarVersion, setAvatarVersion] = useState(0);
+
+	const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+	  const file = e.target.files?.[0];
+	  if (!file) return;
+
+	  const formData = new FormData();
+	  formData.append("avatar", file);
+
+	  const res = await fetch("/api/auth/avatar", {
+	    method: "POST",
+	    body: formData,
+	    credentials: "include",
+	  });
+
+	  if (!res.ok) return;
+
+	  await refresh();
+	  setAvatarVersion(v => v + 1);
+	};
 
 	// Contas so-OAuth (Google/42) nao tem password local; email e password
 	// sao geridos pelo provider, entao so deixamos mudar o username
@@ -111,25 +136,40 @@ export default function page() {
 		<div className={styles.pageGroup}>
         	<div className={styles.profileGroup}>
 				<div className={styles.profileIcon}>
-			    <Image className={styles.profilePic}
-					src={user?.avatarUrl || "/profile.svg"}
-					alt="Profile picture"
-					width={250}
-					height={250}
-				/>
+					<img
+					  className={styles.profilePic}
+					  src={
+					    user?.avatarUrl
+					      ? `${user.avatarUrl}`
+					      : "/profile.svg"
+					  }
+					  alt="Profile picture"
+					  width={250}
+					  height={250}
+					/>
 				</div>
-				<button className={styles.buttonProfile}>
-					<div className={styles.buttonText}>{t("changepfp")}</div>
+				<button className={styles.buttonProfile} onClick={handleButtonClick}>
+				  <div className={styles.buttonText}>{t("changepfp")}</div>
 				</button>
+				<input
+				  ref={fileInputRef}
+				  type="file"
+				  accept="image/*"
+				  style={{ display: "none" }}
+				  onChange={handleFileChange}
+				/>
+				<div>
+
 				<div className={styles.infoGroup}>
 					<div className={styles.info}>
 						<div className={styles.fieldDescription}>{t("username")}
 							<div className={styles.fieldInfo}>{user?.username}</div>
+							</div>
 						</div>
-					</div>
-					<div className={styles.info}>
-						<div className={styles.fieldDescription}>{t("email")}
-							<div className={styles.fieldInfo}>{user?.email}</div>
+						<div className={styles.info}>
+							<div className={styles.fieldDescription}>{t("email")}
+								<div className={styles.fieldInfo}>{user?.email}</div>
+							</div>
 						</div>
 					</div>
 				</div>

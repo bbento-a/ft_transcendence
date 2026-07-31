@@ -44,6 +44,8 @@ services:
         condition: service_healthy
     expose:
       - "3000"
+    volumes:
+      - pfp:/app/uploads
 
   frontend:
     build: ./frontend
@@ -82,3 +84,4 @@ networks:
 # ||  --- VOLUMES ---  ||
 volumes:
   pg_data:
+  pfp:

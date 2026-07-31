@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import { OAuthProfile } from './types/oauth-profile.type';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { USERNAME_MAX } from './dto/userFields';
+import { unlink } from "fs/promises";
+import * as path from "path";
 
 const SALT_ROUNDS = 10;
 
@@ -299,5 +301,29 @@ export class AuthService {
         username,
       }),
     };
+  }
+  async updateAvatar(userId: string, avatarUrl: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarUrl: true },
+    });
+  
+    if (user?.avatarUrl) {
+      const filePath = path.join(
+        process.cwd(),
+        user.avatarUrl.replace(/^\/api/, "")
+      );
+    
+      try {
+        await unlink(filePath);
+      } catch (err) {
+        // File may already be deleted
+      }
+    }
+  
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+    });
   }
 }

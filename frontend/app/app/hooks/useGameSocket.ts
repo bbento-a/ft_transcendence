@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import type { GameState, MatchFoundPayload, GameOverPayload } from "../types/game";
+import type {
+  GameState,
+  MatchFoundPayload,
+  GameOverPayload,
+  OpponentDisconnectedPayload,
+  RoomSummary,
+} from "../types/game";
+import { AI_PLAYER_ID } from "../types/game";
 
 const ROWS = 6;
 const COLS = 7;
@@ -21,12 +28,41 @@ export function useGameSocket() {
   const [connected, setConnected] = useState(false);
   // Our own id, to know if we are player 1 or 2 (which drives "is it my turn").
   const [myId, setMyId] = useState<string | null>(null);
+  // Our own name. While a host waits there is no game yet and so no names from
+  // the server, but the person looking at that empty board is always the host.
+  const [myName, setMyName] = useState<string | null>(null);
+
+  // Lobby: every open room, refreshed by the server whenever one changes.
+  const [rooms, setRooms] = useState<RoomSummary[]>([]);
+  // Id of a room we just created, so the lobby can navigate into it.
+  const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  // A room we never really left (closed tab, lost connection). The lobby sends
+  // us back into it rather than listing it as somebody else's game.
+  const [resumeRoomId, setResumeRoomId] = useState<string | null>(null);
+  // The room we asked for does not exist: the game page returns to the lobby.
+  const [roomUnavailable, setRoomUnavailable] = useState(false);
+  // True once the server confirms we are really inside a room. The board waits
+  // for this, so a wrong URL never flashes a game on its way back to the lobby.
+  const [inRoom, setInRoom] = useState(false);
+  // Who dropped out and how long they have left before forfeiting; null when
+  // nobody is missing. The name and the count are kept together because they are
+  // only meaningful side by side, and `status` gets overwritten by other events.
+  const [forfeit, setForfeit] = useState<OpponentDisconnectedPayload | null>(null);
+
+  // Rematch offers standing since the last game ended. A rematch needs both, so
+  // the button reads "Rematch", "Waiting..." or "Accept rematch" accordingly.
+  const [iWantRematch, setIWantRematch] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   useEffect(() => {
     // Who are we? The board only carries player ids, so we compare against ours.
     fetch("/api/auth/me", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setMyId(d.id))
+      .then((d) => {
+        if (!d) return;
+        setMyId(d.id);
+        setMyName(d.username);
+      })
       .catch(() => {});
 
     // No URL => same origin; nginx proxies /socket.io/. withCredentials sends
@@ -37,37 +73,83 @@ export function useGameSocket() {
     socket.on("connect", () => setConnected(true));
     socket.on("disconnect", () => setConnected(false));
 
-    socket.on("statusWait", (msg: string) => setStatus(msg));
+    // Waiting for an opponent, or watching a game: either way we are in a room.
+    socket.on("statusWait", (msg: string) => {
+      setInRoom(true);
+      setStatus(msg);
+    });
     socket.on("warning", (msg: string) => setStatus(msg));
 
     socket.on("MatchFound", (d: MatchFoundPayload) => {
+      setInRoom(true);
       roomRef.current = d.room;
       setState(d.state);
       setStatus("");
+      // A new game is running (first match or rematch): the offers are spent.
+      setIWantRematch(false);
+      setOpponentWantsRematch(false);
     });
 
+    socket.on("rematchRequested", () => setOpponentWantsRematch(true));
+
     socket.on("gameStateUpdated", (s: GameState) => {
+      setInRoom(true);
       roomRef.current = s.roomId;
       setState(s);
       setStatus("");
     });
 
     socket.on("gameOver", (d: GameOverPayload) => {
+      setForfeit(null);
       setState((prev) =>
         prev ? { ...prev, board: d.board, isGameOver: true, winnerId: d.winner } : prev
       );
     });
 
-    socket.on("opponentDisconnected", (msg: string) => setStatus(msg));
-    socket.on("opponentReconnected", (msg: string) => setStatus(msg));
+    socket.on("opponentDisconnected", (d: OpponentDisconnectedPayload) => {
+      setStatus(d.message);
+      setForfeit(d);
+    });
+    socket.on("opponentReconnected", (msg: string) => {
+      setStatus(msg);
+      setForfeit(null); // they made it back, stop the clock
+    });
+
+    // The opponent walked out. The room reopened around us, so we drop the
+    // board and wait for someone new instead of leaving the page.
+    socket.on("gameAborted", (msg: string) => {
+      setInRoom(true);
+      setState(null);
+      setStatus(msg);
+      setForfeit(null);
+      setIWantRematch(false);
+      setOpponentWantsRematch(false);
+    });
+
+    // --- lobby ---
+    socket.on("roomList", (list: RoomSummary[]) => setRooms(list));
+    socket.on("roomCreated", (d: { roomId: string }) => setCreatedRoomId(d.roomId));
+    socket.on("resumeRoom", (d: { roomId: string }) => setResumeRoomId(d.roomId));
+    socket.on("roomUnavailable", () => setRoomUnavailable(true));
 
     // Cleanup: React dev mode mounts twice; without this we leak sockets and
-    // leave phantom players in the gateway's waitlist.
+    // leave phantom rooms behind in the gateway.
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
   }, []);
+
+  // Tick the forfeit clock down once a second. One timeout per second rather
+  // than an interval, so it stops cleanly the moment the count is cleared.
+  useEffect(() => {
+    if (!forfeit || forfeit.secondsLeft <= 0) return;
+    const timer = setTimeout(
+      () => setForfeit((f) => (f ? { ...f, secondsLeft: f.secondsLeft - 1 } : null)),
+      1000
+    );
+    return () => clearTimeout(timer);
+  }, [forfeit]);
 
   // Which player are we in this match? 1, 2, or null.
   const myPlayerNumber =
@@ -97,11 +179,40 @@ export function useGameSocket() {
 
   // --- actions ---
   const playAI = useCallback(() => socketRef.current?.emit("playVsAI"), []);
-  const findMatch = useCallback(() => socketRef.current?.emit("LookforMatch"), []);
-  const spectate = useCallback(
-    (roomId: string) => socketRef.current?.emit("joinSpectator", roomId),
-    []
-  );
+
+  // Lobby actions.
+  const getRooms = useCallback(() => socketRef.current?.emit("getRooms"), []);
+  const createRoom = useCallback(() => socketRef.current?.emit("createRoom"), []);
+
+  // The only way into a room. The server decides whether we return as a player,
+  // join as the opponent, or watch — so the caller does not have to know.
+  const enterRoom = useCallback((roomId: string) => {
+    roomRef.current = roomId;
+    socketRef.current?.emit("enterRoom", roomId);
+  }, []);
+
+  // Leaves whichever room we are actually in. That is not always the one in the
+  // URL: a game vs the bot is reached through /ai but the server gives it a real
+  // id, and leaving with "ai" would abandon nothing.
+  const leaveRoom = useCallback(() => {
+    const roomId = roomRef.current;
+    if (!roomId) return;
+    socketRef.current?.emit("leaveRoom", roomId);
+    roomRef.current = null;
+  }, []);
+
+  // "Play again" once a game is over. Against the bot there is nobody to agree
+  // with, so a fresh game starts at once; against a person the server holds the
+  // offer until they press it too.
+  const requestRematch = useCallback(() => {
+    if (!state?.isGameOver) return;
+    if (state.player2Id === AI_PLAYER_ID) {
+      socketRef.current?.emit("playVsAI");
+      return;
+    }
+    setIWantRematch(true);
+    socketRef.current?.emit("requestRematch");
+  }, [state]);
 
   const play = useCallback(
     (column: number) => {
@@ -113,8 +224,10 @@ export function useGameSocket() {
   );
 
   return {
-    state, status, connected, isMyTurn, myPlayerNumber,
-    playAI, findMatch, play, spectate, canPlay,
+    state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
+    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
+    getRooms, createRoom, enterRoom, leaveRoom,
+    requestRematch, iWantRematch, opponentWantsRematch,
     ROWS, COLS,
   };
 }
