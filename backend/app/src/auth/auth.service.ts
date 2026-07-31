@@ -281,4 +281,14 @@ export class AuthService {
       }),
     };
   }
+  async updateAvatar(userId: string, avatarUrl: string) {
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        avatarUrl,
+      },
+    });
+  }
 }

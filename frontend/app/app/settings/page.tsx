@@ -1,16 +1,38 @@
 "use client";
 
 import styles from "./page.module.css"
-import Image from 'next/image'
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useRef, ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
 
 export default function page() {
 	const t = useTranslations("settings");
-
 	const { user, refresh } = useUser();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleButtonClick = () => {
+	  fileInputRef.current?.click();
+	};
+
+	const handleFileChange = async (
+	  e: React.ChangeEvent<HTMLInputElement>
+	) => {
+	  const file = e.target.files?.[0];
+	  if (!file) return;
+
+	  const formData = new FormData();
+	  formData.append("avatar", file);
+
+	  const res = await fetch("/api/auth/avatar", {
+	    method: "POST",
+	    body: formData,
+	    credentials: "include",
+	  });
+	  if (res.ok) {
+	    await refresh();
+	  }
+	};
 
 	// Contas so-OAuth (Google/42) nao tem password local; email e password
 	// sao geridos pelo provider, entao so deixamos mudar o username
@@ -87,11 +109,19 @@ export default function page() {
 					width={250}
 					height={250}
 				/>
-				<button className={styles.buttonProfile}>
-					<div className={styles.buttonText}>{t("changepfp")}</div>
+				<button className={styles.buttonProfile} onClick={handleButtonClick}>
+				  <div className={styles.buttonText}>
+				    {t("changepfp")}
+				  </div>
 				</button>
+				<input
+				  ref={fileInputRef}
+				  type="file"
+				  accept="image/*"
+				  style={{ display: "none" }}
+				  onChange={handleFileChange}
+				/>
 			</div>
-
 			<div className={styles.infoGroup}>
 				<div className={styles.info}>
 					<div className={styles.fieldDescription}>{t("username")}
