@@ -9,6 +9,7 @@ import type {
   OpponentDisconnectedPayload,
   RoomSummary,
 } from "../types/game";
+import { AI_PLAYER_ID } from "../types/game";
 
 const ROWS = 6;
 const COLS = 7;
@@ -43,9 +44,15 @@ export function useGameSocket() {
   // True once the server confirms we are really inside a room. The board waits
   // for this, so a wrong URL never flashes a game on its way back to the lobby.
   const [inRoom, setInRoom] = useState(false);
-  // Seconds an absent opponent still has before forfeiting; null when nobody is
-  // missing. The server sets the starting value, we just count it down.
-  const [forfeitSecondsLeft, setForfeitSecondsLeft] = useState<number | null>(null);
+  // Who dropped out and how long they have left before forfeiting; null when
+  // nobody is missing. The name and the count are kept together because they are
+  // only meaningful side by side, and `status` gets overwritten by other events.
+  const [forfeit, setForfeit] = useState<OpponentDisconnectedPayload | null>(null);
+
+  // Rematch offers standing since the last game ended. A rematch needs both, so
+  // the button reads "Rematch", "Waiting..." or "Accept rematch" accordingly.
+  const [iWantRematch, setIWantRematch] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   useEffect(() => {
     // Who are we? The board only carries player ids, so we compare against ours.
@@ -78,7 +85,12 @@ export function useGameSocket() {
       roomRef.current = d.room;
       setState(d.state);
       setStatus("");
+      // A new game is running (first match or rematch): the offers are spent.
+      setIWantRematch(false);
+      setOpponentWantsRematch(false);
     });
+
+    socket.on("rematchRequested", () => setOpponentWantsRematch(true));
 
     socket.on("gameStateUpdated", (s: GameState) => {
       setInRoom(true);
@@ -88,7 +100,7 @@ export function useGameSocket() {
     });
 
     socket.on("gameOver", (d: GameOverPayload) => {
-      setForfeitSecondsLeft(null);
+      setForfeit(null);
       setState((prev) =>
         prev ? { ...prev, board: d.board, isGameOver: true, winnerId: d.winner } : prev
       );
@@ -96,11 +108,11 @@ export function useGameSocket() {
 
     socket.on("opponentDisconnected", (d: OpponentDisconnectedPayload) => {
       setStatus(d.message);
-      setForfeitSecondsLeft(d.secondsLeft);
+      setForfeit(d);
     });
     socket.on("opponentReconnected", (msg: string) => {
       setStatus(msg);
-      setForfeitSecondsLeft(null); // they made it back, stop the clock
+      setForfeit(null); // they made it back, stop the clock
     });
 
     // The opponent walked out. The room reopened around us, so we drop the
@@ -109,7 +121,9 @@ export function useGameSocket() {
       setInRoom(true);
       setState(null);
       setStatus(msg);
-      setForfeitSecondsLeft(null);
+      setForfeit(null);
+      setIWantRematch(false);
+      setOpponentWantsRematch(false);
     });
 
     // --- lobby ---
@@ -129,13 +143,13 @@ export function useGameSocket() {
   // Tick the forfeit clock down once a second. One timeout per second rather
   // than an interval, so it stops cleanly the moment the count is cleared.
   useEffect(() => {
-    if (forfeitSecondsLeft === null || forfeitSecondsLeft <= 0) return;
+    if (!forfeit || forfeit.secondsLeft <= 0) return;
     const timer = setTimeout(
-      () => setForfeitSecondsLeft((s) => (s === null ? null : s - 1)),
+      () => setForfeit((f) => (f ? { ...f, secondsLeft: f.secondsLeft - 1 } : null)),
       1000
     );
     return () => clearTimeout(timer);
-  }, [forfeitSecondsLeft]);
+  }, [forfeit]);
 
   // Which player are we in this match? 1, 2, or null.
   const myPlayerNumber =
@@ -187,6 +201,19 @@ export function useGameSocket() {
     roomRef.current = null;
   }, []);
 
+  // "Play again" once a game is over. Against the bot there is nobody to agree
+  // with, so a fresh game starts at once; against a person the server holds the
+  // offer until they press it too.
+  const requestRematch = useCallback(() => {
+    if (!state?.isGameOver) return;
+    if (state.player2Id === AI_PLAYER_ID) {
+      socketRef.current?.emit("playVsAI");
+      return;
+    }
+    setIWantRematch(true);
+    socketRef.current?.emit("requestRematch");
+  }, [state]);
+
   const play = useCallback(
     (column: number) => {
       // Validate on the frontend before sending. Backend validates again.
@@ -198,8 +225,9 @@ export function useGameSocket() {
 
   return {
     state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
-    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeitSecondsLeft,
+    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
     getRooms, createRoom, enterRoom, leaveRoom,
+    requestRematch, iWantRematch, opponentWantsRematch,
     ROWS, COLS,
   };
 }

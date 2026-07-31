@@ -18,8 +18,9 @@ export default function Page() {
 	const router = useRouter();
 	const params = useParams();
 	const {
-		state, status, connected, inRoom, roomUnavailable, forfeitSecondsLeft, myName,
+		state, status, connected, inRoom, roomUnavailable, forfeit, myName,
 		playAI, enterRoom, leaveRoom, play,
+		requestRematch, iWantRematch, opponentWantsRematch,
 	} = useGameSocket();
 
 	// Once a game is running the server tells us both names. Before that the only
@@ -70,9 +71,9 @@ export default function Page() {
 				return "Draw!";
 			return `Winner: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
 		}
-		// Someone dropped out: show how long they have left to come back.
-		if (forfeitSecondsLeft !== null)
-			return `Opponent disconnected — forfeit in ${forfeitSecondsLeft}s`;
+		// Someone dropped out: name them and show how long they have to come back.
+		if (forfeit)
+			return `${forfeit.message} Forfeit in ${forfeit.secondsLeft}s`;
 		return `${state.currentPlayer === 1 ? state.player1Name : state.player2Name}'s Turn`;
 	}
 
@@ -83,9 +84,15 @@ export default function Page() {
 			return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceLighter.svg" />
 		return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceDark.svg" />
 	}
-	// function resetGame(){
-	// 	return 1
-	// }
+	// A rematch needs both players, so the button doubles as the reply to an
+	// offer. Against the bot it just starts the next game.
+	function rematchLabel() {
+		if (opponentWantsRematch)
+			return "Accept rematch";
+		if (iWantRematch)
+			return "Waiting for opponent...";
+		return "Rematch";
+	}
 
 	return (
 	<div className={styles.pageWrapper}>
@@ -116,10 +123,17 @@ export default function Page() {
 				)}
 			</div>
 			)}
-{/* 
-			<button className={styles.reset} onClick={resetGame()}>
-				Restart
-			</button> */}
+			{/* Only once the game is over. Disabled while our own offer stands,
+			    so the label reads as a status instead of an action. */}
+			{state?.isGameOver && (
+			<button
+				className={styles.reset}
+				onClick={requestRematch}
+				disabled={iWantRematch && !opponentWantsRematch}
+			>
+				{rematchLabel()}
+			</button>
+			)}
 		</div>
 		<div className={styles.sides}>
 			<div className={styles.playerText}>{rightName}</div>

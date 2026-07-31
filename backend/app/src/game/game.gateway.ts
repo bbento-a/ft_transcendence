@@ -95,11 +95,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.spectators.delete(userId);
 
+    const room = this.findRoomByUser(userId);
+
     // Host of a room nobody joined yet: give them a moment to come back before
     // the room disappears from the lobby.
-    const room = this.findRoomByUser(userId);
     if (room && room.status === 'waiting' && room.hostId === userId) {
       this.scheduleRoomCleanup(room.id);
+      return;
+    }
+
+    // Left while the room was waiting on a rematch. There is no game left to
+    // protect, so hand the room to whoever stayed rather than holding both
+    // players in a room neither of them can leave.
+    if (room && room.status === 'finished') {
+      await this.resetRoom(room, userId);
       return;
     }
 
@@ -112,7 +121,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Sent to the whole room, so spectators watch the clock run down too. The
     // server owns the deadline; the page only renders it ticking.
     this.server.to(game.roomId).emit('opponentDisconnected', {
-      message: 'Opponent disconnected.',
+      message: `${client.data.username} disconnected.`,
       secondsLeft: Math.round(FORFEIT_GRACE_PERIOD_MS / 1000),
     });
 
@@ -165,6 +174,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       guestId: null,
       guestName: null,
       status: 'waiting',
+      rematchVotes: new Set(),
     };
     this.rooms.set(room.id, room);
 
@@ -215,7 +225,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Back button: a deliberate exit, unlike a dropped connection. Someone who
   // merely reloads is handled by handleDisconnect's grace periods instead.
   @SubscribeMessage('leaveRoom')
-  leaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
+  async leaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
     const userId = client.data.userId;
 
     this.spectators.delete(userId);
@@ -238,13 +248,53 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    this.resetRoom(room, userId);
+    await this.resetRoom(room, userId);
+  }
+
+  // "Play again". It takes both players: the first press is an offer, the second
+  // one accepts it and the same room starts a fresh game.
+  @SubscribeMessage('requestRematch')
+  requestRematch(@ConnectedSocket() client: Socket) {
+    const { userId, username } = client.data;
+    const room = this.findRoomByUser(userId);
+
+    if (!room || room.status !== 'finished' || !room.guestId || !room.guestName) {
+      client.emit('warning', 'There is no finished game to replay here.');
+      return;
+    }
+
+    room.rematchVotes.add(userId);
+
+    const bothAgreed =
+      room.rematchVotes.has(room.hostId) && room.rematchVotes.has(room.guestId);
+    if (!bothAgreed) {
+      client.to(room.id).emit('rematchRequested', `${username} wants a rematch.`);
+      return;
+    }
+
+    room.rematchVotes.clear();
+    room.status = 'playing';
+
+    const state = this.gameService.InitNewGame(
+      room.id,
+      { id: room.hostId, name: room.hostName },
+      { id: room.guestId, name: room.guestName },
+    );
+
+    // MatchFound is what starts a game everywhere else, so the board, the turn
+    // and the spectators all reset through the path they already use.
+    this.server.to(room.id).emit('MatchFound', {
+      room: room.id,
+      message: 'Rematch! Game starting',
+      state,
+    });
+    this.broadcastRooms();
   }
 
   // A player walked out of a live game. Nobody won, so no result is recorded:
   // the game is dropped, anyone watching is sent back to the lobby, and the room
   // reopens with whoever stayed as its host — free for anyone to join again.
-  private resetRoom(room: GameRoom, leaverId: string) {
+  private async resetRoom(room: GameRoom, leaverId: string) {
     this.gameService.AbandonGame(room.id);
 
     for (const [watcherId, watchedRoomId] of this.spectators) {
@@ -273,6 +323,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(stayingId)
       .emit('gameAborted', 'Your opponent left. Waiting for a new opponent...');
+
+    // They may be gone as well — both players can drop at nearly the same time.
+    // A promoted host who is not actually connected will never disconnect again,
+    // so nothing else would ever clean this room up and it would sit in the
+    // lobby forever. Give them the same grace period as any other absent host.
+    const stayingSockets = await this.server.in(stayingId).fetchSockets();
+    if (stayingSockets.length > 0) this.cancelRoomCleanup(room.id);
+    else this.scheduleRoomCleanup(room.id);
 
     this.broadcastRooms();
   }
@@ -322,7 +380,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.join(game.roomId);
     client.emit('gameStateUpdated', game);
-    client.to(game.roomId).emit('opponentReconnected', 'Your opponent reconnected.');
+    client
+      .to(game.roomId)
+      .emit('opponentReconnected', `${client.data.username} reconnected.`);
   }
 
   // --- gameplay -------------------------------------------------------------
@@ -403,17 +463,45 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       message,
     });
 
-    this.server.in(roomId).socketsLeave(roomId);
     await this.gameService.finalizeGame(finalState);
 
-    // The room played its part; it should not linger in the lobby.
-    this.closeRoom(roomId);
+    // A game vs the bot has no room to keep: "play again" just starts a new one.
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+
+    // Everyone stays in the channel so the players can agree on a rematch (and
+    // spectators can watch it), but the room drops out of the lobby meanwhile.
+    room.status = 'finished';
+    room.rematchVotes.clear();
+
+    // Unless nobody is there to be asked. A forfeit can land long after both
+    // players dropped, and a room with no one in it will never see another
+    // disconnect to clean it up — it would keep both players "busy" for good.
+    if (!(await this.anyPlayerConnected(room))) {
+      this.closeRoom(room.id);
+      return;
+    }
+
+    this.broadcastRooms();
+  }
+
+  private async anyPlayerConnected(room: GameRoom): Promise<boolean> {
+    for (const playerId of [room.hostId, room.guestId]) {
+      if (!playerId) continue;
+      const sockets = await this.server.in(playerId).fetchSockets();
+      if (sockets.length > 0) return true;
+    }
+    return false;
   }
 
   // --- room bookkeeping -----------------------------------------------------
 
+  // Finished rooms are left out: their game is over, so there is nothing to
+  // join or spectate while the two players decide whether to play again.
   private roomSummaries(): RoomSummary[] {
-    return Array.from(this.rooms.values()).map(toRoomSummary);
+    return Array.from(this.rooms.values())
+      .filter((room) => room.status !== 'finished')
+      .map(toRoomSummary);
   }
 
   private broadcastRooms() {

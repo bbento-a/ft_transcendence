@@ -8,9 +8,15 @@ export interface GameRoom {
   guestId: string | null;
   guestName: string | null;
   status: RoomStatus;
+  // Who has asked to play again since the last game ended. A rematch needs both
+  // players, so this is cleared whenever a new game starts.
+  rematchVotes: Set<string>;
 }
 
-export type RoomStatus = 'waiting' | 'playing';
+// 'finished' is a room whose game is over but whose players are still sitting in
+// it deciding on a rematch. It is not offered in the lobby: there is nothing to
+// join and nothing to watch until they agree.
+export type RoomStatus = 'waiting' | 'playing' | 'finished';
 
 // What the lobby actually needs. User ids stay on the server: the boxes only
 // ever show names, so there is no reason to hand ids to every connected client.

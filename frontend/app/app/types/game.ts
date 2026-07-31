@@ -3,6 +3,9 @@
 // Frontend and backend are separate npm projects and cannot import from each
 // other, so this is a hand-copy. Keep it in sync if the backend changes.
 
+// The id the backend gives the bot, in place of a real user id.
+export const AI_PLAYER_ID = "AI";
+
 export interface GameState {
   roomId: string;
   board: number[][];      // 6 rows x 7 cols. 0 = empty, 1 = player1 (red), 2 = player2 (yellow)
