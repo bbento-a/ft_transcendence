@@ -50,7 +50,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # store a second full copy of node_modules (~400MB) in a new layer. The app
 # only needs to READ these files, and the default permissions already allow it.
 RUN addgroup -S nest && adduser -S nest -G nest
-USER nest
+#USER nest
 
 EXPOSE 3000
 

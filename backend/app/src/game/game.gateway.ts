@@ -43,10 +43,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private roomCounter = 1;
 
+  //Tempo minimo que a IA "pensa" antes de jogar para a jogada nao ser instantanea
+  private static readonly AI_THINK_TIME_MS = 1000 * 1.3;
+
   constructor(
     private readonly gameService: GameService,
     private readonly jwtService: JwtService,
   ) {}
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
   // --- connection lifecycle -------------------------------------------------
 
@@ -442,8 +449,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    // Vs the AI the move above was ours, so the bot answers straight away.
+    // Vs the AI the move above was ours, so the bot answers next.
     if (state.player2Id === AI_PLAYER_ID && state.currentPlayer === 2) {
+      // Pause first so the reply is not instant. It is still the bot's turn
+      // while this runs, so the player cannot sneak a move in.
+      await this.sleep(GameGateway.AI_THINK_TIME_MS);
+
       const afterAI = this.gameService.PlayerAIMove(data.roomId);
       if (!afterAI) return;
 

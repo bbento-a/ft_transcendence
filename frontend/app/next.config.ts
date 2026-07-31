@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   // (e.g. a phone hitting the Mac's IP for mobile testing). Only affects
   // `next dev`; ignored in production.
   allowedDevOrigins: ["192.168.1.212"],
+
+  images: {
+    domains: ["cdn.intra.42.fr"],
+  }
 };
 
 export default withNextIntl(nextConfig);

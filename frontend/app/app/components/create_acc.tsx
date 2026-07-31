@@ -6,9 +6,35 @@ import Link from "next/link";
 import React,{ useState ,ChangeEvent} from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "../lib/api";
+import { EMPTY_USERNAME, EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, firstEmptyField, pickError } from "../lib/formErrors";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
+const loginGoogle = () => {
+    window.location.assign("/api/auth/google");
+};
+
+const login42 = () => {
+    window.location.assign("/api/auth/42");
+};
+
+/*
+Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos:
+campos vazios primeiro (de cima para baixo do form), depois as regras de cada
+campo e por fim os conflitos (409). O primeiro padrao que der match ganha, por
+isso as regras estao presas ao verbo (must/cannot/can only) para nao apanharem
+tambem o "Username already in use.".
+*/
+const ERROR_ORDER: RegExp[] = [
+	/^Username cannot be empty/,
+	/^Email cannot be empty/,
+	/^Password cannot be empty/,
+	/^Username (must|cannot|can only)/,
+	/email address/,
+	/^Password (must|cannot)/,
+	/^Username already in use/,
+	/^Email already in use/,
+];
 
 export default function create_acc() {
 	const t = useTranslations("createAcc");
@@ -16,7 +42,8 @@ export default function create_acc() {
 	const [user,setUser] = useState({
 		username:"",email:"",password:""
 	})
-	const [errors,setErrors] = useState<string[]>([]);
+	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
+	const [error,setError] = useState<string | null>(null);
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useRouter();
@@ -26,7 +53,7 @@ export default function create_acc() {
 		const name = e.currentTarget.name;
 		const value = e.currentTarget.value;
 
-		setErrors([]);
+		setError(null);
 		setUser({...user,[name]:value});
 	}
 
@@ -36,7 +63,19 @@ export default function create_acc() {
 		// sem isto, spammar Enter disparava um pedido por cada submit em vez de esperar o anterior acabar
 		if (isSubmitting)
 			return;
-		setErrors([]);
+		setError(null);
+
+		// campos vazios nem chegam a ir ao backend, mostra logo o primeiro em falta
+		const missing = firstEmptyField([
+			{ value: user.username, message: EMPTY_USERNAME },
+			{ value: user.email, message: EMPTY_EMAIL },
+			{ value: user.password, message: EMPTY_PASSWORD, trim: false },
+		]);
+		if (missing)
+		{
+			setError(missing);
+			return;
+		}
 		setIsSubmitting(true);
 
 		try {
@@ -51,9 +90,9 @@ export default function create_acc() {
 				router.refresh();
 				return;//sai com o botao ainda desativado, a pagina esta a mudar
 			}
-			setErrors(result.errors);
+			setError(pickError(result.errors, ERROR_ORDER));
 		} catch {
-			setErrors(["Something went wrong, please try again."]);
+			setError(GENERIC_ERROR);
 		}
 		//so chega aqui se o registo falhou, ent o botao volta a ficar clicavel
 		setIsSubmitting(false);
@@ -74,9 +113,9 @@ export default function create_acc() {
 			</form>
 		</div>
 		<div className={styles.errorSpace}>
-		{errors.length > 0 &&
+		{error &&
 			<div className={styles.errorWrapper}>
-				{errors.map((msg,i) => <div key={i} className={styles.errorText}>{msg}</div>)}
+				<div className={styles.errorText}>{error}</div>
 			</div>
 		}
 		</div>
@@ -85,10 +124,10 @@ export default function create_acc() {
 				<div className={styles.text}>{t("orCreateThrough")}</div>
 			</div>
 			<div className={styles.auths}>
-				<button className={styles.buttonAuth}>
+				<button className={styles.buttonAuth} type="button" onClick={login42}>
 					<Image width={60} height={60} sizes="100vw" alt="" src="/42Logo.svg" />
 				</button>
-				<button className={styles.buttonAuth}>
+				<button className={styles.buttonAuth} type="button" onClick={loginGoogle}>
 					<Image width={40} height={40} sizes="100vw" alt="" src="/googleLogo.svg"/>
 				</button>
 			</div>

@@ -39,6 +39,13 @@
 	justify-content: center;
 	padding: 10px;
 	flex-shrink: 0;
+	transition: background-color 0.2s ease;
+}
+.button:hover {
+  background-color: #c4c4c4;
+}
+.button:active {
+  background-color: #898989;
 }
 .text {
 	position: relative;

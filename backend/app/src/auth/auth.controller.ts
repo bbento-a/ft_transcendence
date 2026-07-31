@@ -7,9 +7,21 @@ import { UpdateUserDto } from './dto/updateUser.dto';
 import type { Request,Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { OAuthProfile } from './types/oauth-profile.type'
+import { UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from "multer";
 
 export type OAuthRequest = Request & {
   user?: OAuthProfile;
+};
+
+type JwtUser = {
+	id: string;
+	username: string;
+};
+
+type AuthRequest = Request & {
+	user: JwtUser;
 };
 
 // Where the browser lands after a successful OAuth login.
@@ -60,6 +72,33 @@ export class AuthController {
   @Patch('me')
   updateProfile(@Req() req: Request, @Body() dto: UpdateUserDto) {
     return this.authService.updateUserData((req.user as { id: string }).id, dto);
+  }
+
+  @UseGuards(AuthGuard("jwt"))
+  @Post("avatar")
+  @UseInterceptors(
+    FileInterceptor("avatar", {
+      storage: diskStorage({
+        destination: "./uploads/avatars",
+        filename: (req, file, cb) => {
+          const user = req.user as JwtUser;
+          const ext = file.originalname.split(".").pop();
+        
+          cb(null, `${user.id}.${ext}`);
+        },
+      }),
+    }),
+  )
+  async uploadAvatar(
+    @Req() req: AuthRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const avatarUrl = `/api/uploads/avatars/${file.filename}`;
+  
+    return this.authService.updateAvatar(
+      req.user.id,
+      avatarUrl,
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))

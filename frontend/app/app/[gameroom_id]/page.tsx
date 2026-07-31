@@ -1,9 +1,11 @@
 "use client";
 import styles from "./page.module.css"
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
+
+import ExitPopUp from "../components/exitPopUp";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -17,6 +19,9 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	const router = useRouter();
 	const params = useParams();
+	// Exit confirmation from dev. The popup itself is still a static shell, so
+	// nothing sets this to true yet — see the note in handleBack below.
+	const [togglePopUp, setTogglePopUp] = useState(false);
 	const {
 		state, status, connected, inRoom, roomUnavailable, forfeit, myName,
 		playAI, enterRoom, leaveRoom, play,
@@ -127,7 +132,7 @@ export default function Page() {
 			    so the label reads as a status instead of an action. */}
 			{state?.isGameOver && (
 			<button
-				className={styles.reset}
+				className={styles.rematch}
 				onClick={requestRematch}
 				disabled={iWantRematch && !opponentWantsRematch}
 			>
@@ -143,6 +148,12 @@ export default function Page() {
 				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
+		{
+			togglePopUp &&
+			<div className={styles.popUpWrapper}>
+				<ExitPopUp></ExitPopUp>
+			</div>
+		}
 	</div>
 	)
 }

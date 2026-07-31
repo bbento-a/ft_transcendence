@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { OAuthProfile } from './types/oauth-profile.type';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { USERNAME_MAX } from './dto/userFields';
 
 const SALT_ROUNDS = 10;
 
@@ -63,8 +64,19 @@ export class AuthService {
       this.prisma.user.findUnique({ where: { username: dto.username } }),
     ]);
 
-    if (emailTaken || usernameTaken) {
-      throw new ConflictException('Credentials already in use.');
+    /*
+    Mensagens separadas de proposito. A mensagem vaga nao escondia nada: basta
+    registar com um username aleatorio para isolar o email e ler a resposta.
+    So um fluxo de verificacao por email fecharia isso, por isso mais vale o
+    utilizador perceber qual e o campo em conflito. Username primeiro, para
+    seguir a ordem dos campos do form.
+    */
+    if (usernameTaken) {
+      throw new ConflictException('Username already in use.');
+    }
+
+    if (emailTaken) {
+      throw new ConflictException('Email already in use.');
     }
 
     // Hash password before storing (never store plaintext)
@@ -167,15 +179,22 @@ export class AuthService {
   }
 
   private async makeUniqueUsername(base: string) {
-    let username = base.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-    if (!username) username = 'user';
-  
+    const clean = (value: string) => value.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+
+    // O nome vem do provider e pode ser maior que o USERNAME_MAX; sem o corte
+    // ficavamos com contas OAuth que o UpdateUserDto ja nao aceitava de volta
+    let root = clean(base).slice(0, USERNAME_MAX);
+    if (!root) root = 'user';
+
+    let username = root;
     let i = 0;
     while (await this.prisma.user.findUnique({ where: { username } })) {
       i += 1;
-      username = `${base}_${i}`.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      // abre espaco para o sufixo em vez de estourar o limite
+      const suffix = `_${i}`;
+      username = `${root.slice(0, USERNAME_MAX - suffix.length)}${suffix}`;
     }
-  
+
     return username;
   }
 
@@ -280,5 +299,15 @@ export class AuthService {
         username,
       }),
     };
+  }
+  async updateAvatar(userId: string, avatarUrl: string) {
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        avatarUrl,
+      },
+    });
   }
 }
