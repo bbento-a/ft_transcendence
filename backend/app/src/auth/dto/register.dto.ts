@@ -1,35 +1,42 @@
 // src/auth/dto/register.dto.ts
 import { IsEmail, IsString, IsNotEmpty, MinLength, MaxLength, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
+import {
+  USERNAME_MIN, USERNAME_MAX, USERNAME_PATTERN,
+  USERNAME_EMPTY_MSG, USERNAME_MIN_MSG, USERNAME_MAX_MSG, USERNAME_PATTERN_MSG,
+  EMAIL_INVALID_MSG,
+  PASSWORD_MIN, PASSWORD_MAX, PASSWORD_EMPTY_MSG, PASSWORD_MIN_MSG, PASSWORD_MAX_MSG,
+} from './userFields';
 
 export class RegisterDto {
 
     /*
     Se alguem partir insto pago um jantar lmao
-    Remover espaços antes e depois 
+    Remover espaços antes e depois
     IsString verifica se o type e uma string value === string
     IsNotEmpty Rejeita strings vazias !== ""
-    Apos o trim tem de ter no minimo 3 caracteres
-    maximo 20 caracteres
+    Apos o trim tem de respeitar o USERNAME_MIN e o USERNAME_MAX
      Matches so caracteres validos
 
     ! significa que estou dizer ao compilador que vou atribuir valor mais tarde
+
+    Os limites e as mensagens vem do userFields.ts, partilhados com o UpdateUserDto
     */
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @IsNotEmpty({ message: 'Username cannot be empty.' })
-  @MinLength(3, { message: 'Username must be at least 3 characters long.' })
-  @MaxLength(12, { message: 'Username cannot exceed 12 characters.' })
-  @Matches(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers and underscores.' })
+  @IsNotEmpty({ message: USERNAME_EMPTY_MSG })
+  @MinLength(USERNAME_MIN, { message: USERNAME_MIN_MSG })
+  @MaxLength(USERNAME_MAX, { message: USERNAME_MAX_MSG })
+  @Matches(USERNAME_PATTERN, { message: USERNAME_PATTERN_MSG })
   username!: string;
 
 
-  @IsEmail({}, { message: 'Please provide a valid email address.' })
+  @IsEmail({}, { message: EMAIL_INVALID_MSG })
   email!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'Password cannot be empty.' })
-  @MinLength(6, { message: 'Password must be at least 6 characters long.' })
-  @MaxLength(72, { message: 'Password cannot exceed 72 characters.' })
+  @IsNotEmpty({ message: PASSWORD_EMPTY_MSG })
+  @MinLength(PASSWORD_MIN, { message: PASSWORD_MIN_MSG })
+  @MaxLength(PASSWORD_MAX, { message: PASSWORD_MAX_MSG })
   password!: string;
 }
