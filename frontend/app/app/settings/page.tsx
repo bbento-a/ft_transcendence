@@ -140,7 +140,7 @@ export default function page() {
 					  className={styles.profilePic}
 					  src={
 					    user?.avatarUrl
-					      ? `${user.avatarUrl}?v=${avatarVersion}`
+					      ? `${user.avatarUrl}`
 					      : "/profile.svg"
 					  }
 					  alt="Profile picture"

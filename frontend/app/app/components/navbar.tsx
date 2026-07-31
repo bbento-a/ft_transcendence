@@ -75,10 +75,7 @@ export default function NavBar()
 						<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
 							<img
 								className={styles.profilePic}
-								src={
-								    user?.avatarUrl
-								      : "/profile.svg"
-								  }
+								src={user?.avatarUrl ? user.avatarUrl : "/profile.svg"}
 								alt="Profile picture"
 								width={50}
 								height={50}

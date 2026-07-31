@@ -82,10 +82,24 @@
 	justify-content: center;
 	color: #dafdd4;
 	padding: 10px;
+	transition: background-color 0.2s ease;
+}
+.buttonProfile:hover {
+  background-color: #2f472e;
+}
+.buttonProfile:active {
+  background-color: #233522;
 }
 .buttonText {
 	position: relative;
 	font-weight: 600;
+	transition: background-color 0.2s ease;
+}
+.buttonText:hover {
+  background-color: #c4c4c4;
+}
+.buttonText:active {
+  background-color: #898989;
 }
 .fieldContent {
 	position: absolute;
@@ -153,6 +167,13 @@
 	margin-top: 20px;
 	padding: 10px;
 	color: #dafdd4;
+	transition: background-color 0.2s ease;
+}
+.confirmButton:hover {
+  background-color: #2f472e;
+}
+.confirmButton:active {
+  background-color: #233522;
 }
 .profilePic {
   width: 250px;
