@@ -151,13 +151,13 @@ export default function page() {
 				<button className={styles.buttonProfile} onClick={handleButtonClick}>
 				  <div className={styles.buttonText}>{t("changepfp")}</div>
 				</button>
-				{/* <input
+				<input
 				  ref={fileInputRef}
 				  type="file"
 				  accept="image/*"
 				  style={{ display: "none" }}
 				  onChange={handleFileChange}
-				/> */}
+				/>
 				<div>
 
 				<div className={styles.infoGroup}>
