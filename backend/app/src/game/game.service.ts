@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { GameState } from './game.types';
+import { GamePlayer, GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
-const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
+// Exported so the gateway can tell the players how long the grace period is,
+// instead of keeping a second copy of the number that could drift out of sync.
+export const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
 const AI_PLAYER_ID = 'AI';
 
 @Injectable()
@@ -22,13 +24,15 @@ export class GameService
     return Array.from({ length: 6 }, () => Array(7).fill(0));
   }
 
-  InitNewGame(roomId: string ,player1Id: string ,player2Id: string): GameState {
+  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer): GameState {
     const newGame: GameState = {
       board: this.createEmptyBoard(),
       roomId: roomId,
-      player1Id: player1Id,
-      player2Id: player2Id,
-      currentPlayer: 1, // player 1 vai começar sempre 
+      player1Id: player1.id,
+      player1Name: player1.name,
+      player2Id: player2.id,
+      player2Name: player2.name,
+      currentPlayer: 1, // player 1 vai começar sempre
       isGameOver:  false,
       winnerId: null,
     };
@@ -195,6 +199,13 @@ StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game:
       clearTimeout(timer);
       this.forfeitTimers.delete(roomId);
     }
+  }
+
+  // Drop a game without recording a result. Somebody walked out, so there is no
+  // winner and no loser: unlike finalizeGame, nothing is written to the database.
+  AbandonGame(roomId: string) {
+    this.CancelForfeitTimer(roomId);
+    this.activeGames.delete(roomId);
   }
 
 async finalizeGame(game: GameState): Promise<void> {
