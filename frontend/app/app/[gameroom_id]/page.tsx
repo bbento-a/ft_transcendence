@@ -147,7 +147,7 @@ export default function Page() {
 		</div>
 		<div className={styles.buttonWrapper}>
 			<button onClick={handleBack}>
-				<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
+				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
 		{

@@ -213,7 +213,7 @@ export default function page() {
 			</div>
 			<div className={styles.buttonWrapper}>
 				<button onClick={() => {router.back()}}>
-					<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
+					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 				</button>
 			</div>
 		</div>

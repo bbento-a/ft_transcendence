@@ -119,19 +119,12 @@
 	background-size: cover;
 	background-position: center;
 }
-
 .buttonWrapper {
-	position: fixed;
-	top: 80px;
-	left: 20px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
 	padding: 5px;
 	z-index: 3;
-}
-.buttonIcon{
-	width: 30px;
-	height: auto;
-	position: relative;
-	object-fit: cover;	
 }
 .popUpWrapper{
 	position: absolute;
