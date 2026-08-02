@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { GameModule } from './game/game.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { StatsModule } from './stats/stats.module';
 import { ConfigModule } from '@nestjs/config';
 
 /*
@@ -23,7 +24,7 @@ Como listei o AppController e o AppService o compilador agora sabe que estao a t
     // limite por omissao para toda a app; rotas sensiveis (login/register)
     // sobrepoem isto com @Throttle para um limite mais apertado
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 20 }]),
-    GameModule, PrismaModule, AuthModule
+    GameModule, PrismaModule, AuthModule, StatsModule
   ],  //Modulos que este modulo vai precisar
   controllers: [AppController], //Controladores que pertencem a este modulo
   providers: [

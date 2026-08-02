@@ -126,7 +126,8 @@
   },
   "profile": {
     "settings": "Definições",
-    "logout": "Terminar sessão"
+    "logout": "Terminar sessão",
+    "dashboard": "Estatísticas"
   },
   "settings": {
     "changepfp": "Alterar imagem de perfil",
@@ -147,5 +148,39 @@
     "passwordmismatch": "As palavras-passe não coincidem.",
     "nochanges": "Preenche pelo menos um campo para guardar alterações.",
     "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
+  },
+  "dashboard": {
+    "title": "Estatísticas",
+    "wins": "Vitórias",
+    "losses": "Derrotas",
+    "draws": "Empates",
+    "totalGames": "Jogos",
+    "winRate": "Taxa de vitórias",
+    "distribution": "Resultados",
+    "gamesPerDay": "Jogos por dia",
+    "winRateOverTime": "Taxa de vitórias ao longo do tempo",
+    "recentMatches": "Partidas recentes",
+    "opponent": "Adversário",
+    "result": "Resultado",
+    "date": "Data",
+    "loading": "A carregar…",
+    "error": "Não foi possível carregar as estatísticas.",
+    "empty": "Ainda não há jogos.",
+    "preset_all": "Tudo",
+    "preset_7d": "7 dias",
+    "preset_30d": "30 dias",
+    "preset_90d": "90 dias",
+    "preset_mtd": "Este mês",
+    "mode_all": "Todos",
+    "mode_player": "vs Jogador",
+    "mode_bot": "vs Bot",
+    "byDifficulty": "Análise por dificuldade do bot",
+    "difficulty": "Dificuldade",
+    "record": "V/D/E",
+    "attemptsToFirstWin": "Tentativas até vencer",
+    "notBeaten": "ainda não venceu",
+    "easy": "Fácil",
+    "medium": "Médio",
+    "hard": "Difícil"
   }
 }

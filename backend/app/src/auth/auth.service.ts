@@ -209,6 +209,9 @@ export class AuthService {
         email: true,
         avatarUrl: true,
         password: true,
+        wins: true,
+        losses: true,
+        draws: true,
       },
     });
 

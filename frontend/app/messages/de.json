@@ -126,7 +126,8 @@
   },
   "profile": {
     "settings": "Einstellungen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "dashboard": "Statistiken"
   },
   "settings": {
     "changepfp": "Profilbild ändern",
@@ -147,5 +148,39 @@
     "passwordmismatch": "Die Passwörter stimmen nicht überein.",
     "nochanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
     "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden."
+  },
+  "dashboard": {
+    "title": "Statistiken",
+    "wins": "Siege",
+    "losses": "Niederlagen",
+    "draws": "Unentschieden",
+    "totalGames": "Spiele",
+    "winRate": "Siegquote",
+    "distribution": "Ergebnisse",
+    "gamesPerDay": "Spiele pro Tag",
+    "winRateOverTime": "Siegquote im Zeitverlauf",
+    "recentMatches": "Letzte Spiele",
+    "opponent": "Gegner",
+    "result": "Ergebnis",
+    "date": "Datum",
+    "loading": "Laden…",
+    "error": "Statistiken konnten nicht geladen werden.",
+    "empty": "Noch keine Spiele gespielt.",
+    "preset_all": "Alle",
+    "preset_7d": "7 Tage",
+    "preset_30d": "30 Tage",
+    "preset_90d": "90 Tage",
+    "preset_mtd": "Dieser Monat",
+    "mode_all": "Alle",
+    "mode_player": "vs Spieler",
+    "mode_bot": "vs Bot",
+    "byDifficulty": "Bot-Schwierigkeit im Detail",
+    "difficulty": "Schwierigkeit",
+    "record": "S/N/U",
+    "attemptsToFirstWin": "Versuche bis zum Sieg",
+    "notBeaten": "noch nicht besiegt",
+    "easy": "Leicht",
+    "medium": "Mittel",
+    "hard": "Schwer"
   }
 }

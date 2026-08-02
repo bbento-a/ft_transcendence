@@ -35,6 +35,45 @@ model User {
   losses        Int      @default(0)
   draws         Int      @default(0)
 
+  // Historico detalhado de partidas deste jogador (um Match por jogo jogado).
+  // Os contadores acima continuam a existir para o total rapido; o Match serve
+  // para graficos ao longo do tempo, filtros por data e export.
+  matches       Match[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+/*
+Uma linha por resultado de jogo, do ponto de vista de UM jogador.
+Um jogo entre dois humanos cria dois Match (um "win" e um "loss", ou dois
+"draw"); um jogo contra a IA cria so o Match do humano.
+E isto que permite filtrar por intervalo de datas e desenhar a evolucao no tempo.
+*/
+model Match {
+  id         String   @id @default(uuid())
+
+  // A quem pertence este registo. onDelete: Cascade => se o User for apagado,
+  // o seu historico desaparece com ele em vez de deixar linhas orfas.
+  playerId   String
+  player     User     @relation(fields: [playerId], references: [id], onDelete: Cascade)//liga o match ao utilizador; permite user.matches
+
+  opponent   String   // username do adversario no momento do jogo, ou "AI"
+
+
+  // Id estavel do adversario (User.id). null quando o adversario e a IA.
+  // Guardamos alem do username para os perfis continuarem a ligar mesmo que o
+  // adversario mude de nome mais tarde.
+  opponentId String?
+  result     String   // "win" | "loss" | "draw" (perspetiva do player acima)
+
+  // Dificuldade da IA neste jogo: "easy" | "medium" | "hard". null nos jogos
+  // contra humanos. Permite ver, por exemplo, quantas tentativas custou vencer
+  // o bot no nivel mais dificil.
+  difficulty String?
+
+  createdAt  DateTime @default(now())  // timestamp usado nos filtros e graficos
+
+  // Acelera as queries mais comuns: "todos os matches deste jogador por data".
+  @@index([playerId, createdAt])
 }

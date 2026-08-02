@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { AiConfig, Difficulty, GamePlayer, GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
@@ -260,46 +261,104 @@ async finalizeGame(game: GameState): Promise<void> {
     this.activeGames.delete(game.roomId);
 
     try {
-      if (game.winnerId === null) {
-        // empate: ambos ganham um draw, exceto a IA :( ja nem ia se pode ser
-        const realPlayerIds = [game.player1Id, game.player2Id].filter(id => id !== AI_PLAYER_ID);
-        if (realPlayerIds.length > 0) {
-          await this.prisma.user.updateMany({
-            where: { id: { in: realPlayerIds } },
-            data: { draws: { increment: 1 } },
-          });
-        }
-        return;
-      }
+      // Descobrir o resultado de cada jogador humano. A IA nunca entra na lista,
+      // por isso nao ganha contadores nem historico.
+      const outcomes = this.buildOutcomes(game);
+      if (outcomes.length === 0) return; // nada a gravar (ex.: so a IA sobrou)
 
-      const loserId = game.winnerId === game.player1Id ? game.player2Id : game.player1Id;
+      // Uma unica transacao por jogador: incrementa o contador agregado E cria a
+      // linha de historico. Ou grava os dois ou nenhum, para os totais nunca
+      // ficarem dessincronizados do historico detalhado.
+      const ops = outcomes.flatMap((o) => [
+        this.prisma.user.update({
+          where: { id: o.playerId },
+          data: this.counterIncrement(o.result),
+        }),
+        this.prisma.match.create({
+          data: {
+            playerId: o.playerId,
+            opponent: o.opponent,
+            opponentId: o.opponentId,
+            result: o.result,
+            difficulty: o.difficulty,
+          },
+        }),
+      ]);
 
-      const updates: any[] = [];
-      if (game.winnerId !== AI_PLAYER_ID) {
-        updates.push(
-          this.prisma.user.update({
-            where: { id: game.winnerId },
-            data: { wins: { increment: 1 } },
-          }),
-        );
-      }
-      if (loserId !== AI_PLAYER_ID) {
-        updates.push(
-          this.prisma.user.update({
-            where: { id: loserId },
-            data: { losses: { increment: 1 } },
-          }),
-        );
-      }
-
-      if (updates.length > 0) {
-        await this.prisma.$transaction(updates);
-      }
+      await this.prisma.$transaction(ops);
     } catch (error) {
       console.error(`[Game] Failed to persist result for room ${game.roomId}:`, error);
     }
   }
+
+  /*
+    Traduz o estado final do jogo numa lista de resultados, um por jogador humano.
+    Cada resultado sabe: de quem e, contra quem foi, o resultado ("win"/"loss"/
+    "draw") e qual o contador a incrementar no User. A IA e removida no fim.
+  */
+  private buildOutcomes(game: GameState): PlayerOutcome[] {
+    const p1 = { id: game.player1Id, name: game.player1Name };
+    const p2 = { id: game.player2Id, name: game.player2Name };
+
+    // Sem vencedor => empate para ambos. Caso contrario, quem tem o winnerId ganha.
+    let pairings: Array<{ player: typeof p1; opponent: typeof p1; result: MatchResult }>;
+    if (game.winnerId === null) {
+      pairings = [
+        { player: p1, opponent: p2, result: 'draw' },
+        { player: p2, opponent: p1, result: 'draw' },
+      ];
+    } else {
+      const winnerIsP1 = game.winnerId === p1.id;
+      const winner = winnerIsP1 ? p1 : p2;
+      const loser = winnerIsP1 ? p2 : p1;
+      pairings = [
+        { player: winner, opponent: loser, result: 'win' },
+        { player: loser, opponent: winner, result: 'loss' },
+      ];
+    }
+
+    return pairings
+      .filter((p) => p.player.id !== AI_PLAYER_ID)
+      .map((p) => {
+        const vsAI = p.opponent.id === AI_PLAYER_ID;
+        return {
+          playerId: p.player.id,
+          opponent: p.opponent.name,
+          // Id estavel do adversario; null se for a IA
+          opponentId: vsAI ? null : p.opponent.id,
+          result: p.result,
+          // So os jogos contra a IA tem dificuldade; usa o default se nao vier.
+          difficulty: vsAI ? game.difficulty ?? DEFAULT_AI_DIFFICULTY : null,
+        };
+      });
+  }
+
+  /*
+    Traduz o resultado no contador certo do User. Feito com switch (em vez de
+    concatenar "s") porque "loss" -> "losses", e assim fica tudo tipado pelo
+    Prisma sem casts.
+  */
+  private counterIncrement(result: MatchResult): Prisma.UserUpdateInput {
+    switch (result) {
+      case 'win':
+        return { wins: { increment: 1 } };
+      case 'loss':
+        return { losses: { increment: 1 } };
+      case 'draw':
+        return { draws: { increment: 1 } };
+    }
+  }
 }
+
+// Resultado de UM jogador numa partida, pronto a persistir.
+type MatchResult = 'win' | 'loss' | 'draw';
+type PlayerOutcome = {
+  playerId: string;
+  opponent: string;
+  opponentId: string | null;
+  result: MatchResult;
+  difficulty: string | null; // "easy"|"medium"|"hard" (so vs IA), senao null
+};
 
 
 

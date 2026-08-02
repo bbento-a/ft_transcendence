@@ -24,6 +24,10 @@ export default function profileMenu({ ref, onClose }: { ref?: Ref<HTMLDivElement
 		onClose?.();
 		router.push("/settings");
 	}
+	const routerDashboard = async () => {
+		onClose?.();
+		router.push("/dashboard");
+	}
 
 	return(
 		<div ref={ref} className={styles.profileWidget}>
@@ -31,6 +35,9 @@ export default function profileMenu({ ref, onClose }: { ref?: Ref<HTMLDivElement
 				<div className={styles.header}>{user?.username}</div>
 			</div>
 			<div className={styles.buttonWrapper}>
+				<button className={styles.button} onClick={routerDashboard}>
+					<div className={styles.text}>{t("dashboard")}</div>
+				</button>
 				<button className={styles.button} onClick={routerSettings}>
 					<div className={styles.text}>{t("settings")}</div>
 				</button>
