@@ -130,15 +130,17 @@ export default function Page() {
 			)}
 			{/* Only once the game is over. Disabled while our own offer stands,
 			    so the label reads as a status instead of an action. */}
-			{state?.isGameOver && (
-			<button
-				className={styles.rematch}
-				onClick={requestRematch}
-				disabled={iWantRematch && !opponentWantsRematch}
-			>
-				{rematchLabel()}
-			</button>
-			)}
+			<div className={styles.centerButton}>
+				{state?.isGameOver && (
+				<button
+					className={styles.rematch}
+					onClick={requestRematch}
+					disabled={iWantRematch && !opponentWantsRematch}
+				>
+					{rematchLabel()}
+				</button>
+				)}
+			</div>
 		</div>
 		<div className={styles.sides}>
 			<div className={styles.playerText}>{rightName}</div>

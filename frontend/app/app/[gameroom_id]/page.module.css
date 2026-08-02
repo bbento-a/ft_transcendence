@@ -56,7 +56,10 @@
 .rematch:hover{
 	background-color: #243119;
 }
-
+.centerButton{
+	height: 30px;
+	width: auto;
+}
 .board{
 	box-sizing: border-box;
 	width: 34vw;
