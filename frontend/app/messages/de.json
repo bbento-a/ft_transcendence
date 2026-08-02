@@ -181,6 +181,8 @@
     "notBeaten": "noch nicht besiegt",
     "easy": "Leicht",
     "medium": "Mittel",
-    "hard": "Schwer"
+    "hard": "Schwer",
+    "exportCsv": "CSV exportieren",
+    "exportPdf": "PDF exportieren"
   }
 }

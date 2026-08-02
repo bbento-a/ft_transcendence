@@ -181,6 +181,8 @@
     "notBeaten": "not beaten yet",
     "easy": "Easy",
     "medium": "Medium",
-    "hard": "Hard"
+    "hard": "Hard",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF"
   }
 }

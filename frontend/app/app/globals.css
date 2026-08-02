@@ -23,6 +23,21 @@ body {
   font-family: Quicksand;
 }
 
+/* Impressao (usado pelo "Export PDF" do dashboard): tira a navbar, o footer e o
+   fundo para a folha sair limpa, so com o conteudo da pagina. */
+@media print {
+  nav,
+  footer {
+    display: none !important;
+  }
+  .background-image {
+    background: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+}
+
 
 /* 
 @theme inline {

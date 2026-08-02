@@ -190,6 +190,24 @@ export function difficultyBreakdown(botMatches: MatchRow[]): DifficultyStat[] {
   }).filter((d) => d.games > 0); // so mostra niveis que a pessoa jogou
 }
 
+// ---- Export CSV ----
+
+// Escapa um valor para CSV: se tiver aspas, virgula ou quebra de linha, poe
+// entre aspas e duplica as aspas internas.
+function csvCell(value: string): string {
+  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+// Converte as partidas (ja filtradas) numa string CSV com cabecalho. Dados crus
+// (result/difficulty como estao na BD) — e um export de dados, nao de UI.
+export function matchesToCsv(matches: MatchRow[]): string {
+  const header = ["opponent", "result", "difficulty", "date"];
+  const lines = matches.map((m) =>
+    [m.opponent, m.result, m.difficulty ?? "", m.createdAt].map(csvCell).join(","),
+  );
+  return [header.join(","), ...lines].join("\r\n");
+}
+
 // ---- Filtros de intervalo de datas ----
 
 export type PresetKey = "all" | "7d" | "30d" | "90d" | "mtd";

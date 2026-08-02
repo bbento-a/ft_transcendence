@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import RequireAuth from "../components/requireAuth";
+import { useStatsSocket } from "../hooks/useStatsSocket";
 import styles from "./page.module.css";
 import {
   StatsResponse,
@@ -22,6 +23,7 @@ import {
   filterByDateRange,
   computeTotals,
   difficultyBreakdown,
+  matchesToCsv,
 } from "./lib";
 import {
   StatTiles,
@@ -79,23 +81,30 @@ function DashboardPage() {
   // Busca UMA vez todas as partidas do utilizador. Os filtros (datas e modo)
   // sao todos aplicados no cliente, por isso trocar de preset/intervalo nao faz
   // pedidos novos — instantaneo e sem risco de bater no rate limit do backend.
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
+  // silent=true (usado no tempo real): atualiza os dados sem o ecra de loading
+  // nem apagar o que estava se falhar.
+  const fetchStats = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(false);
     try {
       const res = await fetch(`/api/stats/me`);
       if (!res.ok) throw new Error("bad status");
       setData(await res.json());
     } catch {
-      setError(true);
+      if (!silent) setError(true);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Tempo real: quando um jogo do utilizador termina, o backend emite
+  // 'statsUpdated' e refazemos o fetch em silencio (sem flash de loading).
+  const onStatsUpdate = useCallback(() => fetchStats(true), [fetchStats]);
+  useStatsSocket(onStatsUpdate);
 
   // Partidas apos aplicar o intervalo de datas E o modo (all / player / bot).
   // Base de tudo o que se ve nos graficos.
@@ -118,6 +127,24 @@ function DashboardPage() {
     totals.total > 0 ? Math.round((totals.wins / totals.total) * 100) : 0;
 
   const hasMatches = matches.length > 0;
+
+  // Export CSV das partidas atualmente visiveis (respeita modo + datas).
+  const exportCsv = () => {
+    const blob = new Blob([matchesToCsv(matches)], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `stats-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Export PDF: usa a impressao do browser + o @media print da folha de estilos
+  // (esconde navbar/controlos e imprime so os graficos). O user escolhe "Guardar
+  // como PDF" no dialogo.
+  const exportPdf = () => window.print();
 
   return (
     <div className={styles.pageWrapper}>
@@ -200,6 +227,16 @@ function DashboardPage() {
           <div className={styles.stateMsg}>{t("empty")}</div>
         ) : (
           <>
+            {/* Barra de export (escondida na impressao pelo @media print) */}
+            <div className={styles.exportBar}>
+              <button className={styles.exportBtn} onClick={exportCsv}>
+                {t("exportCsv")}
+              </button>
+              <button className={styles.exportBtn} onClick={exportPdf}>
+                {t("exportPdf")}
+              </button>
+            </div>
+
             <StatTiles
               totals={totals}
               labels={labels}

@@ -91,6 +91,30 @@
 	font-weight: 700;
 }
 
+/* ---- Barra de export ---- */
+.exportBar {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+.exportBtn {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #426340;
+	color: #dafdd4;
+	padding: 6px 16px;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+.exportBtn:hover {
+	background-color: #2f472e;
+}
+.exportBtn:active {
+	background-color: #233522;
+}
+
 /* ---- Cartoes de resumo ---- */
 /* auto-fit: 5 numa linha larga, e vai reduzindo sozinho ate 2 por linha no
    telemovel, sem precisar de breakpoints por cada largura. */
@@ -277,5 +301,44 @@
 	.backWrapper {
 		top: 12px;
 		left: 12px;
+	}
+}
+
+/* ---- Impressao / Export PDF ---- */
+/* Esconde os controlos e imprime so o titulo + tiles + graficos + tabelas,
+   numa coluna e sem partir cartoes entre paginas. Ver tambem o @media print
+   global em globals.css que esconde a navbar/footer/fundo. */
+@media print {
+	.backWrapper,
+	.modeToggle,
+	.filters,
+	.exportBar {
+		display: none !important;
+	}
+	.pageWrapper {
+		padding: 0;
+		height: auto;
+		overflow: visible;
+	}
+	.content {
+		max-width: none;
+		gap: 12px;
+	}
+	.chartsGrid {
+		grid-template-columns: 1fr;
+	}
+	.card,
+	.cardWide {
+		grid-column: auto;
+		box-shadow: none;
+		break-inside: avoid;
+	}
+	/* garante que as cores dos cartoes/tiles/badges saem na impressao */
+	.tile,
+	.card,
+	.tileValue,
+	.resultBadge {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
 	}
 }
