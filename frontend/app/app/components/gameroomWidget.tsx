@@ -20,7 +20,7 @@ export default function gameroomWidget({
 				</div>
 				<div className={styles.vs}>vs</div>
 				<div className={styles.playerWrapper}>
-					<div className={styles.player}>{room.guestName ?? ""}</div>
+					<div className={styles.player}>{room.guestName ?? "....."}</div>
 				</div>
 			</div>
 			<button className={styles.button} onClick={() => onEnter(room.id)}>
