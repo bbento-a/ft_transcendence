@@ -241,12 +241,3 @@ export function startOfDay(d: Date): Date {
   copy.setHours(0, 0, 0, 0);
   return copy;
 }
-
-// Monta a query string /stats/me?from&to a partir de um intervalo de Datas.
-export function buildStatsQuery(range: { from?: Date; to?: Date }): string {
-  const params = new URLSearchParams();
-  if (range.from) params.set("from", range.from.toISOString());
-  if (range.to) params.set("to", range.to.toISOString());
-  const qs = params.toString();
-  return qs ? `?${qs}` : "";
-}

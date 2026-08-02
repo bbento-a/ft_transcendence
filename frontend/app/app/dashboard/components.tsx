@@ -21,6 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import Link from "next/link";
 import styles from "./page.module.css";
 import {
   DayBucket,
@@ -175,7 +176,7 @@ export function WinRateLine({
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
         <XAxis
-          dataKey="index"
+          dataKey="date"
           tick={{ fill: AXIS, fontSize: 11 }}
           tickMargin={8}
           interval="preserveStartEnd"
@@ -204,19 +205,28 @@ export function WinRateLine({
 
 // ---- Tabela das partidas recentes----
 
+// Quantas partidas a tabela mostra no maximo.
+export const RECENT_LIMIT = 20;
+
 export function MatchesTable({
   matches,
   labels,
   headers,
+  locale,
+  caption,
 }: {
   matches: MatchRow[];
   labels: Labels;
   headers: { opponent: string; result: string; date: string };
+  locale: string;
+  caption?: string; // "A mostrar 20 de 137" — so quando ha mais que o limite
 }) {
-  // Mais recentes primeiro (o backend devolve por ordem crescente).
-  const rows = [...matches].reverse();
+  // Mais recentes primeiro (o backend devolve por ordem crescente) e cortadas
+  // no limite — a tabela e das RECENTES, nao do historico todo.
+  const rows = [...matches].reverse().slice(0, RECENT_LIMIT);
   return (
     <div className={styles.tableWrap}>
+      {caption && <div className={styles.tableCaption}>{caption}</div>}
       <table className={styles.table}>
         <thead>
           <tr>
@@ -228,9 +238,22 @@ export function MatchesTable({
         <tbody>
           {rows.map((m, i) => {
             const kind = m.result as ResultKind;
+            // So adversarios humanos (com opponentId) tem dashboard; o Bot nao.
+            const linkable = m.opponentId !== null;
             return (
               <tr key={i}>
-                <td>{m.opponent}</td>
+                <td>
+                  {linkable ? (
+                    <Link
+                      href={`/dashboard/${encodeURIComponent(m.opponent)}`}
+                      className={styles.opponentLink}
+                    >
+                      {m.opponent}
+                    </Link>
+                  ) : (
+                    m.opponent
+                  )}
+                </td>
                 <td>
                   <span
                     className={styles.resultBadge}
@@ -240,7 +263,7 @@ export function MatchesTable({
                   </span>
                 </td>
                 <td className={styles.tableDate}>
-                  {new Date(m.createdAt).toLocaleDateString()}
+                  {new Date(m.createdAt).toLocaleDateString(locale)}
                 </td>
               </tr>
             );

@@ -30,6 +30,74 @@
 	text-shadow: 0px 0px 10px rgba(236, 255, 233, 0.8);
 }
 
+/* ---- Cabecalho: quem estou a ver + pesquisa ---- */
+.topBar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+}
+.viewingUser {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.viewingAvatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid #426340;
+}
+.viewingName {
+	font-weight: 700;
+	font-size: 1.1rem;
+	color: #243119;
+}
+.backToMine {
+	margin-left: 8px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #426340;
+	text-decoration: underline;
+}
+.search {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.searchInput {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #ecffe9;
+	color: #426340;
+	padding: 6px 12px;
+	font-weight: 600;
+	font-family: inherit;
+	min-width: 200px;
+}
+.searchBtn {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #426340;
+	color: #dafdd4;
+	padding: 6px 12px;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+.searchBtn:hover {
+	background-color: #2f472e;
+}
+.opponentLink {
+	color: #2a78d6;
+	font-weight: 700;
+	text-decoration: underline;
+}
+.opponentLink:hover {
+	color: #1c5cab;
+}
+
 /* ---- Toggle de modo (todos / jogador / bot) ---- */
 .modeToggle {
 	display: flex;
@@ -181,6 +249,12 @@
 	width: 100%;
 	overflow-x: auto;
 }
+.tableCaption {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #898781;
+	margin-bottom: 6px;
+}
 .table {
 	width: 100%;
 	border-collapse: collapse;
@@ -312,7 +386,9 @@
 	.backWrapper,
 	.modeToggle,
 	.filters,
-	.exportBar {
+	.exportBar,
+	.search,
+	.backToMine {
 		display: none !important;
 	}
 	.pageWrapper {

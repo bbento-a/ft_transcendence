@@ -11,14 +11,17 @@ import { io } from "socket.io-client";
   recebe o aviso mesmo sem estar num jogo.
 
   onUpdate deve ser estavel (useCallback), senao o socket religa a cada render.
+  enabled=false nao liga sequer o socket — usado quando vemos o dashboard de
+  OUTRA pessoa (o evento so chega a quem jogou, nao faz sentido ouvir).
 */
-export function useStatsSocket(onUpdate: () => void) {
+export function useStatsSocket(onUpdate: () => void, enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const socket = io({ withCredentials: true });
     socket.on("statsUpdated", onUpdate);
     return () => {
       socket.off("statsUpdated", onUpdate);
       socket.disconnect();
     };
-  }, [onUpdate]);
+  }, [onUpdate, enabled]);
 }

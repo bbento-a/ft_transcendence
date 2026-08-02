@@ -183,6 +183,11 @@
     "medium": "Médio",
     "hard": "Difícil",
     "exportCsv": "Exportar CSV",
-    "exportPdf": "Exportar PDF"
+    "exportPdf": "Exportar PDF",
+    "searchPlaceholder": "Procurar jogador…",
+    "userNotFound": "Jogador não encontrado.",
+    "myDashboard": "O meu dashboard",
+    "emptyFilter": "Nenhum jogo corresponde a este filtro.",
+    "showingRecent": "A mostrar os {shown} mais recentes de {total}"
   }
 }

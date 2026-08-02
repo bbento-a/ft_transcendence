@@ -183,6 +183,11 @@
     "medium": "Medium",
     "hard": "Hard",
     "exportCsv": "Export CSV",
-    "exportPdf": "Export PDF"
+    "exportPdf": "Export PDF",
+    "searchPlaceholder": "Search player…",
+    "userNotFound": "Player not found.",
+    "myDashboard": "My dashboard",
+    "emptyFilter": "No games match this filter.",
+    "showingRecent": "Showing the {shown} most recent of {total}"
   }
 }
