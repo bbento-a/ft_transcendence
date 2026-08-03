@@ -30,6 +30,20 @@ const ERROR_ORDER: RegExp[] = [
 	/^Email is managed by your login provider/,
 ];
 
+/*
+Mostra so os primeiros 3 caracteres da parte local do email (antes do @) e
+mascara o resto, mantendo o dominio visivel.
+  olabomdia@gmail.com  ->  ola**********@gmail.com
+*/
+const EMAIL_MASK = "*".repeat(10);
+function maskEmail(email: string): string {
+	const at = email.indexOf("@");
+	if (at === -1) return email; // sem @: nao e um email normal, nao arriscamos
+	const local = email.slice(0, at);
+	const domain = email.slice(at); // inclui o proprio "@"
+	return `${local.slice(0, 3)}${EMAIL_MASK}${domain}`;
+}
+
 export default function page() {
 	const t = useTranslations("settings");
 	const { user, refresh } = useUser();
@@ -168,7 +182,7 @@ export default function page() {
 						</div>
 						<div className={styles.info}>
 							<div className={styles.fieldDescription}>{t("email")}
-								<div className={styles.fieldInfo}>{user?.email}</div>
+								<div className={styles.fieldInfo}>{user?.email ? maskEmail(user.email) : ""}</div>
 							</div>
 						</div>
 					</div>

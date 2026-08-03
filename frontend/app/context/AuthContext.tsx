@@ -8,6 +8,9 @@ type User = {
 	email: string;
 	avatarUrl: string | null;
 	hasPassword: boolean;
+	wins: number;
+	losses: number;
+	draws: number;
 };
 
 type UserContextType = {

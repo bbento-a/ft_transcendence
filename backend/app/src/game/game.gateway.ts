@@ -489,6 +489,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     await this.gameService.finalizeGame(finalState);
 
+    // Avisa cada jogador humano que as suas stats mudaram, para o dashboard (se
+    // aberto noutra aba) se atualizar em tempo real. Emitimos para a room pessoal
+    // (userId), que apanha todas as ligacoes desse utilizador. A IA nao tem stats.
+    for (const playerId of [finalState.player1Id, finalState.player2Id]) {
+      if (playerId !== AI_PLAYER_ID) {
+        this.server.to(playerId).emit('statsUpdated');
+      }
+    }
+
     // A game vs the bot has no room to keep: "play again" just starts a new one.
     const room = this.rooms.get(roomId);
     if (!room) return;
