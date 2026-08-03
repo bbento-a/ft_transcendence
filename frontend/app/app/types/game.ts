@@ -17,6 +17,10 @@ export interface GameState {
   isGameOver: boolean;
   winnerId: string | null;
   disconnectedPlayerId?: string | null;
+  // Só existe em jogos contra a IA. Por agora quem decide é a constante
+  // DEFAULT_AI_DIFFICULTY no backend (game.service.ts); quando houver ecrã de
+  // escolha, basta emitir playVsAI com { difficulty }.
+  difficulty?: "easy" | "medium" | "hard";
 }
 
 export interface MatchFoundPayload {

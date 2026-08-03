@@ -10,10 +10,10 @@ export default function Footer() {
       <div className={styles.footerWrapper}>
         <div className={styles.footerContent}>
             <div className={styles.footerTexts}>
-              <Link href="/terms"><u><b>{t("terms")}</b></u></Link>
+              <Link href="/terms"><b>{t("terms")}</b></Link>
             </div>
           <div className={styles.footerTexts}>
-              <Link href="/privacy"><u><b>{t("privacyPolicy")}</b></u></Link>
+              <Link href="/privacy"><b>{t("privacyPolicy")}</b></Link>
           </div>
         </div>
       </div>

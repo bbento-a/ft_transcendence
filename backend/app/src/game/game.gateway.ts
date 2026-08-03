@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService, FORFEIT_GRACE_PERIOD_MS } from './game.service';
-import { GameState } from './game.types';
+import { DIFFICULTIES, GameState } from './game.types';
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
@@ -394,8 +394,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // --- gameplay -------------------------------------------------------------
 
+  /*
+    O frontend ainda nao manda dificuldade nenhuma, e nesse caso vale o
+    DEFAULT_AI_DIFFICULTY definido no game.service.ts. Quando houver ecra de escolha
+    basta emitir playVsAI com { difficulty: 'easy' | 'medium' | 'hard' }, sem mexer aqui.
+  */
   @SubscribeMessage('playVsAI')
-  startAIGame(@ConnectedSocket() client: Socket) {
+  startAIGame(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data?: { difficulty?: string },
+  ) {
     const userId = client.data.userId;
 
     if (this.isBusy(userId)) {
@@ -403,11 +411,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    //Nunca confiar no que vem do cliente: so passa se for mesmo um dos niveis conhecidos
+    const requested = data?.difficulty;
+    const difficulty = DIFFICULTIES.find((level) => level === requested);
+
     const roomId = `room-${this.roomCounter++}`;
     const state = this.gameService.InitNewGame(
       roomId,
       { id: userId, name: client.data.username },
       { id: AI_PLAYER_ID, name: AI_PLAYER_NAME },
+      difficulty,
     );
     client.join(roomId);
 

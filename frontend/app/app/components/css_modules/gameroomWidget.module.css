@@ -42,7 +42,7 @@
 }
 .playerWrapper {
 	height: 90px;
-	width: 100%;
+	width: 150px;
 	border-radius: 20px;
 	background-color: #ecffe9;
 	border: 1px solid #243119;
@@ -88,4 +88,25 @@
 .text {
 	position: relative;
 	font-weight: 600;
+}
+
+@media (max-width: 480px) {
+	.playerWrapper {
+		width: 120px;
+		font-size: small;
+	}
+	
+}@media (max-width: 375px) {
+	.playerWrapper {
+		width: 90px;
+		font-size: x-small;
+	}
+	.frameGroup {
+		gap: 10px;
+		align-items: center;
+		justify-content: center;
+	}
+	.button{
+		min-width: 200px;
+	}
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GamePlayer, GameState } from './game.types';
+import { AiConfig, Difficulty, GamePlayer, GameState } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
@@ -7,6 +7,40 @@ import { ConnectFourAI } from './game.ai';
 // instead of keeping a second copy of the number that could drift out of sync.
 export const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
 const AI_PLAYER_ID = 'AI';
+
+/*
+    >>> MUDA AQUI PARA TESTAR OS NIVEIS <<<
+    Enquanto o frontend nao tiver ecra de escolha, e este valor que manda em todos
+    os jogos contra a IA. Aceita 'easy', 'medium' ou 'hard'.
+*/
+const DEFAULT_AI_DIFFICULTY: Difficulty = 'hard';
+
+/*
+    O que cada nivel quer dizer na pratica.
+
+    depth          = jogadas a frente que a IA olha.
+    blunderChance  = probabilidade de jogar a 2a melhor jogada em vez da melhor.
+    timeBudgetMs   = se definido, a IA aprofunda ate gastar este tempo em vez de ir
+                     sempre ate ao depth. Ver o comentario no searchIterative.
+
+    Os tempos sao por jogada e sao tempo em que o servidor fica bloqueado (a procura
+    e sincrona), por isso convem nao esticar.
+
+      easy   -> ve 2 jogadas a frente e erra 40% das vezes. Falha bloqueios obvios,
+                que e o que faz parecer um adversario distraido e nao um bot partido.
+      medium -> ve 6 jogadas a frente e erra 10% das vezes. Joga bem mas escorrega.
+      hard   -> aprofunda o que conseguir em 150ms (chega a 10-12 jogadas em posicoes
+                calmas) e nunca erra de proposito.
+
+    Porque e que o hard nao e simplesmente depth 10 fixo: medimos 60 posicoes e o pior
+    caso de depth 10 foi 2.7s e o de depth 9 foi 2.4s. Com orcamento de tempo o pior
+    caso passa a ser o proprio orcamento.
+*/
+const AI_LEVELS: Record<Difficulty, AiConfig> = {
+  easy:   { depth: 2,  blunderChance: 0.40 },
+  medium: { depth: 6,  blunderChance: 0.10 },
+  hard:   { depth: 12, blunderChance: 0, timeBudgetMs: 150 },
+};
 
 @Injectable()
 export class GameService
@@ -24,7 +58,11 @@ export class GameService
     return Array.from({ length: 6 }, () => Array(7).fill(0));
   }
 
-  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer): GameState {
+  /*
+    difficulty so faz sentido quando o player2 e a IA. Fica no fim e opcional para
+    as chamadas de jogo entre dois humanos continuarem iguais.
+  */
+  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer, difficulty?: Difficulty): GameState {
     const newGame: GameState = {
       board: this.createEmptyBoard(),
       roomId: roomId,
@@ -35,6 +73,7 @@ export class GameService
       currentPlayer: 1, // player 1 vai começar sempre
       isGameOver:  false,
       winnerId: null,
+      difficulty: player2.id === AI_PLAYER_ID ? (difficulty ?? DEFAULT_AI_DIFFICULTY) : undefined,
     };
 
     this.activeGames.set(roomId,newGame);
@@ -128,7 +167,15 @@ PlayerAIMove(roomId: string): GameState | undefined
 
   if(game.player2Id != AI_PLAYER_ID || game.currentPlayer !== 2)
     return undefined;
-  const column = this.ai.getBestMove(game.board,2,6);
+
+  //Jogos criados antes deste campo existir ficam no nivel por omissao
+  const config = AI_LEVELS[game.difficulty ?? DEFAULT_AI_DIFFICULTY];
+  const column = this.ai.getMove(game.board,2,config);
+
+  //-1 significa que a IA nao tinha onde jogar. Nao devia acontecer (o empate e detetado antes)
+  if(column < 0)
+    return undefined;
+
   return this.MakeMove(roomId,AI_PLAYER_ID,column);
 }
 

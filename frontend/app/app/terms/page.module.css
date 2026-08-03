@@ -1,5 +1,6 @@
 .pageWrapper {
     width: 100%;
+    height: auto;
     min-height: 100vh;
     position: relative;
     display: flex;
@@ -9,43 +10,40 @@
     box-sizing: border-box;
     gap: 20px;
 }
-
 .contentWrapper {
     width: 100%;
     max-width: 900px;
     height: auto;
     position: relative;
 }
-
-.frameIcon {
-    position: absolute;
-    width: 483px;
-    height: 116.4px;
-}
-
 .termsTexts {
     position: relative;
-    font-size: large;
+    font-size: smaller;
     color: #243119;
-    background: #9ccb86;
-    border: 1px solid #c7e3ba;
+    background: rgb(218, 253, 212, 0.5);
+    border: 1px solid #243119;
     border-radius: 18px;
     padding: 32px 36px;
-    box-shadow: 0 8px 24px rgba(36, 49, 25, 0.12);
+    box-shadow: 0 8px 14px rgb(36, 49, 25, 0.5);
     max-width: 900px;
     line-height: 1.7;
     overflow: visible;
 }
-
-.termsTexts h1,
-.termsTexts h2,
-.termsTexts p,
-.termsTexts li {
-    color: #204800;
-}
-
-.termsTexts h1,
-.termsTexts h2 {
+.termsTexts h1{
     font-size: x-large;
-    margin-top: 0;
+    font-weight: 600;
+}
+.termsTexts h2 {
+    font-size: large;
+    font-weight: 500;
+}
+.termsTexts p{
+    margin-left: 10px;
+}
+.buttonWrapper {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	padding: 5px;
+	z-index: 3;
 }

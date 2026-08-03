@@ -1,4 +1,8 @@
+"use client"
+
 import styles from "./page.module.css";
+import Image from 'next/image'
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 export default function Terms() {
@@ -18,6 +22,8 @@ export default function Terms() {
     "law",
   ] as const;
 
+  const router = useRouter();
+
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.contentWrapper}>
@@ -33,6 +39,11 @@ export default function Terms() {
           ))}
         </div>
       </div>
+			<div className={styles.buttonWrapper}>
+				<button onClick={() => {router.back()}}>
+					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
+				</button>
+			</div>
     </div>
   );
 }

@@ -149,9 +149,7 @@ export default function page() {
 					/>
 				</div>
 				<button className={styles.buttonProfile} onClick={handleButtonClick}>
-				  <div className={styles.buttonText}>
-				    {t("changepfp")}
-				  </div>
+				  <div className={styles.buttonText}>{t("changepfp")}</div>
 				</button>
 				<input
 				  ref={fileInputRef}
@@ -160,15 +158,18 @@ export default function page() {
 				  style={{ display: "none" }}
 				  onChange={handleFileChange}
 				/>
+				<div>
+
 				<div className={styles.infoGroup}>
 					<div className={styles.info}>
 						<div className={styles.fieldDescription}>{t("username")}
 							<div className={styles.fieldInfo}>{user?.username}</div>
+							</div>
 						</div>
-					</div>
-					<div className={styles.info}>
-						<div className={styles.fieldDescription}>{t("email")}
-							<div className={styles.fieldInfo}>{user?.email}</div>
+						<div className={styles.info}>
+							<div className={styles.fieldDescription}>{t("email")}
+								<div className={styles.fieldInfo}>{user?.email}</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -212,7 +213,7 @@ export default function page() {
 			</div>
 			<div className={styles.buttonWrapper}>
 				<button onClick={() => {router.back()}}>
-					<Image className={styles.buttonIcon} width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
+					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 				</button>
 			</div>
 		</div>
