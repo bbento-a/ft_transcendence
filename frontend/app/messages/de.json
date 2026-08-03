@@ -147,5 +147,10 @@
     "passwordmismatch": "Die Passwörter stimmen nicht überein.",
     "nochanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
     "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden."
+  },
+  "gamerooms": {
+    "NoGameRooms": "Er zijn momenteel geen speelkamers beschikbaar!",
+    "playvsbot": "Speel tegen een bot",
+    "playvsplayer": "Speel tegen iemand"
   }
 }

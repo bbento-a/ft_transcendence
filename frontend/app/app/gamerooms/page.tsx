@@ -9,11 +9,14 @@ import GamePopUp from "../components/gamePopUp"
 import useClickOutside from "../hooks/useClickOutside"
 import RequireAuth from "../components/requireAuth"
 import { useGameSocket } from "../hooks/useGameSocket"
+import { useTranslations } from "next-intl";
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
+
+	const t = useTranslations("gamerooms");
 
 	const { rooms, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
@@ -43,7 +46,7 @@ export default function Home() {
 		{
 			rooms.length === 0 &&
 			<div className={styles.textWrapper}>
-				<div className={styles.noGameRooms}>No game rooms available at the moment!</div>
+				<div className={styles.noGameRooms}>{t("NoGameRooms")}</div>
 			</div>
 		}
 		{rooms.map((room) => (

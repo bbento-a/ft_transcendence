@@ -147,5 +147,10 @@
     "passwordmismatch": "As palavras-passe não coincidem.",
     "nochanges": "Preenche pelo menos um campo para guardar alterações.",
     "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
+  },
+  "gamerooms": {
+    "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
+    "playvsbot": "Jogar com o bot",
+    "playvsplayer": "Jogar com alguém"
   }
 }

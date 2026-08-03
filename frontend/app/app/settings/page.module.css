@@ -175,6 +175,13 @@
 	padding: 7px;
 	margin: 5px 0px;
 	font-weight: 500;
+	transition: background-color 0.2s ease;
+}
+.formField:hover {
+  background-color: #c4c4c4;
+}
+.formField:active {
+  background-color: #898989;
 }
 .confirmButton {
 	width: 100%;
