@@ -11,7 +11,7 @@
 	padding: 20px 40px;
 	box-sizing: border-box;
 	text-align: left;
-	color: #fff;
+	color: #ecffe9;
 }
 .footerContent {
 	width: 100%;
@@ -25,5 +25,12 @@
 .footerTexts {
 	position: relative;
 	font-size: small;
+	font-weight: 600;
+}
+
+.footerTexts:hover {
+	position: relative;
+	font-size: small;
+	color: #243119;
 	font-weight: 600;
 }

@@ -189,5 +189,11 @@
     "myDashboard": "My dashboard",
     "emptyFilter": "No games match this filter.",
     "showingRecent": "Showing the {shown} most recent of {total}"
+  },
+  "gamerooms": {
+    "NoGameRooms": "No game rooms available at the moment!",
+    "playvsbot": "Play vs bot",
+    "playvsplayer": "Play vs someone"
   }
 }
+

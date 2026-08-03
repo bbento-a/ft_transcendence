@@ -189,5 +189,11 @@
     "myDashboard": "O meu dashboard",
     "emptyFilter": "Nenhum jogo corresponde a este filtro.",
     "showingRecent": "A mostrar os {shown} mais recentes de {total}"
+  },
+  "gamerooms": {
+    "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
+    "playvsbot": "Jogar com o bot",
+    "playvsplayer": "Jogar com alguém"
   }
 }
+

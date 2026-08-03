@@ -73,3 +73,17 @@
   object-fit: cover;
   box-sizing: border-box;
 }
+@media (max-width: 375px) {
+	.buttonIcon {
+		width: 30px;
+		height: 30px;
+	}
+	.imageIcon {
+		scale: 0.;
+		height: 2.0rem;
+	}
+	.profilePic {
+		width: 30px;
+		height: 30px;
+	}
+}
