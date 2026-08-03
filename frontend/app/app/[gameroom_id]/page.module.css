@@ -107,7 +107,14 @@
 	width: 30px;
 	height: auto;
 	position: relative;
-	object-fit: cover;	
+	object-fit: cover;
+	transition: transform 0.15s ease;
+}
+.buttonIcon:hover {
+  transform: scale(1.30);
+}
+.buttonIcon:active {
+  transform: scale(0.80);
 }
 .popUpWrapper{
 	position: absolute;
