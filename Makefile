@@ -24,12 +24,12 @@ up: $(ENV_FILE)
 	@echo "  (self-signed cert -> Advanced -> Proceed to localhost)"
 	@echo ""
 
-# Development stack: hot reload, source mounted, db reachable on 127.0.0.1:5432
+# Development stack: hot reload, source mounted (db stays internal; use make psql)
 dev: $(ENV_FILE) host-modules
 	$(COMPOSE) up -d --build
 	@echo ""
 	@echo "  Dev stack running at https://localhost"
-	@echo "  Hot reload is on. After changing package.json, run: make re"
+	@echo "  Hot reload is on. After changing package.json, run: make re-dev"
 	@echo ""
 
 # Populate the HOST node_modules so your editor (VS Code) can resolve imports and
@@ -68,6 +68,14 @@ start:
 $(ENV_FILE): $(ENV_EXAMPLE)
 	@if [ -f $(ENV_FILE) ]; then \
 		echo ">> $(ENV_FILE) already exists, leaving it alone"; \
+		missing=""; \
+		for key in $$(sed -n 's/^\([A-Z0-9_]*\)=.*/\1/p' $(ENV_EXAMPLE)); do \
+			grep -q "^$$key=" $(ENV_FILE) || missing="$$missing $$key"; \
+		done; \
+		if [ -n "$$missing" ]; then \
+			echo ">> WARNING: $(ENV_FILE) is missing keys from $(ENV_EXAMPLE):$$missing"; \
+			echo ">>          Add them by hand, or delete $(ENV_FILE) and rerun make."; \
+		fi; \
 		touch $(ENV_FILE); \
 	else \
 		echo ">> Generating $(ENV_FILE) with random secrets..."; \
@@ -152,8 +160,11 @@ fclean:
 	@rm -rf $(ARTIFACTS)
 	@echo ">> Removed host build artifacts (.next, dist, next-env.d.ts)"
 
+# re rebuilds PRODUCTION (what evaluators expect); re-dev is its dev twin.
 re: fclean up
+
+re-dev: fclean dev
 
 .PHONY: all up dev down stop start setup host-modules ps logs logs-backend \
         logs-frontend logs-nginx psql shell-backend shell-frontend nginx-test \
-        clean clean-artifacts fclean re
+        clean clean-artifacts fclean re re-dev
