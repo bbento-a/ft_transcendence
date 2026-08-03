@@ -1,5 +1,5 @@
 import { Controller, Post, Patch, Body, Res, UseGuards, Get,Req, UnauthorizedException } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -61,6 +61,9 @@ export class AuthController {
     return { message: 'Login successful' };
   }
 
+  // Fora do rate limit: e so um check de sessao (JWT + 1 leitura), chamado a
+  // cada carregamento de pagina.
+  @SkipThrottle()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
   getProfile(@Req() req: Request) {

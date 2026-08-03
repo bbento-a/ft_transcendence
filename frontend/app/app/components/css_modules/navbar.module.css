@@ -73,6 +73,17 @@
   object-fit: cover;
   box-sizing: border-box;
 }
+/* Placeholder do avatar enquanto o /me carrega: reserva o espaco (mesmo tamanho
+   do .buttonIcon) e pulsa suavemente, para o icone de perfil nao aparecer de
+   repente no F5. */
+.avatarPlaceholder {
+  background-color: rgba(218, 253, 212, 0.25);
+  animation: avatarPulse 1.2s ease-in-out infinite;
+}
+@keyframes avatarPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+}
 @media (max-width: 375px) {
 	.buttonIcon {
 		width: 30px;

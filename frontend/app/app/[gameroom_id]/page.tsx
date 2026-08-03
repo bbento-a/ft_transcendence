@@ -102,6 +102,14 @@ export default function Page() {
 
 	return (
 	<div className={styles.pageWrapper}>
+		{!inRoom ? (
+		// Enquanto o socket liga e a sala nao esta confirmada: so o spinner, sem
+		// texto, em vez do esqueleto "Player1 vs Player2 / Connecting...".
+		<div className={styles.connecting}>
+			<div className={styles.spinner} />
+		</div>
+		) : (
+		<>
 		<div className={styles.sides}>
 			<div className={styles.playerText}>{leftName}</div>
 
@@ -146,6 +154,8 @@ export default function Page() {
 		<div className={styles.sides}>
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
+		</>
+		)}
 		<div className={styles.buttonWrapper}>
 			<button className={styles.buttonIcon} onClick={handleBack}>
 				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>

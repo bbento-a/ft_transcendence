@@ -12,9 +12,9 @@ async function bootstrap() {
   // e o rate limit passava a ser partilhado por todos os utilizadores
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
-  app.useStaticAssets(join(__dirname, "..", "uploads"), {
-    prefix: "/uploads/",
-  });
+  
+
+  
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());

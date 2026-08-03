@@ -26,7 +26,7 @@ export default function NavBar()
 
 	
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
-	const { user } = useUser();
+	const { user, loading } = useUser();
 	const logged = !!user;
 	
 	const toggled = openMenu === "lang";
@@ -71,7 +71,14 @@ export default function NavBar()
 				</button>
 				{toggled && <LanguagesWidget ref={langMenuRef}></LanguagesWidget>}
 				{
-					logged &&
+					// Enquanto o /me carrega mostramos um placeholder no lugar do
+					// perfil, para o icone nao "saltar" quando o user aparece (F5).
+					loading ? (
+						<div
+							className={`${styles.buttonIcon} ${styles.avatarPlaceholder}`}
+							aria-hidden="true"
+						/>
+					) : logged ? (
 						<button ref={profBtnRef} onClick={() => setOpenMenu(profMenu ? null : "profile")} className={styles.buttonIcon}>
 							<img
 								className={styles.profilePic}
@@ -81,6 +88,7 @@ export default function NavBar()
 								height={50}
 							/>
 						</button>
+					) : null
 				}
 				{logged && profMenu && <ProfileMenu ref={profMenuRef} onClose={() => setOpenMenu(null)}></ProfileMenu>}
 			</div>

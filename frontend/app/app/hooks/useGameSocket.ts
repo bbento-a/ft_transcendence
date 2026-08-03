@@ -10,6 +10,7 @@ import type {
   RoomSummary,
 } from "../types/game";
 import { AI_PLAYER_ID } from "../types/game";
+import { useUser } from "@/context/AuthContext";
 
 const ROWS = 6;
 const COLS = 7;
@@ -26,14 +27,20 @@ export function useGameSocket() {
   const [state, setState] = useState<GameState | null>(null);
   const [status, setStatus] = useState<string>("");
   const [connected, setConnected] = useState(false);
-  // Our own id, to know if we are player 1 or 2 (which drives "is it my turn").
-  const [myId, setMyId] = useState<string | null>(null);
-  // Our own name. While a host waits there is no game yet and so no names from
-  // the server, but the person looking at that empty board is always the host.
-  const [myName, setMyName] = useState<string | null>(null);
+  // Quem somos: id (para saber se somos o player 1 ou 2) e nome. Vem do
+  // AuthContext, que ja carregou o /api/auth/me uma vez — NAO voltamos a
+  // pedi-lo aqui. Cada montagem deste hook (navegacao, StrictMode em dev) fazia
+  // mais um /api/auth/me e isso estoirava o rate limit (429).
+  const { user } = useUser();
+  const myId = user?.id ?? null;
+  const myName = user?.username ?? null;
 
   // Lobby: every open room, refreshed by the server whenever one changes.
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
+  // Ja recebemos a lista de salas pelo menos uma vez? Distingue "ainda a
+  // carregar" de "carregou e esta vazia", para o lobby nao dar flash do
+  // "no rooms available" enquanto o socket liga (ex.: no F5).
+  const [roomsLoaded, setRoomsLoaded] = useState(false);
   // Id of a room we just created, so the lobby can navigate into it.
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
   // A room we never really left (closed tab, lost connection). The lobby sends
@@ -55,16 +62,6 @@ export function useGameSocket() {
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   useEffect(() => {
-    // Who are we? The board only carries player ids, so we compare against ours.
-    fetch("/api/auth/me", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!d) return;
-        setMyId(d.id);
-        setMyName(d.username);
-      })
-      .catch(() => {});
-
     // No URL => same origin; nginx proxies /socket.io/. withCredentials sends
     // the auth cookie in the handshake so the gateway can identify us.
     const socket = io({ withCredentials: true });
@@ -127,7 +124,10 @@ export function useGameSocket() {
     });
 
     // --- lobby ---
-    socket.on("roomList", (list: RoomSummary[]) => setRooms(list));
+    socket.on("roomList", (list: RoomSummary[]) => {
+      setRooms(list);
+      setRoomsLoaded(true);
+    });
     socket.on("roomCreated", (d: { roomId: string }) => setCreatedRoomId(d.roomId));
     socket.on("resumeRoom", (d: { roomId: string }) => setResumeRoomId(d.roomId));
     socket.on("roomUnavailable", () => setRoomUnavailable(true));
@@ -225,7 +225,7 @@ export function useGameSocket() {
 
   return {
     state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
-    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
+    rooms, roomsLoaded, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
     getRooms, createRoom, enterRoom, leaveRoom,
     requestRematch, iWantRematch, opponentWantsRematch,
     ROWS, COLS,
