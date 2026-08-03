@@ -7,7 +7,9 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
-RUN npm ci
+# Cache mount: npm's download cache survives between builds (it lives outside
+# the image), so a rebuild only downloads packages that actually changed.
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 
 # ============================================================
@@ -32,7 +34,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY app/package.json app/package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
@@ -49,8 +51,14 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # No `chown -R /app`: it would rewrite every file's metadata and make Docker
 # store a second full copy of node_modules (~400MB) in a new layer. The app
 # only needs to READ these files, and the default permissions already allow it.
-RUN addgroup -S nest && adduser -S nest -G nest
-#USER nest
+#
+# uploads/ is the one place the app WRITES. Owning it here (a tiny empty dir,
+# so the layer cost is nothing) means the named volume mounted on top inherits
+# nest's ownership when Docker first creates it — so the container never needs
+# root, not even in the entrypoint.
+RUN addgroup -S nest && adduser -S nest -G nest \
+ && mkdir -p /app/uploads/avatars && chown -R nest:nest /app/uploads
+USER nest
 
 EXPOSE 3000
 
