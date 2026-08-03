@@ -64,10 +64,9 @@ export default function Home() {
 			{
 				toggled &&
 				<GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>
-
 			}
 			{
-				toggled &&
+				toggled && difficulty &&
 				<DifficultyWidget></DifficultyWidget>
 			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
