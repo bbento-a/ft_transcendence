@@ -75,7 +75,11 @@
 	width: 70px;
 	height: 70px;
 	position: relative;
-	object-fit: cover;	
+	object-fit: cover;
+	transition: transform 0.15s ease;
+}
+.gameroomIcon:active {
+  transform: scale(0.80);
 }
 
 @media (max-width: 430px) {

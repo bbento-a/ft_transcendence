@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
         </div>
       </div>
       <div className={styles.buttonWrapper}>
-				<button onClick={() => {router.back()}}>
+				<button className={styles.backButton} onClick={() => {router.back()}}>
 					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 				</button>
 			</div>

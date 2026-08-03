@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
 
 import ExitPopUp from "../components/exitPopUp";
+import { subtle } from "crypto";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -146,7 +147,7 @@ export default function Page() {
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
 		<div className={styles.buttonWrapper}>
-			<button onClick={handleBack}>
+			<button className={styles.buttonIcon} onClick={handleBack}>
 				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
