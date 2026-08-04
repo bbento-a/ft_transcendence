@@ -147,7 +147,8 @@
     "success": "Perfil atualizado com sucesso.",
     "passwordmismatch": "As palavras-passe não coincidem.",
     "nochanges": "Preenche pelo menos um campo para guardar alterações.",
-    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
+    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui.",
+    "avatarerror": "Não foi possível atualizar a imagem. Usa um JPEG, PNG, GIF ou WebP com menos de 5MB."
   },
   "dashboard": {
     "title": "Estatísticas",
