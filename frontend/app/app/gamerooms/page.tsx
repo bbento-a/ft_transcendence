@@ -39,6 +39,12 @@ export default function Home() {
 
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
+	// Fechar o popup fecha tambem o widget de dificuldade, senao ao reabrir o
+	// popup ele ja vinha aberto da vez anterior.
+	useEffect(() => {
+		if (!toggled) setDifficulty(false);
+	}, [toggled]);
+
 	// A rota [gameroom_id] e a mesma para qualquer sala, por isso prefetch de um
 	// id qualquer (/ai) ja descarrega o chunk dela — o push depois e imediato.
 	useEffect(() => {
@@ -100,12 +106,17 @@ export default function Home() {
 						setCreatingRoom(true);
 						createRoom();
 					}}
-					onPlayVsBot={() => router.push("/ai")}
+					onPlayVsBot={() => setDifficulty((open) => !open)}
 				></GamePopUp>
 			}
 			{
+				// "Play vs bot" abre isto em vez de navegar logo: escolher o nivel
+				// e que arranca o jogo, com a dificuldade a viajar no URL para a
+				// pagina /ai a mandar no playVsAI.
 				toggled && difficulty &&
-				<DifficultyWidget></DifficultyWidget>
+				<DifficultyWidget
+					onSelect={(level) => router.push(`/ai?difficulty=${level}`)}
+				></DifficultyWidget>
 			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>

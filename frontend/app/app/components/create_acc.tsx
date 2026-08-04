@@ -2,9 +2,9 @@
 
 import styles from "./css_modules/create_acc.module.css";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import React,{ useState ,ChangeEvent} from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { apiPost } from "../lib/api";
 import { EMPTY_USERNAME, EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, firstEmptyField, pickError } from "../lib/formErrors";
 import { useUser } from "@/context/AuthContext";
@@ -46,7 +46,7 @@ export default function create_acc() {
 	const [error,setError] = useState<string | null>(null);
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
-	const router = useRouter();
+	const router = useTransitionRouter();
 	const { refresh } = useUser();
 
 	const handleInputs=(e: ChangeEvent<HTMLInputElement>)=>{

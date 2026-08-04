@@ -21,7 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import styles from "./page.module.css";
 import {
   DayBucket,

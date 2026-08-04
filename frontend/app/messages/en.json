@@ -193,8 +193,14 @@
   },
   "gamerooms": {
     "NoGameRooms": "No game rooms available at the moment!",
+    "difficulty": "Difficulty",
     "playvsbot": "Play vs bot",
     "playvsplayer": "Play vs someone"
+  },
+  "game": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
   }
 }
 

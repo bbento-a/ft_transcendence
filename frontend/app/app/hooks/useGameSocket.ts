@@ -9,7 +9,7 @@ import type {
   OpponentDisconnectedPayload,
   RoomSummary,
 } from "../types/game";
-import { AI_PLAYER_ID } from "../types/game";
+import { AI_PLAYER_ID, Difficulty } from "../types/game";
 import { useUser } from "@/context/AuthContext";
 
 const ROWS = 6;
@@ -196,7 +196,11 @@ export function useGameSocket() {
   );
 
   // --- actions ---
-  const playAI = useCallback(() => socketRef.current?.emit("playVsAI"), []);
+  // Sem dificuldade o backend usa o DEFAULT_AI_DIFFICULTY dele; com ela, o
+  // backend ainda valida contra a lista de niveis antes de aceitar.
+  const playAI = useCallback((difficulty?: Difficulty) => {
+    socketRef.current?.emit("playVsAI", difficulty ? { difficulty } : undefined);
+  }, []);
 
   // Lobby actions.
   const getRooms = useCallback(() => socketRef.current?.emit("getRooms"), []);
@@ -237,7 +241,12 @@ export function useGameSocket() {
   const requestRematch = useCallback(() => {
     if (!state?.isGameOver) return;
     if (state.player2Id === AI_PLAYER_ID) {
-      socketRef.current?.emit("playVsAI");
+      // Repete a dificuldade do jogo que acabou; sem ela o rematch caia no
+      // default do backend em vez de manter o nivel escolhido.
+      socketRef.current?.emit(
+        "playVsAI",
+        state.difficulty ? { difficulty: state.difficulty } : undefined,
+      );
       return;
     }
     setIWantRematch(true);

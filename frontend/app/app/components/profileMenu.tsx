@@ -2,7 +2,7 @@
 
 import type { Ref } from "react";
 import styles from "./css_modules/profileMenu.module.css"
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -11,7 +11,7 @@ export default function profileMenu({ ref, onClose }: { ref?: Ref<HTMLDivElement
 	const t = useTranslations("profile");
 
 	const { user, logout } = useUser();
-	const router = useRouter();
+	const router = useTransitionRouter();
 
 	const handleLogout = async () => {
 		await logout();

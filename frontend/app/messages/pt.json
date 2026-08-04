@@ -193,8 +193,14 @@
   },
   "gamerooms": {
     "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
+    "difficulty": "Dificuldade",
     "playvsbot": "Jogar com o bot",
     "playvsplayer": "Jogar com alguém"
+  },
+  "game": {
+    "easy": "Fácil",
+    "medium": "Médio",
+    "hard": "Difícil"
   }
 }
 
