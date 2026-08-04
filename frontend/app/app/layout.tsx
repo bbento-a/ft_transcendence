@@ -5,6 +5,7 @@ import "./globals.css";
 import NavBar from "./components/navbar";
 import Footer from "./components/footer";
 import { UserProvider } from "@/context/AuthContext";
+import { NavGuardProvider } from "@/context/NavGuardContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 
@@ -38,11 +39,13 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>
           <UserProvider>
-            <NavBar />
-            <div className="background-image">
-              {children}
-            </div>
-            <Footer />
+            <NavGuardProvider>
+              <NavBar />
+              <div className="background-image">
+                {children}
+              </div>
+              <Footer />
+            </NavGuardProvider>
           </UserProvider>
         </NextIntlClientProvider>
       </body>

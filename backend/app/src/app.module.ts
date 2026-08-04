@@ -21,9 +21,12 @@ Como listei o AppController e o AppService o compilador agora sabe que estao a t
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // limite por omissao para toda a app; rotas sensiveis (login/register)
-    // sobrepoem isto com @Throttle para um limite mais apertado
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 20 }]),
+    // Limite por omissao para toda a app. Conta TODOS os pedidos por IP juntos,
+    // por isso 20/min era baixo demais para uso normal (navegar + /auth/me +
+    // /stats/me + jogo davam 429 com facilidade, ainda mais em dev com o
+    // StrictMode a duplicar efeitos). 100/min deixa folga e continua a travar
+    // abuso. As rotas sensiveis (login/register) mantem o seu @Throttle apertado.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     GameModule, PrismaModule, AuthModule, StatsModule
   ],  //Modulos que este modulo vai precisar
   controllers: [AppController], //Controladores que pertencem a este modulo

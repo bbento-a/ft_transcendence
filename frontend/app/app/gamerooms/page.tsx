@@ -20,7 +20,7 @@ export default function Home() {
 
 	const t = useTranslations("gamerooms");
 
-	const { rooms, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
+	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
@@ -46,18 +46,25 @@ export default function Home() {
 		<div className={styles.wrapperScroll}>
 
 		{
-			rooms.length === 0 &&
-			<div className={styles.textWrapper}>
-				<div className={styles.noGameRooms}>{t("NoGameRooms")}</div>
-			</div>
+			// Ainda a carregar a lista: spinner, para nao dar flash do "no rooms".
+			!roomsLoaded ? (
+				<div className={styles.textWrapper}>
+					<div className={styles.spinner} aria-label="Loading" />
+				</div>
+			) : rooms.length === 0 ? (
+				<div className={styles.textWrapper}>
+					<div className={styles.noGameRooms}>{t("NoGameRooms")}</div>
+				</div>
+			) : (
+				rooms.map((room) => (
+					<GameroomWidget
+						key={room.id}
+						room={room}
+						onEnter={(roomId) => router.push(`/${roomId}`)}
+					/>
+				))
+			)
 		}
-		{rooms.map((room) => (
-			<GameroomWidget
-				key={room.id}
-				room={room}
-				onEnter={(roomId) => router.push(`/${roomId}`)}
-			/>
-		))}
 
 		</div>
 		<div ref={popupRef} className={styles.buttonWrapper}>

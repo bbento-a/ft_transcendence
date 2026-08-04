@@ -10,9 +10,15 @@ import type {
   RoomSummary,
 } from "../types/game";
 import { AI_PLAYER_ID } from "../types/game";
+import { useUser } from "@/context/AuthContext";
 
 const ROWS = 6;
 const COLS = 7;
+
+// Quanto tempo, no maximo, o socket fica aberto a espera da confirmacao de uma
+// saida antes de fechar na mesma. A pagina nunca espera por isto — so o fecho
+// do socket espera —, por isso um servidor calado nao trava nada.
+const LEAVE_ACK_TIMEOUT_MS = 1000;
 
 // The single place that talks to the game gateway. A component calls this hook
 // and drives the board from `state`, forwarding column clicks through `play`.
@@ -23,17 +29,27 @@ export function useGameSocket() {
   // callback risks a stale value. The server sends roomId on every update.
   const roomRef = useRef<string | null>(null);
 
+  // Saida pedida e ainda por confirmar. Resolve quando o servidor responde, e e
+  // o que segura o fecho do socket na limpeza do efeito.
+  const pendingLeaveRef = useRef<Promise<void> | null>(null);
+
   const [state, setState] = useState<GameState | null>(null);
   const [status, setStatus] = useState<string>("");
   const [connected, setConnected] = useState(false);
-  // Our own id, to know if we are player 1 or 2 (which drives "is it my turn").
-  const [myId, setMyId] = useState<string | null>(null);
-  // Our own name. While a host waits there is no game yet and so no names from
-  // the server, but the person looking at that empty board is always the host.
-  const [myName, setMyName] = useState<string | null>(null);
+  // Quem somos: id (para saber se somos o player 1 ou 2) e nome. Vem do
+  // AuthContext, que ja carregou o /api/auth/me uma vez — NAO voltamos a
+  // pedi-lo aqui. Cada montagem deste hook (navegacao, StrictMode em dev) fazia
+  // mais um /api/auth/me e isso estoirava o rate limit (429).
+  const { user } = useUser();
+  const myId = user?.id ?? null;
+  const myName = user?.username ?? null;
 
   // Lobby: every open room, refreshed by the server whenever one changes.
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
+  // Ja recebemos a lista de salas pelo menos uma vez? Distingue "ainda a
+  // carregar" de "carregou e esta vazia", para o lobby nao dar flash do
+  // "no rooms available" enquanto o socket liga (ex.: no F5).
+  const [roomsLoaded, setRoomsLoaded] = useState(false);
   // Id of a room we just created, so the lobby can navigate into it.
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
   // A room we never really left (closed tab, lost connection). The lobby sends
@@ -55,16 +71,6 @@ export function useGameSocket() {
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   useEffect(() => {
-    // Who are we? The board only carries player ids, so we compare against ours.
-    fetch("/api/auth/me", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!d) return;
-        setMyId(d.id);
-        setMyName(d.username);
-      })
-      .catch(() => {});
-
     // No URL => same origin; nginx proxies /socket.io/. withCredentials sends
     // the auth cookie in the handshake so the gateway can identify us.
     const socket = io({ withCredentials: true });
@@ -127,16 +133,28 @@ export function useGameSocket() {
     });
 
     // --- lobby ---
-    socket.on("roomList", (list: RoomSummary[]) => setRooms(list));
+    socket.on("roomList", (list: RoomSummary[]) => {
+      setRooms(list);
+      setRoomsLoaded(true);
+    });
     socket.on("roomCreated", (d: { roomId: string }) => setCreatedRoomId(d.roomId));
     socket.on("resumeRoom", (d: { roomId: string }) => setResumeRoomId(d.roomId));
     socket.on("roomUnavailable", () => setRoomUnavailable(true));
 
     // Cleanup: React dev mode mounts twice; without this we leak sockets and
     // leave phantom rooms behind in the gateway.
+    //
+    // Com uma saida acabada de pedir, o socket so fecha depois de o servidor a
+    // confirmar. Sao alguns ms com dois sockets nossos abertos — o gateway ja
+    // conta com isso e e o que evita
+    // que o pacote do "leaveRoom" morra com a ligacao.
     return () => {
-      socket.disconnect();
+      const pendingLeave = pendingLeaveRef.current;
+      pendingLeaveRef.current = null;
       socketRef.current = null;
+
+      if (pendingLeave) pendingLeave.then(() => socket.disconnect());
+      else socket.disconnect();
     };
   }, []);
 
@@ -194,11 +212,23 @@ export function useGameSocket() {
   // Leaves whichever room we are actually in. That is not always the one in the
   // URL: a game vs the bot is reached through /ai but the server gives it a real
   // id, and leaving with "ai" would abandon nothing.
+  //
+  // Volta imediatamente: quem chama navega ja, sem esperar pelo servidor. O que
+  // fica pendente e o fecho do socket — desmontar a pagina fecha-o, e fecha-lo
+  // antes de o pacote sair deixava-nos "dentro" da sala do lado do servidor.
   const leaveRoom = useCallback(() => {
     const roomId = roomRef.current;
-    if (!roomId) return;
-    socketRef.current?.emit("leaveRoom", roomId);
+    const socket = socketRef.current;
     roomRef.current = null;
+    if (!roomId || !socket) return;
+
+    pendingLeaveRef.current = new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, LEAVE_ACK_TIMEOUT_MS);
+      socket.emit("leaveRoom", roomId, () => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
   }, []);
 
   // "Play again" once a game is over. Against the bot there is nobody to agree
@@ -225,7 +255,7 @@ export function useGameSocket() {
 
   return {
     state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
-    rooms, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
+    rooms, roomsLoaded, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
     getRooms, createRoom, enterRoom, leaveRoom,
     requestRematch, iWantRematch, opponentWantsRematch,
     ROWS, COLS,
