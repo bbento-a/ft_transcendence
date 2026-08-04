@@ -12,6 +12,28 @@
   justify-content: center;
 }
 
+/* Transicao entre paginas (View Transitions API, ver layout.tsx): a pagina
+   antiga desvanece com um leve blur e a nova aparece por cima. Em browsers sem
+   suporte a navegacao acontece na mesma, so sem animacao. */
+::view-transition-old(root) {
+  animation: page-leave 0.25s ease-in both;
+}
+::view-transition-new(root) {
+  animation: page-enter 0.3s ease-out both;
+}
+@keyframes page-leave {
+  to { opacity: 0; filter: blur(6px); }
+}
+@keyframes page-enter {
+  from { opacity: 0; filter: blur(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 :root {
   --background: #ECFFE9;
   --foreground: #426340;

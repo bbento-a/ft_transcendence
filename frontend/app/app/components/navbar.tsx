@@ -3,9 +3,13 @@
 import Image from "next/image";
 import styles from "./css_modules/navbar.module.css"
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from "next/navigation";
 import { useUser } from "@/context/AuthContext";
 import useClickOutside from "../hooks/useClickOutside";
-import Link from "next/link";
+// O Link da next-view-transitions e o next/link com a navegacao embrulhada em
+// view transition. Chama o nosso onClick primeiro e respeita preventDefault,
+// por isso o guardedNav continua a mandar.
+import { Link } from "next-view-transitions";
 
 import LanguagesWidget from "./lgsWidget";
 import ProfileMenu from "./profileMenu";
@@ -29,13 +33,22 @@ export default function NavBar()
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
 	const { user, loading } = useUser();
 	const { guard } = useNavGuard();
+	const pathname = usePathname();
 	const logged = !!user;
+
+	// O icone aponta DIRETO ao destino real em vez de "/" para todos: a pagina
+	// "/" redireciona logados para /gamerooms no servidor, e essa segunda
+	// navegacao rebentava a meio da view transition (o ecra ficava preso num
+	// crossfade desfocado da pagina para ela propria).
+	const homeHref = logged ? "/gamerooms" : "/";
 
 	// O board de jogo pode registar um guard enquanto ha uma partida a decorrer.
 	// Se ele intercetar o clique (true), fica com a decisao — mostra o popup de
 	// confirmacao — e nos cancelamos a navegacao. Sem guard, o link e um link.
+	// Ja estar no destino tambem cancela: transicionar uma pagina para ela
+	// propria e so um pisca-pisca sem navegacao nenhuma.
 	const guardedNav = (e: React.MouseEvent, href: string) => {
-		if (guard && guard(href))
+		if (pathname === href || (guard && guard(href)))
 			e.preventDefault();
 	};
 	
@@ -61,7 +74,7 @@ export default function NavBar()
 		<nav>
 		<div className={styles.navBarWrapper}>
 			<div className={styles.leftWrapper}>
-				<Link href="/" className={styles.wawaIcon} onClick={(e) => guardedNav(e, "/")}>
+				<Link href={homeHref} className={styles.wawaIcon} onClick={(e) => guardedNav(e, homeHref)}>
 				  <Image
 				    className={styles.wawaIcon}
 				    width={60}
@@ -71,7 +84,7 @@ export default function NavBar()
 				    src="/wawaIcon.svg"
 				  />
 				</Link>
-				<Link href="/" className={styles.wawaText} onClick={(e) => guardedNav(e, "/")}>
+				<Link href={homeHref} className={styles.wawaText} onClick={(e) => guardedNav(e, homeHref)}>
 				  wawa
 				</Link>
 			</div>

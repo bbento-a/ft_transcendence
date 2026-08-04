@@ -2,7 +2,9 @@
 import styles from "./page.module.css"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+// O router da next-view-transitions e o do Next com push/replace embrulhados
+// em document.startViewTransition — e isso que anima a troca de pagina.
+import { useTransitionRouter } from "next-view-transitions"
 
 import GameroomWidget from "../components/gameroomWidget"
 import DifficultyWidget from "../components/difficultyWidget"
@@ -16,11 +18,24 @@ export default function Home() {
 	const [toggled, setToggle] = useState(false);
 	const [difficulty, setDifficulty] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
-	const router = useRouter();
+	const router = useTransitionRouter();
 
 	const t = useTranslations("gamerooms");
 
 	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
+
+	// "Play vs someone" tem uma ida ao servidor ANTES de haver navegacao — a
+	// transicao nao cobre essa espera, por isso e o proprio botao que mostra um
+	// spinner ate o createdRoomId chegar.
+	const [creatingRoom, setCreatingRoom] = useState(false);
+
+	// Rede de seguranca: se o servidor nunca responder, o botao nao pode ficar
+	// preso no spinner para sempre.
+	useEffect(() => {
+		if (!creatingRoom) return;
+		const timer = setTimeout(() => setCreatingRoom(false), 8000);
+		return () => clearTimeout(timer);
+	}, [creatingRoom]);
 
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
@@ -52,8 +67,11 @@ export default function Home() {
 		<div className={styles.wrapperScroll}>
 
 		{
-			// Ainda a carregar a lista: spinner, para nao dar flash do "no rooms".
-			!roomsLoaded ? (
+			// Spinner em vez da lista quando: ainda a carregar; a criar a nossa
+			// sala (o servidor atualiza a lista ANTES de mandar o createdRoomId,
+			// senao via-se o widget da sala nova aparecer no lobby mesmo antes da
+			// navegacao); ou a voltar a um jogo que nunca deixamos.
+			!roomsLoaded || creatingRoom || resumeRoomId ? (
 				<div className={styles.textWrapper}>
 					<div className={styles.spinner} aria-label="Loading" />
 				</div>
@@ -77,7 +95,11 @@ export default function Home() {
 			{
 				toggled &&
 				<GamePopUp
-					onPlayVsSomeone={() => createRoom()}
+					creating={creatingRoom}
+					onPlayVsSomeone={() => {
+						setCreatingRoom(true);
+						createRoom();
+					}}
 					onPlayVsBot={() => router.push("/ai")}
 				></GamePopUp>
 			}

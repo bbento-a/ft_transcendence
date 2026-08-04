@@ -2,7 +2,8 @@
 import styles from "./page.module.css"
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { useGameSocket } from "../hooks/useGameSocket";
 
 import ExitPopUp from "../components/exitPopUp";
@@ -18,7 +19,8 @@ function emptyBoard(): number[][] {
 }
 
 export default function Page() {
-	const router = useRouter();
+	// Router com view transitions: sair da sala anima de volta como entrar nela.
+	const router = useTransitionRouter();
 	const params = useParams();
 	// Exit confirmation: opens only when walking out of a LIVE match (back
 	// button or the navbar's wawa icon). Leaving any other room state skips
@@ -178,11 +180,12 @@ export default function Page() {
 
 	return (
 	<div className={styles.pageWrapper}>
-		{!inRoom || leaving ? (
-		// Enquanto o socket liga e a sala nao esta confirmada — ou ja pedimos
-		// para sair: so o spinner, sem texto, em vez do esqueleto do jogo. No
-		// caso do "leaving", e o que faz o clique parecer imediato mesmo quando
-		// a navegacao para o lobby demora (ex.: modo dev acabado de compilar).
+		{!inRoom && !leaving ? (
+		// Enquanto o socket liga e a sala nao esta confirmada: so o spinner, sem
+		// texto, em vez do esqueleto do jogo. Durante o "leaving" e ao contrario
+		// — mantemos o jogo no ecra: a view transition congela um snapshot dele
+		// e desvanece-o; trocar para o spinner antes dessa captura fazia a
+		// pagina piscar (jogo -> spinner -> fade).
 		<div className={styles.connecting}>
 			<div className={styles.spinner} />
 		</div>
