@@ -195,6 +195,22 @@
     "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
     "playvsbot": "Jogar com o bot",
     "playvsplayer": "Jogar com alguém"
+  },
+  "gameroomsWidget": {
+    "Waiting": "Esperando",
+    "Join": "Entrar",
+    "Spectate": "Observar"
+  },
+  "gameroom_id": {
+    "Looking for opponent": "À procura de um adversário",
+    "Connecting": "Conectando",
+    "Draw": "Empate",
+    "Winner": "Vencedor",
+    "Forfeit in": "Desistindo em",
+    "Current turn": "Vez de",
+    "Accept rematch": "Aceitar desforra",
+    "Waiting for opponent": "À espera do adversário",
+    "Rematch": "Desforra"
   }
 }
 

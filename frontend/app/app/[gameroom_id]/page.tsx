@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
+import { useTranslations } from "next-intl";
 
 import { useNavGuard } from "@/context/NavGuardContext";
 
@@ -22,6 +23,7 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	const router = useRouter();
 	const params = useParams();
+	const t = useTranslations("gameroom_id");
 	// Exit confirmation: opens only when walking out of a LIVE match (back
 	// button or the navbar's wawa icon). Leaving any other room state skips
 	// the question and just leaves.
@@ -149,16 +151,16 @@ export default function Page() {
 
 	function statusText() {
 		if (!state)
-			return status || (connected ? "Looking for opponent..." : "Connecting...");
+			return status || (connected ? `${t("Looking for opponent")}...` : `${t("Connecting")}...`);
 		if (state.isGameOver) {
 			if (state.winnerId === null)
-				return "Draw!";
-			return `Winner: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
+				return `${t("Draw")}!`;
+			return `${t("Winner")}: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
 		}
 		// Someone dropped out: name them and show how long they have to come back.
 		if (forfeit)
-			return `${forfeit.message} Forfeit in ${forfeit.secondsLeft}s`;
-		return `${state.currentPlayer === 1 ? state.player1Name : state.player2Name}'s Turn`;
+			return `${forfeit.message} ${t("Forfeit in")} ${forfeit.secondsLeft}`;
+		return `${t("Current turn")}: ${state.currentPlayer === 1 ? state.player1Name : state.player2Name}`;
 	}
 
 	function turnImage(){
@@ -172,10 +174,10 @@ export default function Page() {
 	// offer. Against the bot it just starts the next game.
 	function rematchLabel() {
 		if (opponentWantsRematch)
-			return "Accept rematch";
+			return t("Accept rematch");
 		if (iWantRematch)
-			return "Waiting for opponent...";
-		return "Rematch";
+			return `${t("Waiting for opponent")}...`;
+		return t("Rematch");
 	}
 
 	return (
