@@ -159,6 +159,13 @@
 .buttonIcon:active {
   transform: scale(0.80);
 }
+/* Saida ja pedida, a espera do servidor: o botao fica marcado como carregado
+   para o clique nao parecer perdido enquanto a confirmacao nao chega. */
+.buttonIcon:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: scale(0.80);
+}
 .popUpWrapper{
 	position: absolute;
 	display: flex;

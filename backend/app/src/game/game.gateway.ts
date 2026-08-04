@@ -245,8 +245,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Back button: a deliberate exit, unlike a dropped connection. Someone who
   // merely reloads is handled by handleDisconnect's grace periods instead.
+  //
+  // Devolve sempre um valor: e o ack que a pagina espera antes de navegar, e o
+  // adaptador do Nest so o envia se o handler devolver algo. Sem ele a pagina
+  // saia antes de nos processarmos isto e, na ligacao seguinte, ainda a viamos
+  // dentro da sala — mandando-a de volta com "resumeRoom".
   @SubscribeMessage('leaveRoom')
-  async leaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
+  async leaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomId: string,
+  ): Promise<{ left: true }> {
     const userId = client.data.userId;
 
     this.spectators.delete(userId);
@@ -257,19 +265,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Private game vs the AI: drop it, or the player stays "busy" forever.
       const game = this.gameService.GetStateOfGame(roomId);
       if (game && game.player1Id === userId) this.gameService.AbandonGame(roomId);
-      return;
+      return { left: true };
     }
 
     const isPlayer = userId === room.hostId || userId === room.guestId;
-    if (!isPlayer) return; // a spectator walking out changes nothing for the room
+    // A spectator walking out changes nothing for the room.
+    if (!isPlayer) return { left: true };
 
     // Nobody had joined yet, so the room leaves with its host.
     if (room.status === 'waiting') {
       this.closeRoom(room.id);
-      return;
+      return { left: true };
     }
 
     await this.resetRoom(room, userId);
+    return { left: true };
   }
 
   // "Play again". It takes both players: the first press is an offer, the second

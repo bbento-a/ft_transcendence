@@ -15,6 +15,11 @@ import { useUser } from "@/context/AuthContext";
 const ROWS = 6;
 const COLS = 7;
 
+// Quanto tempo, no maximo, o socket fica aberto a espera da confirmacao de uma
+// saida antes de fechar na mesma. A pagina nunca espera por isto — so o fecho
+// do socket espera —, por isso um servidor calado nao trava nada.
+const LEAVE_ACK_TIMEOUT_MS = 1000;
+
 // The single place that talks to the game gateway. A component calls this hook
 // and drives the board from `state`, forwarding column clicks through `play`.
 export function useGameSocket() {
@@ -23,6 +28,10 @@ export function useGameSocket() {
   // roomId in a ref: `play` reads it, and capturing it from state inside the
   // callback risks a stale value. The server sends roomId on every update.
   const roomRef = useRef<string | null>(null);
+
+  // Saida pedida e ainda por confirmar. Resolve quando o servidor responde, e e
+  // o que segura o fecho do socket na limpeza do efeito.
+  const pendingLeaveRef = useRef<Promise<void> | null>(null);
 
   const [state, setState] = useState<GameState | null>(null);
   const [status, setStatus] = useState<string>("");
@@ -134,9 +143,18 @@ export function useGameSocket() {
 
     // Cleanup: React dev mode mounts twice; without this we leak sockets and
     // leave phantom rooms behind in the gateway.
+    //
+    // Com uma saida acabada de pedir, o socket so fecha depois de o servidor a
+    // confirmar. Sao alguns ms com dois sockets nossos abertos — o gateway ja
+    // conta com isso e e o que evita
+    // que o pacote do "leaveRoom" morra com a ligacao.
     return () => {
-      socket.disconnect();
+      const pendingLeave = pendingLeaveRef.current;
+      pendingLeaveRef.current = null;
       socketRef.current = null;
+
+      if (pendingLeave) pendingLeave.then(() => socket.disconnect());
+      else socket.disconnect();
     };
   }, []);
 
@@ -194,11 +212,23 @@ export function useGameSocket() {
   // Leaves whichever room we are actually in. That is not always the one in the
   // URL: a game vs the bot is reached through /ai but the server gives it a real
   // id, and leaving with "ai" would abandon nothing.
+  //
+  // Volta imediatamente: quem chama navega ja, sem esperar pelo servidor. O que
+  // fica pendente e o fecho do socket — desmontar a pagina fecha-o, e fecha-lo
+  // antes de o pacote sair deixava-nos "dentro" da sala do lado do servidor.
   const leaveRoom = useCallback(() => {
     const roomId = roomRef.current;
-    if (!roomId) return;
-    socketRef.current?.emit("leaveRoom", roomId);
+    const socket = socketRef.current;
     roomRef.current = null;
+    if (!roomId || !socket) return;
+
+    pendingLeaveRef.current = new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, LEAVE_ACK_TIMEOUT_MS);
+      socket.emit("leaveRoom", roomId, () => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
   }, []);
 
   // "Play again" once a game is over. Against the bot there is nobody to agree

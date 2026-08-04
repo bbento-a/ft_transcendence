@@ -6,7 +6,6 @@ import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
 
 import ExitPopUp from "../components/exitPopUp";
-import { subtle } from "crypto";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -23,6 +22,9 @@ export default function Page() {
 	// Exit confirmation from dev. The popup itself is still a static shell, so
 	// nothing sets this to true yet — see the note in handleBack below.
 	const [togglePopUp, setTogglePopUp] = useState(false);
+	// Saida pedida, a espera da confirmacao do servidor. Trava o botao para os
+	// cliques seguintes nao dispararem outra saida enquanto a primeira decorre.
+	const [leaving, setLeaving] = useState(false);
 	const {
 		state, status, connected, inRoom, roomUnavailable, forfeit, myName,
 		playAI, enterRoom, leaveRoom, play,
@@ -53,7 +55,11 @@ export default function Page() {
 
 	// Back button: tell the server before leaving, so an empty room we hosted
 	// disappears from the lobby straight away instead of after the grace period.
+	// Saimos ja, sem esperar pela resposta: quem espera pela confirmacao e o
+	// fecho do socket, la dentro do hook, para o pedido nao morrer com ele.
 	function handleBack() {
+		if (leaving) return; // segundo clique: o pedido ja seguiu
+		setLeaving(true);
 		leaveRoom();
 		router.push("/gamerooms");
 	}
@@ -102,9 +108,11 @@ export default function Page() {
 
 	return (
 	<div className={styles.pageWrapper}>
-		{!inRoom ? (
-		// Enquanto o socket liga e a sala nao esta confirmada: so o spinner, sem
-		// texto, em vez do esqueleto "Player1 vs Player2 / Connecting...".
+		{!inRoom || leaving ? (
+		// Enquanto o socket liga e a sala nao esta confirmada — ou ja pedimos
+		// para sair: so o spinner, sem texto, em vez do esqueleto do jogo. No
+		// caso do "leaving", e o que faz o clique parecer imediato mesmo quando
+		// a navegacao para o lobby demora (ex.: modo dev acabado de compilar).
 		<div className={styles.connecting}>
 			<div className={styles.spinner} />
 		</div>
@@ -154,13 +162,13 @@ export default function Page() {
 		<div className={styles.sides}>
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
-		</>
-		)}
 		<div className={styles.buttonWrapper}>
-			<button className={styles.buttonIcon} onClick={handleBack}>
+			<button className={styles.buttonIcon} onClick={handleBack} disabled={leaving}>
 				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 			</button>
 		</div>
+		</>
+		)}
 		{
 			togglePopUp &&
 			<div className={styles.popUpWrapper}>
