@@ -92,7 +92,7 @@
 	transition: transform 0.15s ease;
 }
 .gameroomIcon:active {
-  transform: scale(0.80);
+  transform: scale(0.90);
 }
 
 @media (max-width: 430px) {
