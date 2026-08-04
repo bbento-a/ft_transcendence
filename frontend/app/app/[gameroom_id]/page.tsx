@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
 
 import ExitPopUp from "../components/exitPopUp";
+import { useNavGuard } from "@/context/NavGuardContext";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -19,17 +20,33 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	const router = useRouter();
 	const params = useParams();
-	// Exit confirmation from dev. The popup itself is still a static shell, so
-	// nothing sets this to true yet — see the note in handleBack below.
+	// Exit confirmation: opens only when walking out of a LIVE match (back
+	// button or the navbar's wawa icon). Leaving any other room state skips
+	// the question and just leaves.
 	const [togglePopUp, setTogglePopUp] = useState(false);
+	// Where the person was heading when the popup intercepted them, so "Leave"
+	// finishes that navigation instead of always dumping them in the lobby.
+	const [pendingHref, setPendingHref] = useState<string | null>(null);
 	// Saida pedida, a espera da confirmacao do servidor. Trava o botao para os
 	// cliques seguintes nao dispararem outra saida enquanto a primeira decorre.
 	const [leaving, setLeaving] = useState(false);
+	const { setGuard } = useNavGuard();
 	const {
-		state, status, connected, inRoom, roomUnavailable, forfeit, myName,
+		state, status, connected, inRoom, roomUnavailable, forfeit, myName, myPlayerNumber,
 		playAI, enterRoom, leaveRoom, play,
 		requestRematch, iWantRematch, opponentWantsRematch,
 	} = useGameSocket();
+
+	// Only a PLAYER in a game still running has something to lose by leaving:
+	// the backend records that exit as a forfeit, against a human or the bot
+	// alike. Spectators, a host waiting alone and finished games exit freely.
+	//
+	// An untouched board counts as nothing to lose either: with no piece played
+	// the server records no result, so asking "are you sure?" would be a warning
+	// about a forfeit that is not going to happen.
+	const anyPiecePlayed = !!state && state.board.some((row) => row.some((cell) => cell !== 0));
+	const liveGame =
+		!!state && !state.isGameOver && myPlayerNumber !== null && anyPiecePlayed;
 
 	// Once a game is running the server tells us both names. Before that the only
 	// person on this page is the host waiting for someone, so that side is us.
@@ -53,15 +70,68 @@ export default function Page() {
 		if (roomUnavailable) router.push("/gamerooms");
 	}, [roomUnavailable, router]);
 
-	// Back button: tell the server before leaving, so an empty room we hosted
-	// disappears from the lobby straight away instead of after the grace period.
+	// O guard fica registado enquanto estivermos numa sala, mas tem de correr
+	// sempre a logica mais recente. Guardamo-la numa ref: re-registar a cada
+	// render punha o contexto a atualizar em ciclo.
+	const navAttemptRef = useRef<(href: string) => void>(() => {});
+	useEffect(() => {
+		navAttemptRef.current = (href: string) => {
+			// A match with pieces on the board: ask first, leaving costs a loss.
+			if (liveGame) {
+				setPendingHref(href);
+				setTogglePopUp(true);
+				return;
+			}
+			// Anything else (waiting for an opponent, game over, spectating):
+			// leave straight away, exactly like the back arrow. It still goes
+			// through leaveRoom, so a room we were waiting in is dropped now
+			// instead of lingering until the host grace period runs out.
+			confirmLeave(href);
+		};
+	});
+
+	// Guard the navbar for as long as we are inside a room, whatever its state:
+	// the wawa icon must never navigate out without telling the server first.
+	useEffect(() => {
+		if (!inRoom) return;
+		setGuard((href) => {
+			navAttemptRef.current(href);
+			return true; // intercepted: the page owns this navigation now
+		});
+		return () => setGuard(null);
+	}, [inRoom, setGuard]);
+
+	// The question stops making sense if the game ends while it is on screen
+	// (opponent left, game over): leaving is free now, so drop the popup.
+	useEffect(() => {
+		if (!liveGame) {
+			setTogglePopUp(false);
+			setPendingHref(null);
+		}
+	}, [liveGame]);
+
+	// Actually leave: tell the server, so an empty room we hosted disappears
+	// from the lobby straight away instead of after the grace period.
 	// Saimos ja, sem esperar pela resposta: quem espera pela confirmacao e o
 	// fecho do socket, la dentro do hook, para o pedido nao morrer com ele.
-	function handleBack() {
+	function confirmLeave(href: string) {
 		if (leaving) return; // segundo clique: o pedido ja seguiu
 		setLeaving(true);
+		setTogglePopUp(false);
 		leaveRoom();
-		router.push("/gamerooms");
+		router.push(href);
+	}
+
+	// Back button: mid-match it only ASKS (the popup decides); any other state
+	// — waiting alone, game over, spectating — leaves straight away.
+	function handleBack() {
+		if (leaving) return;
+		if (liveGame) {
+			setPendingHref("/gamerooms");
+			setTogglePopUp(true);
+			return;
+		}
+		confirmLeave("/gamerooms");
 	}
 
 	// Server board when a match is live; empty board otherwise.
@@ -172,7 +242,10 @@ export default function Page() {
 		{
 			togglePopUp &&
 			<div className={styles.popUpWrapper}>
-				<ExitPopUp></ExitPopUp>
+				<ExitPopUp
+					onStay={() => { setTogglePopUp(false); setPendingHref(null); }}
+					onLeave={() => confirmLeave(pendingHref ?? "/gamerooms")}
+				></ExitPopUp>
 			</div>
 		}
 	</div>

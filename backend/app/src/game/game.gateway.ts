@@ -262,9 +262,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      // Private game vs the AI: drop it, or the player stays "busy" forever.
+      // Private game vs the AI. Walking out on purpose is a forfeit here too:
+      // the bot "wins" (it never gets counters — buildOutcomes drops it) and the
+      // player takes the loss, exactly as against a human. Either way the game
+      // leaves activeGames, or the player would stay "busy" forever.
       const game = this.gameService.GetStateOfGame(roomId);
-      if (game && game.player1Id === userId) this.gameService.AbandonGame(roomId);
+      if (game && game.player1Id === userId) {
+        const forfeited = this.gameService.ForfeitGame(roomId, userId);
+        if (forfeited) await this.gameService.finalizeGame(forfeited);
+        else this.gameService.AbandonGame(roomId);
+      }
       return { left: true };
     }
 
@@ -326,7 +333,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // the game is dropped, anyone watching is sent back to the lobby, and the room
   // reopens with whoever stayed as its host — free for anyone to join again.
   private async resetRoom(room: GameRoom, leaverId: string) {
-    this.gameService.AbandonGame(room.id);
+    // Walking out of a RUNNING game is a forfeit — exactly what the exit popup
+    // warns — so the result is recorded: the leaver takes the loss, whoever
+    // stayed the win, match history included. When there is no live game (a
+    // room waiting on a rematch), there is nothing to record and Abandon just
+    // tidies the timers.
+    const forfeited = this.gameService.ForfeitGame(room.id, leaverId);
+    if (forfeited) await this.gameService.finalizeGame(forfeited);
+    else this.gameService.AbandonGame(room.id);
 
     for (const [watcherId, watchedRoomId] of this.spectators) {
       if (watchedRoomId !== room.id) continue;
@@ -353,7 +367,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.in(stayingId).socketsJoin(room.id);
     this.server
       .to(stayingId)
-      .emit('gameAborted', 'Your opponent left. Waiting for a new opponent...');
+      .emit(
+        'gameAborted',
+        forfeited
+          ? 'Your opponent left — you win by forfeit. Waiting for a new opponent...'
+          : 'Your opponent left. Waiting for a new opponent...',
+      );
 
     // They may be gone as well — both players can drop at nearly the same time.
     // A promoted host who is not actually connected will never disconnect again,

@@ -9,6 +9,7 @@ import Link from "next/link";
 
 import LanguagesWidget from "./lgsWidget";
 import ProfileMenu from "./profileMenu";
+import { useNavGuard } from "@/context/NavGuardContext";
 
 export default function NavBar()
 {
@@ -27,7 +28,16 @@ export default function NavBar()
 	
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
 	const { user, loading } = useUser();
+	const { guard } = useNavGuard();
 	const logged = !!user;
+
+	// O board de jogo pode registar um guard enquanto ha uma partida a decorrer.
+	// Se ele intercetar o clique (true), fica com a decisao — mostra o popup de
+	// confirmacao — e nos cancelamos a navegacao. Sem guard, o link e um link.
+	const guardedNav = (e: React.MouseEvent, href: string) => {
+		if (guard && guard(href))
+			e.preventDefault();
+	};
 	
 	const toggled = openMenu === "lang";
 	const profMenu = openMenu === "profile";
@@ -51,7 +61,7 @@ export default function NavBar()
 		<nav>
 		<div className={styles.navBarWrapper}>
 			<div className={styles.leftWrapper}>
-				<Link href="/" className={styles.wawaIcon}>
+				<Link href="/" className={styles.wawaIcon} onClick={(e) => guardedNav(e, "/")}>
 				  <Image
 				    className={styles.wawaIcon}
 				    width={60}
@@ -61,7 +71,7 @@ export default function NavBar()
 				    src="/wawaIcon.svg"
 				  />
 				</Link>
-				<Link href="/" className={styles.wawaText}>
+				<Link href="/" className={styles.wawaText} onClick={(e) => guardedNav(e, "/")}>
 				  wawa
 				</Link>
 			</div>
