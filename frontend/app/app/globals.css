@@ -12,6 +12,27 @@
   justify-content: center;
 }
 
+/* Fade-in de pagina: aplicado pelo template.tsx, que remonta a cada navegacao.
+   Espelha o flex do .background-image para nao alterar o centramento. */
+.page-fade {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: page-fade-in 0.25s ease-out;
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade {
+    animation: none;
+  }
+}
+
 :root {
   --background: #ECFFE9;
   --foreground: #426340;

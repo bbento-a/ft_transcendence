@@ -192,8 +192,9 @@
     "showingRecent": "Die {shown} neuesten von {total}"
   },
   "gamerooms": {
-    "NoGameRooms": "Er zijn momenteel geen speelkamers beschikbaar!",
-    "playvsbot": "Speel tegen een bot",
-    "playvsplayer": "Speel tegen iemand"
+    "NoGameRooms": "Momentan sind keine Spielräume verfügbar!",
+    "EnteringRoom": "Betrete den Raum...",
+    "playvsbot": "Gegen den Bot spielen",
+    "playvsplayer": "Gegen jemanden spielen"
   }
 }
