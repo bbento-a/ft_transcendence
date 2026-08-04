@@ -61,43 +61,6 @@
 		transform: rotate(360deg);
 	}
 }
-/* Transicao de sala: cobre a pagina toda (navbar incluida — sair a meio da
-   entrada deixava a sala pendurada no servidor) com um fade curto. */
-.enterOverlay {
-	position: fixed;
-	inset: 0;
-	z-index: 20;
-	display: flex;
-	flex-direction: column;
-	gap: 18px;
-	align-items: center;
-	justify-content: center;
-	background: rgba(10, 27, 1, 1);
-	backdrop-filter: blur(8px);
-	color: #ecffe9;
-	font-size: x-large;
-	font-weight: 600;
-	text-shadow: 0px 0px 15px #0a1b01;
-	animation: overlay-fade-in 0.2s ease-out;
-}
-@keyframes overlay-fade-in {
-	from { opacity: 0; }
-	to   { opacity: 1; }
-}
-/* O .spinner do lobby e verde-escuro; sobre o overlay escuro ficava invisivel. */
-.overlaySpinner {
-	width: 48px;
-	height: 48px;
-	border-radius: 50%;
-	border: 5px solid rgba(236, 255, 233, 0.25);
-	border-top-color: #ecffe9;
-	animation: spin 0.8s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-	.enterOverlay {
-		animation: none;
-	}
-}
 .noGameRooms {
 	position: relative;
 	font-size: x-large;

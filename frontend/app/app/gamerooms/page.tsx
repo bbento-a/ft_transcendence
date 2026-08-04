@@ -22,10 +22,6 @@ export default function Home() {
 
 	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
-	// Transicao de sala: liga o overlay no CLIQUE, antes de qualquer viagem ao
-	// servidor, para nunca se ver o lobby parado enquanto a sala nao chega.
-	const [entering, setEntering] = useState(false);
-
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
 	// A rota [gameroom_id] e a mesma para qualquer sala, por isso prefetch de um
@@ -33,14 +29,6 @@ export default function Home() {
 	useEffect(() => {
 		router.prefetch("/ai");
 	}, [router]);
-
-	// Rede de seguranca: se o servidor nunca responder ao createRoom, o overlay
-	// nao pode ficar a tapar o lobby para sempre.
-	useEffect(() => {
-		if (!entering) return;
-		const timer = setTimeout(() => setEntering(false), 8000);
-		return () => clearTimeout(timer);
-	}, [entering]);
 
 	// Ask once we are connected; the server pushes every change after that.
 	useEffect(() => {
@@ -55,10 +43,7 @@ export default function Home() {
 	// We are still in a game we never left, so go back to it. `replace` keeps the
 	// lobby out of the history: the game's back button must lead somewhere.
 	useEffect(() => {
-		if (resumeRoomId) {
-			setEntering(true);
-			router.replace(`/${resumeRoomId}`);
-		}
+		if (resumeRoomId) router.replace(`/${resumeRoomId}`);
 	}, [resumeRoomId, router]);
 
   return (
@@ -81,10 +66,7 @@ export default function Home() {
 					<GameroomWidget
 						key={room.id}
 						room={room}
-						onEnter={(roomId) => {
-							setEntering(true);
-							router.push(`/${roomId}`);
-						}}
+						onEnter={(roomId) => router.push(`/${roomId}`)}
 					/>
 				))
 			)
@@ -95,14 +77,8 @@ export default function Home() {
 			{
 				toggled &&
 				<GamePopUp
-					onPlayVsSomeone={() => {
-						setEntering(true);
-						createRoom();
-					}}
-					onPlayVsBot={() => {
-						setEntering(true);
-						router.push("/ai");
-					}}
+					onPlayVsSomeone={() => createRoom()}
+					onPlayVsBot={() => router.push("/ai")}
 				></GamePopUp>
 			}
 			{
@@ -113,15 +89,6 @@ export default function Home() {
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
 			</button>
 		</div>
-		{
-			// Tapa o lobby entre o clique e a sala montada, com um fade curto,
-			// para a navegacao parecer uma transicao em vez de um flash.
-			entering &&
-			<div className={styles.enterOverlay}>
-				<div className={styles.overlaySpinner} aria-label="Loading" />
-				<div>{t("EnteringRoom")}</div>
-			</div>
-		}
 	</div>
 	</RequireAuth>
   )

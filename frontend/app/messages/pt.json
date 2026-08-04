@@ -193,7 +193,6 @@
   },
   "gamerooms": {
     "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
-    "EnteringRoom": "A entrar na sala...",
     "playvsbot": "Jogar com o bot",
     "playvsplayer": "Jogar com alguém"
   }

@@ -193,7 +193,6 @@
   },
   "gamerooms": {
     "NoGameRooms": "Momentan sind keine Spielräume verfügbar!",
-    "EnteringRoom": "Betrete den Raum...",
     "playvsbot": "Gegen den Bot spielen",
     "playvsplayer": "Gegen jemanden spielen"
   }
