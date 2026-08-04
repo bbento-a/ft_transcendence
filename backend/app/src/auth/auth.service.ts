@@ -311,12 +311,15 @@ export class AuthService {
       select: { avatarUrl: true },
     });
   
-    if (user?.avatarUrl) {
+    // So apagamos ficheiros que fomos NOS a gravar. Contas OAuth trazem um
+    // avatarUrl remoto (https://lh3.googleusercontent.com/...) e o path.join
+    // com isso dava um caminho sem sentido dentro do container.
+    if (user?.avatarUrl?.startsWith("/api/uploads/avatars/")) {
       const filePath = path.join(
         process.cwd(),
         user.avatarUrl.replace(/^\/api/, "")
       );
-    
+
       try {
         await unlink(filePath);
       } catch (err) {

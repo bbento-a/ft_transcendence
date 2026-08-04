@@ -147,7 +147,8 @@
     "success": "Profil erfolgreich aktualisiert.",
     "passwordmismatch": "Die Passwörter stimmen nicht überein.",
     "nochanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
-    "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden."
+    "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden.",
+    "avatarerror": "Das Bild konnte nicht aktualisiert werden. Verwende ein JPEG, PNG, GIF oder WebP unter 5MB."
   },
   "dashboard": {
     "title": "Statistiken",

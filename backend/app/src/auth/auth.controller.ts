@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Body, Res, UseGuards, Get,Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Patch, Body, Res, UseGuards, Get,Req, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -23,6 +23,18 @@ type JwtUser = {
 type AuthRequest = Request & {
 	user: JwtUser;
 };
+
+// Extensao gravada no disco, escolhida pelo mimetype e nao pelo nome que o
+// browser mandou: ha ficheiros sem extensao nenhuma, e o originalname vem do
+// cliente (nao e de confiar para construir caminhos).
+const AVATAR_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+};
+
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
 // Where the browser lands after a successful OAuth login.
 const OAUTH_SUCCESS_REDIRECT = '/gamerooms';
@@ -85,23 +97,36 @@ export class AuthController {
         destination: "./uploads/avatars",
         filename: (req, file, cb) => {
           const user = req.user as JwtUser;
-          const ext = file.originalname.split(".").pop();
-          
+          const ext = AVATAR_EXTENSIONS[file.mimetype];
+
           cb(null, `${user.id}${Date.now()}.${ext}`);
         },
       }),
+      // So imagens, e so as que sabemos servir. Sem isto qualquer ficheiro era
+      // aceite e ficava gravado com uma extensao que ninguem consegue mostrar.
+      fileFilter: (req, file, cb) => {
+        cb(null, file.mimetype in AVATAR_EXTENSIONS);
+      },
+      limits: { fileSize: AVATAR_MAX_BYTES },
     }),
   )
   async uploadAvatar(
     @Req() req: AuthRequest,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    // O fileFilter rejeita em silencio (nao ha ficheiro), e o campo pode nem
+    // vir no form. Sem este guard rebentava em file.filename com um 500.
+    if (!file) {
+      throw new BadRequestException('Avatar must be a JPEG, PNG, GIF or WebP image under 5MB.');
+    }
+
     const avatarUrl = `/api/uploads/avatars/${file.filename}`;
-  
-    return this.authService.updateAvatar(
-      req.user.id,
-      avatarUrl,
-    );
+
+    await this.authService.updateAvatar(req.user.id, avatarUrl);
+
+    // Devolvemos o URL novo: o frontend faz refresh do /me a seguir, mas assim
+    // a resposta nao e um corpo vazio e da para usar sem outro pedido.
+    return { avatarUrl };
   }
 
   @UseGuards(AuthGuard('jwt'))
