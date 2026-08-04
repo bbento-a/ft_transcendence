@@ -13,6 +13,14 @@
   	color: #ecffe9;
 	z-index: 4;
 }
+
+/* Nao imprimir a navbar (logo + icones de idioma e perfil) no Export PDF do
+   dashboard. */
+@media print {
+	.navBarWrapper {
+		display: none !important;
+	}
+}
 .leftWrapper {
   	align-self: stretch;
   	flex: 1;

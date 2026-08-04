@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import GameroomWidget from "../components/gameroomWidget"
+import DifficultyWidget from "../components/difficultyWidget"
 import GamePopUp from "../components/gamePopUp"
 import useClickOutside from "../hooks/useClickOutside"
 import RequireAuth from "../components/requireAuth"
@@ -13,6 +14,7 @@ import { useTranslations } from "next-intl";
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
+	const [difficulty, setDifficulty] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
@@ -59,7 +61,14 @@ export default function Home() {
 
 		</div>
 		<div ref={popupRef} className={styles.buttonWrapper}>
-			{ toggled && <GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>}
+			{
+				toggled &&
+				<GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>
+			}
+			{
+				toggled && difficulty &&
+				<DifficultyWidget></DifficultyWidget>
+			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
 			</button>

@@ -1,0 +1,438 @@
+.pageWrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	padding: 40px 20px;
+	box-sizing: border-box;
+	overflow-y: auto;
+	scrollbar-width: none;
+	z-index: 3;
+}
+.pageWrapper::-webkit-scrollbar {
+	display: none;
+}
+
+.content {
+	width: 100%;
+	max-width: 1100px;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.title {
+	color: #243119;
+	font-size: 2rem;
+	font-weight: 700;
+	text-align: center;
+	text-shadow: 0px 0px 10px rgba(236, 255, 233, 0.8);
+}
+
+/* ---- Cabecalho: quem estou a ver + pesquisa ---- */
+.topBar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+}
+.viewingUser {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.viewingAvatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid #426340;
+}
+.viewingName {
+	font-weight: 700;
+	font-size: 1.1rem;
+	color: #243119;
+}
+.backToMine {
+	margin-left: 8px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #426340;
+	text-decoration: underline;
+}
+.search {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.searchInput {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #ecffe9;
+	color: #426340;
+	padding: 6px 12px;
+	font-weight: 600;
+	font-family: inherit;
+	min-width: 200px;
+}
+.searchBtn {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #426340;
+	color: #dafdd4;
+	padding: 6px 12px;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+.searchBtn:hover {
+	background-color: #2f472e;
+}
+.opponentLink {
+	color: #2a78d6;
+	font-weight: 700;
+	text-decoration: underline;
+}
+.opponentLink:hover {
+	color: #1c5cab;
+}
+
+/* ---- Toggle de modo (todos / jogador / bot) ---- */
+.modeToggle {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: center;
+}
+
+/* ---- Filtros ---- */
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+}
+.presets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.preset,
+.presetActive {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	padding: 6px 14px;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+.preset {
+	background-color: #ecffe9;
+	color: #426340;
+}
+.preset:hover {
+	background-color: #d7f5d1;
+}
+.presetActive {
+	background-color: #426340;
+	color: #dafdd4;
+}
+.customRange {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.dateInput {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #ecffe9;
+	color: #426340;
+	padding: 6px 10px;
+	font-weight: 600;
+	font-family: inherit;
+}
+.rangeDash {
+	color: #426340;
+	font-weight: 700;
+}
+
+/* ---- Barra de export ---- */
+.exportBar {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+.exportBtn {
+	border-radius: 12px;
+	border: 1px solid #243119;
+	background-color: #426340;
+	color: #dafdd4;
+	padding: 6px 16px;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+.exportBtn:hover {
+	background-color: #2f472e;
+}
+.exportBtn:active {
+	background-color: #233522;
+}
+
+/* ---- Cartoes de resumo ---- */
+/* auto-fit: 5 numa linha larga, e vai reduzindo sozinho ate 2 por linha no
+   telemovel, sem precisar de breakpoints por cada largura. */
+.tilesRow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+	gap: 16px;
+}
+.tile {
+	background-color: #ffffff;
+	border: 1px solid #243119;
+	border-radius: 15px;
+	padding: 16px 12px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	box-shadow: 0px 2px 8px rgba(36, 49, 25, 0.15);
+}
+.tileValue {
+	font-size: 1.8rem;
+	font-weight: 700;
+	line-height: 1;
+}
+.tileLabel {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #52514e;
+	text-align: center;
+}
+
+/* ---- Grelha dos graficos ---- */
+.chartsGrid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 20px;
+}
+.card {
+	background-color: #ffffff;
+	border: 1px solid #243119;
+	border-radius: 15px;
+	padding: 16px;
+	box-shadow: 0px 2px 8px rgba(36, 49, 25, 0.15);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.cardWide {
+	grid-column: 1 / -1;
+}
+.cardTitle {
+	color: #243119;
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+/* Recharts precisa de altura explicita no pai do ResponsiveContainer */
+.chartBox {
+	width: 100%;
+	height: 280px;
+}
+
+/* ---- Tabela ---- */
+.tableWrap {
+	width: 100%;
+	overflow-x: auto;
+}
+.tableCaption {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #898781;
+	margin-bottom: 6px;
+}
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+.table th,
+.table td {
+	text-align: left;
+	padding: 8px 10px;
+	border-bottom: 1px solid rgba(36, 49, 25, 0.12);
+}
+.table th {
+	color: #426340;
+	font-weight: 700;
+}
+.table td {
+	color: #52514e;
+	font-weight: 600;
+}
+.tableDate {
+	font-variant-numeric: tabular-nums;
+}
+.resultBadge {
+	display: inline-block;
+	color: #ffffff;
+	font-weight: 700;
+	font-size: 0.75rem;
+	padding: 2px 10px;
+	border-radius: 10px;
+}
+
+/* ---- Estados ---- */
+.stateMsg {
+	text-align: center;
+	color: #426340;
+	font-weight: 600;
+	padding: 40px;
+}
+
+/* ---- Voltar ---- */
+.backWrapper {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	z-index: 4;
+}
+.backIcon {
+	width: 30px;
+	height: 30px;
+}
+
+/* ---- Responsivo ---- */
+
+/* Tablet e abaixo: graficos passam a uma coluna (empilhados). */
+@media (max-width: 900px) {
+	.chartsGrid {
+		grid-template-columns: 1fr;
+	}
+	.card,
+	.cardWide {
+		grid-column: auto;
+	}
+	.chartBox {
+		height: 260px;
+	}
+}
+
+/* Telemovel: menos padding, filtros a largura total, tudo mais compacto. */
+@media (max-width: 560px) {
+	.pageWrapper {
+		padding: 24px 12px;
+	}
+	.content {
+		gap: 16px;
+	}
+	.title {
+		font-size: 1.5rem;
+		/* deixa margem nos lados para nao passar por baixo da seta de voltar */
+		padding: 0 44px;
+	}
+
+	.topBar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.viewingUser {
+		flex-wrap: wrap;
+	}
+	.search {
+		width: 100%;
+	}
+	.searchInput {
+		flex: 1;
+		min-width: 0; /* deixa encolher abaixo dos 200px */
+	}
+	.exportBar {
+		flex-wrap: wrap;
+	}
+	.filters {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.presets {
+		justify-content: center;
+	}
+	.customRange {
+		width: 100%;
+	}
+	/* inputs de data ocupam o espaco a dividir, com o traco no meio */
+	.dateInput {
+		flex: 1;
+		min-width: 0;
+	}
+	.tileValue {
+		font-size: 1.4rem;
+	}
+	.tile {
+		padding: 12px 8px;
+	}
+	.card {
+		padding: 12px;
+	}
+	.chartBox {
+		height: 220px;
+	}
+	.cardTitle {
+		font-size: 1rem;
+	}
+	.table {
+		font-size: 0.8rem;
+	}
+	.table th,
+	.table td {
+		padding: 6px 6px;
+	}
+	.backWrapper {
+		top: 12px;
+		left: 12px;
+	}
+}
+
+/* ---- Impressao / Export PDF ---- */
+/* Esconde os controlos e imprime so o titulo + tiles + graficos + tabelas,
+   numa coluna e sem partir cartoes entre paginas. Ver tambem o @media print
+   global em globals.css que esconde a navbar/footer/fundo. */
+@media print {
+	.backWrapper,
+	.modeToggle,
+	.filters,
+	.exportBar,
+	.search,
+	.backToMine {
+		display: none !important;
+	}
+	.pageWrapper {
+		padding: 0;
+		height: auto;
+		overflow: visible;
+	}
+	.content {
+		max-width: none;
+		gap: 12px;
+	}
+	.chartsGrid {
+		grid-template-columns: 1fr;
+	}
+	.card,
+	.cardWide {
+		grid-column: auto;
+		box-shadow: none;
+		break-inside: avoid;
+	}
+	/* garante que as cores dos cartoes/tiles/badges saem na impressao */
+	.tile,
+	.card,
+	.tileValue,
+	.resultBadge {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+}
