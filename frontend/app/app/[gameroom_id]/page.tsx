@@ -102,7 +102,7 @@ export default function Page() {
 
 	return (
 	<div className={styles.pageWrapper}>
-		<div className={styles.sides}>
+		<div className={styles.sideLeft}>
 			<div className={styles.playerText}>{leftName}</div>
 
 		</div>
@@ -143,7 +143,7 @@ export default function Page() {
 				)}
 			</div>
 		</div>
-		<div className={styles.sides}>
+		<div className={styles.sideRight}>
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
 		<div className={styles.buttonWrapper}>
