@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
 import { GENERIC_ERROR, pickError } from "../lib/formErrors";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
+
+import BackArrow from "../components/backArrow";
 
 /*
 Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos.
@@ -156,8 +156,6 @@ export default function page() {
 		setIsSubmitting(false);
 	}
 
-	const router = useRouter();
-	
   	return (
   	<div className={styles.pageWrapper}>
 		<div className={styles.pageGroup}>
@@ -238,11 +236,7 @@ export default function page() {
 					}
 				</div>
 			</div>
-			<div className={styles.buttonWrapper}>
-				<button className={styles.backButton} onClick={() => {router.back()}}>
-					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
-				</button>
-			</div>
+			<div className={styles.buttonWrapper}><BackArrow /></div>
 		</div>
 	)
 }

@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "../hooks/useGameSocket";
 
-import ExitPopUp from "../components/exitPopUp";
 import { useNavGuard } from "@/context/NavGuardContext";
+
+import ExitPopUp from "../components/exitPopUp";
+import BackArrow from "../components/backArrow";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -163,8 +165,8 @@ export default function Page() {
 		if (state === null)
 			return
 		else if (state.currentPlayer === 1)
-			return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceLighter.svg" />
-		return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceDark.svg" />
+			return <Image className={styles.fixPieceSize} width="0" height="0" sizes="100vw" alt="" src="/pieceLighter.svg" />
+		return <Image className={styles.fixPieceSize} width="0" height="0" sizes="100vw" alt="" src="/pieceDark.svg" />
 	}
 	// A rematch needs both players, so the button doubles as the reply to an
 	// offer. Against the bot it just starts the next game.
@@ -232,11 +234,7 @@ export default function Page() {
 		<div className={styles.sideRight}>
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
-		<div className={styles.buttonWrapper}>
-			<button className={styles.buttonIcon} onClick={handleBack} disabled={leaving}>
-				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
-			</button>
-		</div>
+		<div className={styles.buttonWrapper}><BackArrow /></div>
 		</>
 		)}
 		{

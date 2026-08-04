@@ -1,0 +1,17 @@
+.backButton{
+	width: 30px;
+	height: 30px;
+	position: relative;
+	object-fit: cover;
+	transition: transform 0.15s ease;
+}
+.backButton:hover {
+  transform: scale(1.30);
+}
+.backButton:active {
+  transform: scale(0.80);
+}
+.fixSize{
+	width: 100%;
+	height: auto;
+}
