@@ -7,7 +7,10 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
-RUN npm install
+# npm ci (not install): installs EXACTLY the lockfile, never rewrites it, so
+# every build gets the same dependency tree. The cache mount keeps npm's
+# download cache between builds — only changed packages get downloaded.
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 
 # ============================================================
