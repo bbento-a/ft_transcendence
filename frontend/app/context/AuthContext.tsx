@@ -39,6 +39,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 	// deixava o ecra preso no estado de submit
 	const refresh = async () => {
 		let res: Response;
+		
 		try {
 			res = await fetch('/api/auth/me');
 		} catch {
