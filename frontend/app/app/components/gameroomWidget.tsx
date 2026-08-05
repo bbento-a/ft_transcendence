@@ -27,7 +27,11 @@ export default function gameroomWidget({
 			</div>
 			<button className={styles.button} onClick={() => onEnter(room.id)}>
 				<div className={styles.text}>
-					{room.status === t("Waiting") ? t("Join") : t("Spectate")}
+					{/* Comparar com o valor CRU que vem do servidor ("waiting"), nao
+					    com um texto traduzido: t("Waiting") da "Warten"/"Esperando"
+					    conforme o idioma e nunca coincidiria com o status. So o
+					    rotulo visivel e que e traduzido. */}
+					{room.status === "waiting" ? t("Join") : t("Spectate")}
 				</div>
 			</button>
 		</div>
