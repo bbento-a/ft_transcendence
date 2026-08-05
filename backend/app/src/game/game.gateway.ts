@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService, FORFEIT_GRACE_PERIOD_MS } from './game.service';
-import { DIFFICULTIES, GameState } from './game.types';
+import { DIFFICULTIES, GameState, otherPlayer } from './game.types';
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
@@ -196,6 +196,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       guestName: null,
       status: 'waiting',
       rematchVotes: new Set(),
+      lastStarter: null,
     };
     this.rooms.set(room.id, room);
 
@@ -313,11 +314,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     room.rematchVotes.clear();
     room.status = 'playing';
 
+    // Revanche: abre quem NAO abriu da ultima vez, em vez de sortear outra vez.
+    // Sem lastStarter (sala antiga, por exemplo) cai no sorteio do servico.
+    const nextStarter = room.lastStarter ? otherPlayer(room.lastStarter) : undefined;
+
     const state = this.gameService.InitNewGame(
       room.id,
       { id: room.hostId, name: room.hostName },
       { id: room.guestId, name: room.guestName },
+      undefined,
+      nextStarter,
     );
+    room.lastStarter = state.currentPlayer;
 
     // MatchFound is what starts a game everywhere else, so the board, the turn
     // and the spectators all reset through the path they already use.
@@ -362,6 +370,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     room.guestId = null;
     room.guestName = null;
     room.status = 'waiting';
+    // Adversario novo: a alternancia recomeca do zero, com sorteio.
+    room.lastStarter = null;
 
     // Whoever stayed keeps the room and waits in it, exactly like a fresh host.
     this.server.in(stayingId).socketsJoin(room.id);
@@ -395,11 +405,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     room.guestName = username;
     room.status = 'playing';
 
+    // Sem starter explicito o servico sorteia. Guardamos o resultado: a
+    // revanche desta sala da a abertura ao outro jogador.
     const state = this.gameService.InitNewGame(
       room.id,
       { id: room.hostId, name: room.hostName },
       { id: userId, name: username },
     );
+    room.lastStarter = state.currentPlayer;
     client.join(room.id);
 
     this.server.to(room.id).emit('MatchFound', {
@@ -443,7 +456,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     basta emitir playVsAI com { difficulty: 'easy' | 'medium' | 'hard' }, sem mexer aqui.
   */
   @SubscribeMessage('playVsAI')
-  startAIGame(
+  async startAIGame(
     @ConnectedSocket() client: Socket,
     @MessageBody() data?: { difficulty?: string },
   ) {
@@ -487,6 +500,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       message: 'Playing against AI',
       state,
     });
+
+    // O sorteio pode ter calhado ao bot: nesse caso e ele que abre o jogo.
+    await this.playAITurnIfDue(roomId, state);
   }
 
   @SubscribeMessage('playerMove')
@@ -521,17 +537,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     // Vs the AI the move above was ours, so the bot answers next.
-    if (state.player2Id === AI_PLAYER_ID && state.currentPlayer === 2) {
-      // Pause first so the reply is not instant. It is still the bot's turn
-      // while this runs, so the player cannot sneak a move in.
-      await this.sleep(GameGateway.AI_THINK_TIME_MS);
+    await this.playAITurnIfDue(data.roomId, state);
+  }
 
-      const afterAI = this.gameService.PlayerAIMove(data.roomId);
-      if (!afterAI) return;
+  /*
+    Faz a jogada do bot se for mesmo a vez dele. Chamado depois de cada jogada
+    humana e tambem no arranque de um jogo vs bot: como a abertura e sorteada,
+    o bot pode calhar jogar primeiro -- e sem isto ficava tudo a espera de um
+    jogador que nao pode jogar.
+  */
+  private async playAITurnIfDue(roomId: string, state: GameState) {
+    if (state.isGameOver) return;
+    if (state.player2Id !== AI_PLAYER_ID || state.currentPlayer !== 2) return;
 
-      this.server.to(data.roomId).emit('gameStateUpdated', afterAI);
-      if (afterAI.isGameOver) await this.endGame(data.roomId, afterAI);
-    }
+    // Pause first so the reply is not instant. It is still the bot's turn
+    // while this runs, so the player cannot sneak a move in.
+    await this.sleep(GameGateway.AI_THINK_TIME_MS);
+
+    const afterAI = this.gameService.PlayerAIMove(roomId);
+    if (!afterAI) return;
+
+    this.server.to(roomId).emit('gameStateUpdated', afterAI);
+    if (afterAI.isGameOver) await this.endGame(roomId, afterAI);
   }
 
   private async endGame(roomId: string, finalState: GameState, customMessage?: string) {

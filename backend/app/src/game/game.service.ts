@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AiConfig, BoardCell, Difficulty, GamePlayer, GameState } from './game.types';
+import { AiConfig, BoardCell, Difficulty, GamePlayer, GameState, PlayerNumber, otherPlayer } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
@@ -53,6 +53,15 @@ export class GameService
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /*
+    Cara ou coroa para decidir quem abre. Comecar primeiro e uma vantagem no 4
+    em linha, por isso nao pode calhar sempre ao mesmo -- e como o sorteio vive
+    aqui, quem chama o InitNewGame nao precisa de saber como se sorteia.
+  */
+  private drawStartingPlayer(): PlayerNumber {
+    return Math.random() < 0.5 ? 1 : 2;
+  }
+
   // Função auxiliar para gerar matrizes 6x7 cheias de zeros
   private createEmptyBoard(): number[][] {
     // Cria 6 linhas, cada uma com um array de 7 colunas a zero
@@ -62,8 +71,18 @@ export class GameService
   /*
     difficulty so faz sentido quando o player2 e a IA. Fica no fim e opcional para
     as chamadas de jogo entre dois humanos continuarem iguais.
+
+    startingPlayer: quem abre o jogo. Se nao vier nada e sorteado, que e o caso
+    normal (jogo novo). Quem quiser mandar no valor passa-o -- e o que a revanche
+    faz, para alternar em vez de sortear outra vez.
   */
-  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer, difficulty?: Difficulty): GameState {
+  InitNewGame(
+    roomId: string,
+    player1: GamePlayer,
+    player2: GamePlayer,
+    difficulty?: Difficulty,
+    startingPlayer?: PlayerNumber,
+  ): GameState {
     const newGame: GameState = {
       board: this.createEmptyBoard(),
       roomId: roomId,
@@ -71,7 +90,7 @@ export class GameService
       player1Name: player1.name,
       player2Id: player2.id,
       player2Name: player2.name,
-      currentPlayer: 1, // player 1 vai começar sempre
+      currentPlayer: startingPlayer ?? this.drawStartingPlayer(),
       isGameOver:  false,
       winnerId: null,
       lastMove: null,     //tabuleiro limpo, ninguem jogou ainda
@@ -160,7 +179,7 @@ MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
     game.winnerId = null;
   }else{
     //Troca o turno na brotheragem
-    game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
+    game.currentPlayer = otherPlayer(game.currentPlayer);
   }
   return game;
 }
