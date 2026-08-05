@@ -151,7 +151,7 @@
 */
 .blurredTile{
 	filter: blur(1.2px);
-	transition: filter 1.5s ease;
+	transition: filter 2s ease;
 }
 
 /*
