@@ -140,25 +140,59 @@
 	box-shadow: 0px 0px 4px rgb(0, 0, 0, 0.7);
 	cursor: pointer;
 }
-.playedTile{
-	box-sizing: border-box;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(50, 69, 45, 0.5);
-	border-radius: 50%;
-	border: 1px solid rgb(10, 27, 1);
-	box-shadow: 0px 0px 10px #243119;
-	cursor: pointer;
+
+/*
+	Fim de jogo: o tabuleiro todo desfoca menos a linha vencedora.
+
+	O blur e aplicado A CADA casa perdedora, e nao a um veu com backdrop-filter
+	por cima do tabuleiro. Um veu desses tem de ter opacity 1 para funcionar
+	(com opacity < 1 o elemento vira "backdrop root" e o efeito desaparece), o
+	que o torna fragil. Assim e simples e nao depende do backdrop-filter.
+*/
+.blurredTile{
+	filter: blur(1.2px);
+	transition: filter 1.5s ease;
 }
-.winnerTile{
-	box-sizing: border-box;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(50, 69, 45, 0.5);
-	border-radius: 50%;
-	border: 1px solid rgb(10, 27, 1);
-	box-shadow: 0px 0px 10px #ecffe9;
-	cursor: pointer;
+
+/*
+	A linha vencedora fica nitida e a pulsar. O scale cabe no gap de 10px do
+	tabuleiro, e o z-index poe a peca por cima das vizinhas enquanto cresce
+	(as desfocadas criam contexto proprio por causa do filter).
+*/
+@keyframes winnerPulse{
+	0%, 100%{ transform: scale(1); }
+	50%{ transform: scale(1.1); }
+}
+.winnerPulse{
+	position: relative;
+	z-index: 2;
+	animation: winnerPulse 1.5s ease-in-out infinite;
+}
+
+/*
+	Ultima peca jogada, durante o jogo. Deliberadamente MAIS discreto que o
+	pulsar da vitoria: cresce menos e mais devagar. So marca "foi aqui que o
+	adversario jogou", nao festeja nada.
+*/
+@keyframes lastPlayedPulse{
+	0%, 100%{ transform: scale(1); }
+	50%{ transform: scale(1.05); }
+}
+.lastPlayedPulse{
+	position: relative;
+	z-index: 1;
+	animation: lastPlayedPulse 1.8s ease-in-out infinite;
+}
+
+/* Quem prefere menos movimento fica so com o desfoque, sem o pulsar */
+@media (prefers-reduced-motion: reduce){
+	.winnerPulse,
+	.lastPlayedPulse{
+		animation: none;
+	}
+	.blurredTile{
+		transition: none;
+	}
 }
 
 .light-piece{

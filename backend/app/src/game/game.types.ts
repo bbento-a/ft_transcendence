@@ -35,6 +35,14 @@ export interface GamePlayer
     name: string;
 }
 
+//Uma casa do tabuleiro. Serve para o frontend saber QUAIS as pecas ganharam,
+//sem ter de descobrir a linha vencedora outra vez a partir do board.
+export interface BoardCell
+{
+    row: number;
+    column: number;
+}
+
 export interface GameState
 {
     roomId: string;
@@ -46,6 +54,13 @@ export interface GameState
     currentPlayer: number;//What turn is Player1 or Player2
     isGameOver: boolean;
     winnerId: string | null;
+    //Ultima peca a cair, para o tabuleiro a poder destacar. null antes da
+    //primeira jogada -- e num jogo novo volta a null.
+    lastMove: BoardCell | null;
+    //As pecas que fizeram o 4 em linha (podem ser 5 se a linha for maior).
+    //null enquanto ninguem ganhar -- e fica null numa vitoria por forfeit,
+    //porque ai nao ha nenhuma linha no tabuleiro para destacar.
+    winningCells: BoardCell[] | null;
     disconnectedPlayerId?: string | null;
     //So existe em jogos contra a IA. Se vier undefined usa se o DEFAULT_AI_DIFFICULTY
     difficulty?: Difficulty;

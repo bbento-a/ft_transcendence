@@ -159,12 +159,30 @@ export default function Page() {
 	// Server board when a match is live; empty board otherwise.
 	const board = state ? state.board : emptyBoard();
 
-	function tileClassName(cell: number) {
-		if (cell === 1)
-			return `${styles.tile} ${styles["light-piece"]}`;
-		if (cell === 2)
-			return `${styles.tile} ${styles["dark-piece"]}`;
-		return styles.tile;
+	// Casas da linha vencedora, para saberem se pulsam ou se desfocam.
+	const winningCells = state?.winningCells ?? null;
+	const isWinningCell = (row: number, column: number) =>
+		!!winningCells?.some((w) => w.row === row && w.column === column);
+
+	// Durante o jogo destacamos so a ultima peca jogada. Assim que ha linha
+	// vencedora e ela que manda: pulsa, e TODO o resto do tabuleiro desfoca.
+	function tileClassName(row: number, column: number, cell: number) {
+		const classes = [styles.tile];
+
+		if (cell === 1) classes.push(styles["light-piece"]);
+		else if (cell === 2) classes.push(styles["dark-piece"]);
+
+		if (winningCells) {
+			// Fim de jogo: um so destaque no tabuleiro, o da vitoria.
+			classes.push(isWinningCell(row, column) ? styles.winnerPulse : styles.blurredTile);
+		} else if (
+			state?.lastMove?.row === row &&
+			state?.lastMove?.column === column
+		) {
+			classes.push(styles.lastPlayedPulse);
+		}
+
+		return classes.join(" ");
 	}
 
 	function statusText() {
@@ -233,7 +251,7 @@ export default function Page() {
 						<div
 							key={`${r}-${c}`}
 							id={`${r}-${c}`}
-							className={tileClassName(cell)}
+							className={tileClassName(r, c, cell)}
 							onClick={() => play(c)}
 						/>
 					))
