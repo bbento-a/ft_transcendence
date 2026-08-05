@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AiConfig, Difficulty, GamePlayer, GameState } from './game.types';
+import { AiConfig, BoardCell, Difficulty, GamePlayer, GameState, PlayerNumber, otherPlayer } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectFourAI } from './game.ai';
 
@@ -53,6 +53,15 @@ export class GameService
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /*
+    Cara ou coroa para decidir quem abre. Comecar primeiro e uma vantagem no 4
+    em linha, por isso nao pode calhar sempre ao mesmo -- e como o sorteio vive
+    aqui, quem chama o InitNewGame nao precisa de saber como se sorteia.
+  */
+  private drawStartingPlayer(): PlayerNumber {
+    return Math.random() < 0.5 ? 1 : 2;
+  }
+
   // Função auxiliar para gerar matrizes 6x7 cheias de zeros
   private createEmptyBoard(): number[][] {
     // Cria 6 linhas, cada uma com um array de 7 colunas a zero
@@ -62,8 +71,18 @@ export class GameService
   /*
     difficulty so faz sentido quando o player2 e a IA. Fica no fim e opcional para
     as chamadas de jogo entre dois humanos continuarem iguais.
+
+    startingPlayer: quem abre o jogo. Se nao vier nada e sorteado, que e o caso
+    normal (jogo novo). Quem quiser mandar no valor passa-o -- e o que a revanche
+    faz, para alternar em vez de sortear outra vez.
   */
-  InitNewGame(roomId: string, player1: GamePlayer, player2: GamePlayer, difficulty?: Difficulty): GameState {
+  InitNewGame(
+    roomId: string,
+    player1: GamePlayer,
+    player2: GamePlayer,
+    difficulty?: Difficulty,
+    startingPlayer?: PlayerNumber,
+  ): GameState {
     const newGame: GameState = {
       board: this.createEmptyBoard(),
       roomId: roomId,
@@ -71,9 +90,11 @@ export class GameService
       player1Name: player1.name,
       player2Id: player2.id,
       player2Name: player2.name,
-      currentPlayer: 1, // player 1 vai começar sempre
+      currentPlayer: startingPlayer ?? this.drawStartingPlayer(),
       isGameOver:  false,
       winnerId: null,
+      lastMove: null,     //tabuleiro limpo, ninguem jogou ainda
+      winningCells: null, //ainda nao ha linha vencedora nenhuma
       difficulty: player2.id === AI_PLAYER_ID ? (difficulty ?? DEFAULT_AI_DIFFICULTY) : undefined,
     };
 
@@ -142,19 +163,23 @@ MakeMove(roomId: string,playerId: string,column: number): GameState | undefined
   //Atualizar o board com a ficha(1 para Player1, 2 para Player2)
   game.board[rowToPlace][column] = game.currentPlayer;
 
+  //Peca acabada de jogar: o tabuleiro destaca-a ate cair a proxima
+  game.lastMove = { row: rowToPlace, column: column };
+
   //Sera que ganhou???
-  const hasWon = this.checkWin(game.board,rowToPlace,column,game.currentPlayer);
-  if(hasWon)
+  const winningLine = this.findWinningLine(game.board,rowToPlace,column,game.currentPlayer);
+  if(winningLine)
   {
     game.isGameOver = true;
     game.winnerId = playerId;
+    game.winningCells = winningLine;
   }else if(this.checkDraw(game.board))
   {
     game.isGameOver = true;
     game.winnerId = null;
   }else{
     //Troca o turno na brotheragem
-    game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
+    game.currentPlayer = otherPlayer(game.currentPlayer);
   }
   return game;
 }
@@ -186,7 +211,13 @@ private checkDraw(board: number[][]): boolean
   return board[0].every(cell => cell !== 0);
 }
 
-  private checkWin(board: number[][],row: number,col: number,player: number): boolean
+  /*
+    Procura um 4 em linha que passe pela peca que acabou de cair. Em vez de so
+    dizer "ganhou", devolve AS CASAS da linha vencedora: e o que o tabuleiro
+    precisa para saber quais e que pulsam e quais e que desfocam. null se nao
+    houver vitoria. Uma linha de 5 devolve as 5 casas, nao so 4.
+  */
+  private findWinningLine(board: number[][],row: number,col: number,player: number): BoardCell[] | null
   {
     const directions = [
       [[0,1] , [0, -1]], // Eixo horizontal (Direita, Esquerda)
@@ -197,8 +228,9 @@ private checkDraw(board: number[][]): boolean
     //Vamos verificar cada um dos eixos
     for(const axis of directions)
     {
-      let count = 1; // Ficha que acabou de cair conta como 1
-      
+      // Ficha que acabou de cair faz sempre parte da linha
+      const line: BoardCell[] = [{ row: row, column: col }];
+
       //
       for(const dir of axis)
       {
@@ -208,16 +240,16 @@ private checkDraw(board: number[][]): boolean
         //Enquanto estiver mos dentro da playzone(grid) e a ficha for do mesmo player
         while(r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] == player)
         {
-          count++;
+          line.push({ row: r, column: c });
           r += dir[0]; // da mais um passo na mesma direçao
           c += dir[1];
         }
       }
 
-      if(count >= 4)
-          return true;
+      if(line.length >= 4)
+          return line;
     }
-    return false;
+    return null;
   }
   
 StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game: GameState) => void)

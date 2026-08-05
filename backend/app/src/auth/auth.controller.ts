@@ -10,6 +10,7 @@ import { OAuthProfile } from './types/oauth-profile.type'
 import { UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from "multer";
+import { OptionalJwtAuthGuard } from './optjwt.strategy';
 
 export type OAuthRequest = Request & {
   user?: OAuthProfile;
@@ -76,9 +77,13 @@ export class AuthController {
   // Fora do rate limit: e so um check de sessao (JWT + 1 leitura), chamado a
   // cada carregamento de pagina.
   @SkipThrottle()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('me')
   getProfile(@Req() req: Request) {
+    if (!req.user) {
+      return null;
+    }
+
     return this.authService.getMe((req.user as { id: string }).id);
   }
 

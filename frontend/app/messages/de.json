@@ -220,6 +220,12 @@
     "Accept rematch": "Rückkampf annehmen",
     "Waiting for opponent": "Warten auf den Gegner",
     "Rematch": "Rückspiel"
+  },
+  "exitPopUp": {
+    "title": "Bist du dir sicher, dass du gehen willst",
+    "description": "Das Verlassen eines Spiels während des Spielverlaufs gilt als Aufgabe des aktuellen Spiels",
+    "stay": "Bleiben",
+    "leave": "Verlassen"
   }
 
 }

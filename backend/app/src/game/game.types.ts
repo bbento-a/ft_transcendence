@@ -35,6 +35,26 @@ export interface GamePlayer
     name: string;
 }
 
+//Player 1 (o host) ou player 2 (o convidado). Quem abre o jogo e sorteado, por
+//isso isto deixou de ser sempre 1 -- ter um tipo proprio evita que se escreva
+//um numero qualquer onde so estes dois fazem sentido.
+export type PlayerNumber = 1 | 2;
+
+//O adversario de quem esta a jogar. Numa so linha para nao andar espalhado
+//por varios ficheiros o "1 ? 2 : 1".
+export function otherPlayer(player: PlayerNumber): PlayerNumber
+{
+    return player === 1 ? 2 : 1;
+}
+
+//Uma casa do tabuleiro. Serve para o frontend saber QUAIS as pecas ganharam,
+//sem ter de descobrir a linha vencedora outra vez a partir do board.
+export interface BoardCell
+{
+    row: number;
+    column: number;
+}
+
 export interface GameState
 {
     roomId: string;
@@ -43,9 +63,16 @@ export interface GameState
     player1Name: string;
     player2Id: string;
     player2Name: string;
-    currentPlayer: number;//What turn is Player1 or Player2
+    currentPlayer: PlayerNumber;//What turn is Player1 or Player2
     isGameOver: boolean;
     winnerId: string | null;
+    //Ultima peca a cair, para o tabuleiro a poder destacar. null antes da
+    //primeira jogada -- e num jogo novo volta a null.
+    lastMove: BoardCell | null;
+    //As pecas que fizeram o 4 em linha (podem ser 5 se a linha for maior).
+    //null enquanto ninguem ganhar -- e fica null numa vitoria por forfeit,
+    //porque ai nao ha nenhuma linha no tabuleiro para destacar.
+    winningCells: BoardCell[] | null;
     disconnectedPlayerId?: string | null;
     //So existe em jogos contra a IA. Se vier undefined usa se o DEFAULT_AI_DIFFICULTY
     difficulty?: Difficulty;

@@ -11,6 +11,13 @@ export const AI_PLAYER_ID = "AI";
 export type Difficulty = "easy" | "medium" | "hard";
 export const DIFFICULTIES: readonly Difficulty[] = ["easy", "medium", "hard"];
 
+// One square of the board.
+// Source of truth: backend/app/src/game/game.types.ts
+export interface BoardCell {
+  row: number;
+  column: number;
+}
+
 export interface GameState {
   roomId: string;
   board: number[][];      // 6 rows x 7 cols. 0 = empty, 1 = player1 (red), 2 = player2 (yellow)
@@ -21,6 +28,8 @@ export interface GameState {
   currentPlayer: number;  // 1 or 2 — whose turn it is
   isGameOver: boolean;
   winnerId: string | null;
+  lastMove: BoardCell | null;        // piece that just dropped; null before move 1
+  winningCells: BoardCell[] | null;  // the 4-in-a-row; null unless won on the board
   disconnectedPlayerId?: string | null;
   // Só existe em jogos contra a IA. Escolhida no widget de dificuldade do
   // lobby e enviada em playVsAI com { difficulty }; sem escolha vale o

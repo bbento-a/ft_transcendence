@@ -1,3 +1,5 @@
+import { PlayerNumber } from './game.types';
+
 // A lobby room: the "box" shown in /gamerooms.
 // The host creates it and waits; the first person to enter becomes the guest and
 // the game starts. Anyone entering after that watches as a spectator.
@@ -11,6 +13,11 @@ export interface GameRoom {
   // Who has asked to play again since the last game ended. A rematch needs both
   // players, so this is cleared whenever a new game starts.
   rematchVotes: Set<string>;
+  // Quem abriu o ultimo jogo desta sala (1 = host, 2 = convidado). A revanche
+  // da a primeira jogada ao outro, para a vantagem de abrir nao ficar sempre
+  // do mesmo lado. null enquanto nao se jogar nada aqui -- e volta a null com
+  // um adversario novo, que recomeca com sorteio.
+  lastStarter: PlayerNumber | null;
 }
 
 // 'finished' is a room whose game is over but whose players are still sitting in

@@ -218,6 +218,12 @@
     "Accept rematch": "Accept rematch",
     "Waiting for opponent": "Waiting for opponent",
     "Rematch": "Rematch"
+  },
+  "exitPopUp": {
+    "title": "Are you sure you want to leave",
+    "description": "Leaving during a match will be considered as forfeiting the current game",
+    "stay": "Stay",
+    "leave": "Leave"
   }
 
 }

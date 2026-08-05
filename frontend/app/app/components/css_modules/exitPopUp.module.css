@@ -11,7 +11,7 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 20px;
-	gap: 15px;
+	gap: 0px;
 	text-align: center;
 	font-size: 20px;
 	color: #243119;
@@ -40,7 +40,7 @@
 	align-self: stretch;
 	flex: 1;
 	position: relative;
-	font-size: x-small;
+	font-size: xx-small;
 	font-weight: 600;
 	flex-shrink: 0;
 }
@@ -66,6 +66,13 @@
 	justify-content: center;
 	padding: 10px;
 	flex-shrink: 0;
+	transition: background-color 0.2s ease;
+}
+.button:hover {
+  background-color: #c4c4c4;
+}
+.button:active {
+  background-color: #898989;
 }
 .text {
 	position: relative;
@@ -84,4 +91,11 @@
 	padding: 10px;
 	flex-shrink: 0;
 	color: #dafdd4;
+	transition: background-color 0.2s ease;
+}
+.buttonDark:hover {
+  background-color: #2f472e;
+}
+.buttonDark:active {
+  background-color: #233522;
 }
