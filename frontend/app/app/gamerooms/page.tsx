@@ -119,7 +119,7 @@ export default function Home() {
 				></DifficultyWidget>
 			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
-				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
+				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg" loading="eager"/>
 			</button>
 		</div>
 	</div>

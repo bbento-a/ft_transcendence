@@ -8,8 +8,10 @@ import { useTranslations } from "next-intl";
 import { useGameSocket } from "../hooks/useGameSocket";
 import { AI_PLAYER_ID, DIFFICULTIES } from "../types/game";
 
-import ExitPopUp from "../components/exitPopUp";
 import { useNavGuard } from "@/context/NavGuardContext";
+
+import ExitPopUp from "../components/exitPopUp";
+import BackArrow from "../components/backArrow";
 
 const ROWS = 6;
 const COLUMNS = 7;
@@ -24,6 +26,7 @@ export default function Page() {
 	// Router com view transitions: sair da sala anima de volta como entrar nela.
 	const router = useTransitionRouter();
 	const params = useParams();
+	const t = useTranslations("gameroom_id");
 	// Exit confirmation: opens only when walking out of a LIVE match (back
 	// button or the navbar's wawa icon). Leaving any other room state skips
 	// the question and just leaves.
@@ -60,8 +63,8 @@ export default function Page() {
 	// Nivel do bot, por baixo do nome dele: sem isto um jogo no facil e um no
 	// dificil sao o mesmo "Bot" no ecra. So o lado da IA e que o mostra — o
 	// servidor poe a IA no player2, mas verificamos os dois lados na mesma.
-	const t = useTranslations("game");
-	const difficultyLabel = state?.difficulty ? t(state.difficulty) : null;
+	const tGame = useTranslations("game");
+	const difficultyLabel = state?.difficulty ? tGame(state.difficulty) : null;
 	const leftDifficulty = state?.player1Id === AI_PLAYER_ID ? difficultyLabel : null;
 	const rightDifficulty = state?.player2Id === AI_PLAYER_ID ? difficultyLabel : null;
 
@@ -166,33 +169,33 @@ export default function Page() {
 
 	function statusText() {
 		if (!state)
-			return status || (connected ? "Looking for opponent..." : "Connecting...");
+			return status || (connected ? `${t("Looking for opponent")}...` : `${t("Connecting")}...`);
 		if (state.isGameOver) {
 			if (state.winnerId === null)
-				return "Draw!";
-			return `Winner: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
+				return `${t("Draw")}!`;
+			return `${t("Winner")}: ${state.winnerId === state.player1Id ? state.player1Name : state.player2Name}!`;
 		}
 		// Someone dropped out: name them and show how long they have to come back.
 		if (forfeit)
-			return `${forfeit.message} Forfeit in ${forfeit.secondsLeft}s`;
-		return `${state.currentPlayer === 1 ? state.player1Name : state.player2Name}'s Turn`;
+			return `${forfeit.message} ${t("Forfeit in")} ${forfeit.secondsLeft}`;
+		return `${t("Current turn")}: ${state.currentPlayer === 1 ? state.player1Name : state.player2Name}`;
 	}
 
 	function turnImage(){
 		if (state === null)
 			return
 		else if (state.currentPlayer === 1)
-			return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceLighter.svg" />
-		return <Image width={20} height={20} sizes="100vw" alt="" src="/pieceDark.svg" />
+			return <Image className={styles.fixPieceSize} width="0" height="0" sizes="100vw" alt="" src="/pieceLighter.svg" />
+		return <Image className={styles.fixPieceSize} width="0" height="0" sizes="100vw" alt="" src="/pieceDark.svg" />
 	}
 	// A rematch needs both players, so the button doubles as the reply to an
 	// offer. Against the bot it just starts the next game.
 	function rematchLabel() {
 		if (opponentWantsRematch)
-			return "Accept rematch";
+			return t("Accept rematch");
 		if (iWantRematch)
-			return "Waiting for opponent...";
-		return "Rematch";
+			return `${t("Waiting for opponent")}...`;
+		return t("Rematch");
 	}
 
 	return (
@@ -257,10 +260,10 @@ export default function Page() {
 				{rightDifficulty && <div className={styles.playerDifficulty}>{rightDifficulty}</div>}
 			</div>
 		</div>
+		{/* Aqui a seta NAO pode ser um router.back() simples: tem de avisar o
+		    servidor (leaveRoom) e, a meio de uma partida, perguntar primeiro. */}
 		<div className={styles.buttonWrapper}>
-			<button className={styles.buttonIcon} onClick={handleBack} disabled={leaving}>
-				<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
-			</button>
+			<BackArrow onClick={handleBack} disabled={leaving} />
 		</div>
 		</>
 		)}

@@ -5,9 +5,13 @@ import Image from "next/image";
 // router.back() nao precisa de nada: o popstate ja e animado pela biblioteca.
 // O useTransitionRouter e para os push (pesquisa de outro dashboard).
 import { Link, useTransitionRouter } from "next-view-transitions";
+import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useStatsSocket } from "../hooks/useStatsSocket";
 import styles from "./page.module.css";
+
+import BackArrow from "../components/backArrow";
+
 import {
   StatsResponse,
   ResultKind,
@@ -188,18 +192,7 @@ export default function DashboardView({ username }: { username?: string }) {
   return (
     <div className={styles.pageWrapper}>
       {/* Botao voltar */}
-      <div className={styles.backWrapper}>
-        <button onClick={() => router.back()} aria-label="Back">
-          <Image
-            className={styles.backIcon}
-            width={30}
-            height={30}
-            alt=""
-            src="/arrow.svg"
-          />
-        </button>
-      </div>
-
+			<div className={styles.buttonWrapper}><BackArrow /></div>
       <div className={styles.content}>
         <h1 className={styles.title}>{t("title")}</h1>
 

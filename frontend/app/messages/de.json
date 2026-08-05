@@ -200,6 +200,26 @@
   "game": {
     "easy": "Leicht",
     "medium": "Mittel",
-    "hard": "Schwer"
+    "hard": "Schwer",
+    "NoGameRooms": "Er zijn momenteel geen speelkamers beschikbaar!",
+    "playvsbot": "Speel tegen een bot",
+    "playvsplayer": "Speel tegen iemand"
+  },
+  "gameroomsWidget": {
+    "Waiting": "Warten",
+    "Join": "Beitreten",
+    "Spectate": "Zuschauen"
+  },
+  "gameroom_id": {
+    "Looking for opponent": "Auf der Suche nach einem Gegner",
+    "Connecting": "Verbinden",
+    "Draw": "Unentschieden",
+    "Winner": "Gewinner",
+    "Forfeit in": "Aufgeben bei",
+    "Current turn": "Spielzug",
+    "Accept rematch": "Rückkampf annehmen",
+    "Waiting for opponent": "Warten auf den Gegner",
+    "Rematch": "Rückspiel"
   }
+
 }

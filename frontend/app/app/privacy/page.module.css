@@ -47,16 +47,3 @@
 	padding: 5px;
 	z-index: 3;
 }
-.backButton{
-	width: 30px;
-	height: auto;
-	position: relative;
-	object-fit: cover;
-	transition: transform 0.15s ease;
-}
-.backButton:hover {
-  transform: scale(1.30);
-}
-.backButton:active {
-  transform: scale(0.80);
-}

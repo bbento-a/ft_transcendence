@@ -295,22 +295,12 @@
 }
 
 /* ---- Voltar ---- */
-.backWrapper {
+.buttonWrapper {
 	position: absolute;
 	top: 30px;
 	left: 30px;
 	z-index: 4;
 	transition: transform 0.15s ease;
-}
-.backWrapper:hover {
-  transform: scale(1.30);
-}
-.backWrapper:active {
-  transform: scale(0.80);
-}
-.backIcon {
-	width: 30px;
-	height: 30px;
 }
 
 /* ---- Responsivo ---- */

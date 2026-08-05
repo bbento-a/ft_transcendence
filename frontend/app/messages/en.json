@@ -201,6 +201,24 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard"
+  },
+  "gameroomsWidget": {
+    "Waiting": "Waiting",
+    "Join": "Join",
+    "Spectate": "Spectate"
+    
+  },
+  "gameroom_id": {
+    "Looking for opponent": "Looking for opponent",
+    "Connecting": "Connecting",
+    "Draw": "Draw",
+    "Winner": "Winner",
+    "Forfeit in": "Forfeit in",
+    "Current turn": "Current turn",
+    "Accept rematch": "Accept rematch",
+    "Waiting for opponent": "Waiting for opponent",
+    "Rematch": "Rematch"
   }
+
 }
 
