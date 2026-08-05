@@ -217,6 +217,12 @@
     "Accept rematch": "Aceitar desforra",
     "Waiting for opponent": "À espera do adversário",
     "Rematch": "Desforra"
+  },
+  "exitPopUp": {
+    "title": "Tens a certeza que queres sair",
+    "description": "Sair a meio de uma partida será considerado como desistência do jogo atual",
+    "stay": "Ficar",
+    "leave": "Sair"
   }
 }
 
