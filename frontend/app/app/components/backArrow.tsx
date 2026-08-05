@@ -28,7 +28,7 @@ export default function backArrow({
 			onClick={onClick ?? (() => {router.back()})}
 			disabled={disabled}
 		>
-			<Image width="0" height="0" sizes="100vw" alt="" src={"/arrow.svg"} className={styles.fixSize}></Image>
+			<Image className={styles.fixSize} width="0" height="0" sizes="100vw" alt="" src={"/arrow.svg"}></Image>
 		</button>
   )
 }
