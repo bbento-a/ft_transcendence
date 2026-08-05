@@ -304,6 +304,13 @@
 .backIcon {
 	width: 30px;
 	height: 30px;
+	transition: transform 0.15s ease;
+}
+.backIcon:hover {
+  transform: scale(1.30);
+}
+.backIcon:active {
+  transform: scale(0.80);
 }
 
 /* ---- Responsivo ---- */
