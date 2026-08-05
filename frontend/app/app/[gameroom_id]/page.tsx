@@ -236,7 +236,11 @@ export default function Page() {
 		<div className={styles.sideRight}>
 			<div className={styles.playerText}>{rightName}</div>
 		</div>
-		<div className={styles.buttonWrapper}><BackArrow /></div>
+		{/* Aqui a seta NAO pode ser um router.back() simples: tem de avisar o
+		    servidor (leaveRoom) e, a meio de uma partida, perguntar primeiro. */}
+		<div className={styles.buttonWrapper}>
+			<BackArrow onClick={handleBack} disabled={leaving} />
+		</div>
 		</>
 		)}
 		{
