@@ -80,7 +80,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // or a private game vs the bot. Null when they are free to browse.
   private findResumableRoom(userId: string): string | null {
     const room = this.findRoomByUser(userId);
-    if (room) return room.id;
+    // Nao puxamos de volta para uma sala em ESPERA: se a pessoa saiu para o
+    // lobby/home (ex.: clicou no icone wawa), foi porque quis :$
+    if (room && room.status !== 'waiting') return room.id;
 
     const game = this.gameService.GetGameByPlayerId(userId);
     if (game && !game.isGameOver) return game.roomId;
@@ -122,6 +124,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // In a live game: pause it and let GameService decide the forfeit.
     const game = this.gameService.GetGameByPlayerId(userId);
     if (!game || game.isGameOver) return;
+
+    // Jogo vs bot: nao ha adversario humano para proteger, por isso sair (ex.:
+    // ir as settings) nao e um forfeit — simplesmente descartamos o jogo. Sem
+    // isto, o jogo ficava preso em activeGames e um novo "Play vs bot" era
+    // recusado com "You are already in a game or room.", alem de gravar uma
+    // derrota injusta quando o timer expirava.
+    const vsBot =
+      game.player1Id === AI_PLAYER_ID || game.player2Id === AI_PLAYER_ID;
+    if (vsBot) {
+      this.gameService.AbandonGame(game.roomId);
+      return;
+    }
 
     game.disconnectedPlayerId = userId;
 
@@ -231,8 +245,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Back button: a deliberate exit, unlike a dropped connection. Someone who
   // merely reloads is handled by handleDisconnect's grace periods instead.
+  //
+  // Devolve sempre um valor: e o ack que a pagina espera antes de navegar, e o
+  // adaptador do Nest so o envia se o handler devolver algo. Sem ele a pagina
+  // saia antes de nos processarmos isto e, na ligacao seguinte, ainda a viamos
+  // dentro da sala — mandando-a de volta com "resumeRoom".
   @SubscribeMessage('leaveRoom')
-  async leaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
+  async leaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomId: string,
+  ): Promise<{ left: true }> {
     const userId = client.data.userId;
 
     this.spectators.delete(userId);
@@ -240,22 +262,31 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      // Private game vs the AI: drop it, or the player stays "busy" forever.
+      // Private game vs the AI. Walking out on purpose is a forfeit here too:
+      // the bot "wins" (it never gets counters — buildOutcomes drops it) and the
+      // player takes the loss, exactly as against a human. Either way the game
+      // leaves activeGames, or the player would stay "busy" forever.
       const game = this.gameService.GetStateOfGame(roomId);
-      if (game && game.player1Id === userId) this.gameService.AbandonGame(roomId);
-      return;
+      if (game && game.player1Id === userId) {
+        const forfeited = this.gameService.ForfeitGame(roomId, userId);
+        if (forfeited) await this.gameService.finalizeGame(forfeited);
+        else this.gameService.AbandonGame(roomId);
+      }
+      return { left: true };
     }
 
     const isPlayer = userId === room.hostId || userId === room.guestId;
-    if (!isPlayer) return; // a spectator walking out changes nothing for the room
+    // A spectator walking out changes nothing for the room.
+    if (!isPlayer) return { left: true };
 
     // Nobody had joined yet, so the room leaves with its host.
     if (room.status === 'waiting') {
       this.closeRoom(room.id);
-      return;
+      return { left: true };
     }
 
     await this.resetRoom(room, userId);
+    return { left: true };
   }
 
   // "Play again". It takes both players: the first press is an offer, the second
@@ -302,7 +333,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // the game is dropped, anyone watching is sent back to the lobby, and the room
   // reopens with whoever stayed as its host — free for anyone to join again.
   private async resetRoom(room: GameRoom, leaverId: string) {
-    this.gameService.AbandonGame(room.id);
+    // Walking out of a RUNNING game is a forfeit — exactly what the exit popup
+    // warns — so the result is recorded: the leaver takes the loss, whoever
+    // stayed the win, match history included. When there is no live game (a
+    // room waiting on a rematch), there is nothing to record and Abandon just
+    // tidies the timers.
+    const forfeited = this.gameService.ForfeitGame(room.id, leaverId);
+    if (forfeited) await this.gameService.finalizeGame(forfeited);
+    else this.gameService.AbandonGame(room.id);
 
     for (const [watcherId, watchedRoomId] of this.spectators) {
       if (watchedRoomId !== room.id) continue;
@@ -329,7 +367,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.in(stayingId).socketsJoin(room.id);
     this.server
       .to(stayingId)
-      .emit('gameAborted', 'Your opponent left. Waiting for a new opponent...');
+      .emit(
+        'gameAborted',
+        forfeited
+          ? 'Your opponent left — you win by forfeit. Waiting for a new opponent...'
+          : 'Your opponent left. Waiting for a new opponent...',
+      );
 
     // They may be gone as well — both players can drop at nearly the same time.
     // A promoted host who is not actually connected will never disconnect again,
@@ -406,9 +449,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = client.data.userId;
 
-    if (this.isBusy(userId)) {
+    // Uma sala de lobby (multiplayer) bloqueia mesmo — nao a mexemos.
+    if (this.findRoomByUser(userId)) {
       client.emit('warning', 'You are already in a game or room.');
       return;
+    }
+    // Um jogo vs bot antigo e descartavel: abandona-o e comeca um novo, para
+    // "Play vs bot" nunca ficar preso em "already in a game" (ex.: foi as
+    // settings e voltou). So recusamos se for um jogo multiplayer a decorrer.
+    const existing = this.gameService.GetGameByPlayerId(userId);
+    if (existing) {
+      const existingVsBot =
+        existing.player1Id === AI_PLAYER_ID ||
+        existing.player2Id === AI_PLAYER_ID;
+      if (!existingVsBot) {
+        client.emit('warning', 'You are already in a game or room.');
+        return;
+      }
+      this.gameService.AbandonGame(existing.roomId);
     }
 
     //Nunca confiar no que vem do cliente: so passa se for mesmo um dos niveis conhecidos

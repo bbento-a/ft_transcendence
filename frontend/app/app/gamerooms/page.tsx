@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import GameroomWidget from "../components/gameroomWidget"
+import DifficultyWidget from "../components/difficultyWidget"
 import GamePopUp from "../components/gamePopUp"
 import useClickOutside from "../hooks/useClickOutside"
 import RequireAuth from "../components/requireAuth"
@@ -13,12 +14,13 @@ import { useTranslations } from "next-intl";
 
 export default function Home() {
 	const [toggled, setToggle] = useState(false);
+	const [difficulty, setDifficulty] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
 	const t = useTranslations("gamerooms");
 
-	const { rooms, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
+	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
 	useClickOutside([popupRef], () => setToggle(false), toggled);
 
@@ -44,24 +46,38 @@ export default function Home() {
 		<div className={styles.wrapperScroll}>
 
 		{
-			rooms.length === 0 &&
-			<div className={styles.textWrapper}>
-				<div className={styles.noGameRooms}>{t("NoGameRooms")}</div>
-			</div>
+			// Ainda a carregar a lista: spinner, para nao dar flash do "no rooms".
+			!roomsLoaded ? (
+				<div className={styles.textWrapper}>
+					<div className={styles.spinner} aria-label="Loading" />
+				</div>
+			) : rooms.length === 0 ? (
+				<div className={styles.textWrapper}>
+					<div className={styles.noGameRooms}>{t("NoGameRooms")}</div>
+				</div>
+			) : (
+				rooms.map((room) => (
+					<GameroomWidget
+						key={room.id}
+						room={room}
+						onEnter={(roomId) => router.push(`/${roomId}`)}
+					/>
+				))
+			)
 		}
-		{rooms.map((room) => (
-			<GameroomWidget
-				key={room.id}
-				room={room}
-				onEnter={(roomId) => router.push(`/${roomId}`)}
-			/>
-		))}
 
 		</div>
 		<div ref={popupRef} className={styles.buttonWrapper}>
-			{ toggled && <GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>}
+			{
+				toggled &&
+				<GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>
+			}
+			{
+				toggled && difficulty &&
+				<DifficultyWidget></DifficultyWidget>
+			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
-				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg"/>
+				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg" loading="eager"/>
 			</button>
 		</div>
 	</div>

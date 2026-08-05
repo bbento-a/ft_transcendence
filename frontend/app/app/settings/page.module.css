@@ -243,8 +243,8 @@
 }
 .buttonWrapper {
 	position: absolute;
-	top: 20px;
-	left: 20px;
+	top: 10px;
+	left: 30px;
 	padding: 5px;
 	z-index: 3;
 }
@@ -253,19 +253,6 @@
 	height: 70px;
 	position: relative;
 	object-fit: cover;	
-}
-.backButton{
-	width: 30px;
-	height: auto;
-	position: relative;
-	object-fit: cover;
-	transition: transform 0.15s ease;
-}
-.backButton:hover {
-  transform: scale(1.30);
-}
-.backButton:active {
-  transform: scale(0.80);
 }
 @media (max-width: 1000px) {
 	.pageWrapper{

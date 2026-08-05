@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useStatsSocket } from "../hooks/useStatsSocket";
 import styles from "./page.module.css";
+
+import BackArrow from "../components/backArrow";
+
 import {
   StatsResponse,
   ResultKind,
@@ -187,18 +189,7 @@ export default function DashboardView({ username }: { username?: string }) {
   return (
     <div className={styles.pageWrapper}>
       {/* Botao voltar */}
-      <div className={styles.backWrapper}>
-        <button onClick={() => router.back()} aria-label="Back">
-          <Image
-            className={styles.backIcon}
-            width={30}
-            height={30}
-            alt=""
-            src="/arrow.svg"
-          />
-        </button>
-      </div>
-
+			<div className={styles.buttonWrapper}><BackArrow /></div>
       <div className={styles.content}>
         <h1 className={styles.title}>{t("title")}</h1>
 

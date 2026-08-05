@@ -1,9 +1,7 @@
-"use client"
-
-import Image from 'next/image'
 import styles from "./page.module.css";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+
+import BackArrow from "../components/backArrow";
 
 export default function PrivacyPolicy() {
   const t = useTranslations("privacyPolicy");
@@ -22,8 +20,6 @@ export default function PrivacyPolicy() {
     "changes",
   ] as const;
 
-  const router = useRouter();
-
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.contentWrapper}>
@@ -39,11 +35,7 @@ export default function PrivacyPolicy() {
           ))}
         </div>
       </div>
-      <div className={styles.buttonWrapper}>
-				<button className={styles.backButton} onClick={() => {router.back()}}>
-					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
-				</button>
-			</div>
+			<div className={styles.buttonWrapper}><BackArrow /></div>
     </div>
   );
 }

@@ -32,8 +32,8 @@
   	gap: 5px;
 }
 .wawaIcon {
-  	height: 60px;
-  	width: 100px;
+	width: 100px;
+  	height: auto;
   	position: relative;
 }
 .wawaText {
@@ -53,11 +53,12 @@
 	box-sizing: border-box;
 }
 .buttonIcon {
-  width: 50px;
-  height: 50px;
-  padding: 0;
-  border-radius: 50%;
-  overflow: hidden;
+	width: 50px;
+	height: 50px;
+	padding: 0;
+	border-radius: 50%;
+	overflow: hidden;
+	transition: transform 0.15s ease;
 }
 .imageIcon {
 	scale: 0.;
@@ -66,12 +67,26 @@
   	position: relative;
   	object-fit: cover;
 }
+.buttonIcon:active {
+	transform: scale(0.90);
+}
 .profilePic {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-sizing: border-box;
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	object-fit: cover;
+	box-sizing: border-box;
+}
+/* Placeholder do avatar enquanto o /me carrega: reserva o espaco (mesmo tamanho
+   do .buttonIcon) e pulsa suavemente, para o icone de perfil nao aparecer de
+   repente no F5. */
+.avatarPlaceholder {
+	background-color: rgba(218, 253, 212, 0.25);
+	animation: avatarPulse 1.2s ease-in-out infinite;
+}
+@keyframes avatarPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.75; }
 }
 @media (max-width: 375px) {
 	.buttonIcon {

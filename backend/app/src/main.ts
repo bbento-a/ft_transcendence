@@ -12,6 +12,10 @@ async function bootstrap() {
   // e o rate limit passava a ser partilhado por todos os utilizadores
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
+  // Serve os avatares gravados pelo multer em ./uploads/avatars.
+  // O nginx tira o /api do caminho, por isso /api/uploads/avatars/x.png
+  // chega aqui como /uploads/avatars/x.png. Sem isto o URL guardado na BD
+  // devolve 404 e a foto de perfil aparece partida.
   app.useStaticAssets(join(__dirname, "..", "uploads"), {
     prefix: "/uploads/",
   });

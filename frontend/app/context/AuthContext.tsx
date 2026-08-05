@@ -16,6 +16,10 @@ type User = {
 type UserContextType = {
 	user: User | null;
 	loading: boolean;
+	// true SO quando o /me confirmou que a sessao e invalida (401/403). Falhas
+	// transitorias (429 do throttle, 5xx, rede) NAO poem isto a true, para o
+	// RequireAuth nao mandar a pessoa para o login por causa de um erro passageiro.
+	sessionExpired: boolean;
 	refresh: () => Promise<void>;
 	logout: () => Promise<void>;
 };
@@ -25,6 +29,7 @@ export const UserContext = createContext<UserContextType | null>(null);
 export function UserProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [sessionExpired, setSessionExpired] = useState(false);
 
     // se 200, guarda o user; se 401/403 (sessao invalida) fica null.
 	// noutros erros (429 do throttle, 5xx, rede)
@@ -41,6 +46,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 		}
 
 		if (res.ok) {
+			setSessionExpired(false);
 			try {
 				setUser(await res.json());
 			} catch {
@@ -50,8 +56,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 		}
 
 		if (res.status === 401 || res.status === 403) {
+			// Sessao mesmo invalida (ex.: user apagado). So AQUI marcamos expirada.
 			setUser(null);
+			setSessionExpired(true);
 		}
+		// 429/5xx: nao mexemos no user nem marcamos expirada — e passageiro.
 	};
 
 	// mesmo que o pedido falhe limpamos o user, senao ficava logado na UI
@@ -62,6 +71,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 			// o cookie pode nao ter sido limpo, mas localmente saimos na mesma
 		}
 		setUser(null);
+		setSessionExpired(false); // saida deliberada, nao e sessao-fantasma
 	};
 
 	useEffect(() => {
@@ -69,7 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	return (
-		<UserContext.Provider value={{ user, loading, refresh, logout }}>
+		<UserContext.Provider value={{ user, loading, sessionExpired, refresh, logout }}>
 			{children}
 		</UserContext.Provider>
 	);

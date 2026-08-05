@@ -1,12 +1,12 @@
 .pageWrapper{
-	width: auto;
+	width: 90%;
 	height: 100%;
 	position: relative;
 	display: flex;
 	flex-direction:row;
 	align-content: center;
 }
-.sides{
+.sideLeft{
 	width: 100%;
 	height: 100%;
 	min-width: 100px;
@@ -14,6 +14,17 @@
 	display: flex;
 	position: relative;
 	align-items: top;
+	justify-content: right;
+}
+.sideRight{
+	width: 100%;
+	height: 100%;
+	min-width: 100px;
+	padding: 50px 20px;
+	display: flex;
+	position: relative;
+	align-items: top;
+	justify-content: left;
 }
 .playerText{
 	color: #ecffe9;
@@ -40,6 +51,26 @@
 	font-size: x-large;
 	font-weight: 600;
 	text-shadow: 0px 0px 10px #0a1b01;
+}
+/* Estado "a ligar" no F5: spinner centrado em vez do esqueleto Player1/Player2. */
+.connecting{
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+}
+.spinner{
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	border: 5px solid rgba(66, 99, 64, 0.25);
+	border-top-color: #426340;
+	animation: spin 0.8s linear infinite;
+}
+@keyframes spin{
+	to { transform: rotate(360deg); }
 }
 .rematch{
 	padding: 10px 24px;
@@ -119,10 +150,14 @@
 	background-size: cover;
 	background-position: center;
 }
+.fixPieceSize{
+	width: 20px;
+	height: auto;
+}
 .buttonWrapper {
 	position: absolute;
-	top: 0px;
-	left: 0px;
+	top: 20px;
+	left: -40px;
 	padding: 5px;
 	z-index: 3;
 }
@@ -139,6 +174,13 @@
 .buttonIcon:active {
   transform: scale(0.80);
 }
+/* Saida ja pedida, a espera do servidor: o botao fica marcado como carregado
+   para o clique nao parecer perdido enquanto a confirmacao nao chega. */
+.buttonIcon:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: scale(0.80);
+}
 .popUpWrapper{
 	position: absolute;
 	display: flex;
@@ -149,15 +191,16 @@
 	box-sizing: border-box;
 	
 }
-
 @media (max-width: 1190px) {
 	.board{
 		width: 38vw;
 		height: auto;
 	}
-	
+	.buttonWrapper {
+		top: -10px;
+		left: -20px;
+	}
 }
-
 @media (max-width: 1100px) {
 	.board{
 		width: 44vw;
@@ -190,7 +233,11 @@
 		width: 70vw;
 		height: auto;
 	}
-	.sides{
+	.sideRight{
+		display: none;
+		padding: none;
+	}
+	.sideLeft{
 		display: none;
 		padding: none;
 	}
@@ -199,5 +246,8 @@
 	.board{
 		width: 80vw;
 		height: auto;
+	}
+	.buttonWrapper {
+		left: -10px;
 	}
 }

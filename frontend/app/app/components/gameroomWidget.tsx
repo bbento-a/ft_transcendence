@@ -1,5 +1,6 @@
 import styles from "./css_modules/gameroomWidget.module.css"
 import type { RoomSummary } from "../types/game"
+import { useTranslations } from "next-intl";
 
 // One room box: host on the left, opponent on the right (blank while waiting).
 // Waiting room -> the button joins you as the opponent.
@@ -11,6 +12,7 @@ export default function gameroomWidget({
 	room: RoomSummary;
 	onEnter: (roomId: string) => void;
 }) {
+	const t = useTranslations("gameroomsWidget");
   return (
 	<div className={styles.roomWidget}>
 		<div className={styles.contentWrapper}>
@@ -25,7 +27,7 @@ export default function gameroomWidget({
 			</div>
 			<button className={styles.button} onClick={() => onEnter(room.id)}>
 				<div className={styles.text}>
-					{room.status === "waiting" ? "Join" : "Spectate"}
+					{room.status === t("Waiting") ? t("Join") : t("Spectate")}
 				</div>
 			</button>
 		</div>

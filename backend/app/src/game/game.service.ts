@@ -256,6 +256,38 @@ StartForfeitTimer(roomId: string,disconnectedPlayerId: string, onForfeit: (game:
     this.activeGames.delete(roomId);
   }
 
+  /*
+    Fecha um jogo A DECORRER porque um jogador saiu de proposito: quem saiu
+    perde, quem ficou ganha — e o que o popup de saida promete. So marca o
+    resultado; gravar (contadores + historico) e trabalho do finalizeGame,
+    que quem chamar isto deve invocar a seguir com o estado devolvido.
+
+    Devolve undefined se nao houver nada para perder: jogo inexistente, ja
+    terminado, o "leaver" nem sequer e jogador dele, ou ainda ninguem jogou
+    uma peca. Quem chama trata esses casos como uma saida simples (Abandon),
+    sem resultado nenhum gravado.
+  */
+  ForfeitGame(roomId: string, leaverId: string): GameState | undefined {
+    const game = this.activeGames.get(roomId);
+    if (!game || game.isGameOver)
+      return undefined;
+    if (game.player1Id !== leaverId && game.player2Id !== leaverId)
+      return undefined;
+    // Tabuleiro intacto: nao chegou a haver jogo, por isso nao ha vitoria nem
+    // derrota a atribuir. Sair de uma sala onde ninguem jogou e so sair.
+    if (!this.hasAnyPiece(game.board))
+      return undefined;
+
+    game.isGameOver = true;
+    game.winnerId = game.player1Id === leaverId ? game.player2Id : game.player1Id;
+    return game;
+  }
+
+  //Ja caiu alguma peca no tabuleiro?
+  private hasAnyPiece(board: number[][]): boolean {
+    return board.some((row) => row.some((cell) => cell !== 0));
+  }
+
 async finalizeGame(game: GameState): Promise<void> {
     this.CancelForfeitTimer(game.roomId);
     this.activeGames.delete(game.roomId);

@@ -147,7 +147,8 @@
     "success": "Perfil atualizado com sucesso.",
     "passwordmismatch": "As palavras-passe não coincidem.",
     "nochanges": "Preenche pelo menos um campo para guardar alterações.",
-    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
+    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui.",
+    "avatarerror": "Não foi possível atualizar a imagem. Usa um JPEG, PNG, GIF ou WebP com menos de 5MB."
   },
   "dashboard": {
     "title": "Estatísticas",
@@ -194,6 +195,22 @@
     "NoGameRooms": "Não há salas de jogo disponíveis no momento!",
     "playvsbot": "Jogar com o bot",
     "playvsplayer": "Jogar com alguém"
+  },
+  "gameroomsWidget": {
+    "Waiting": "Esperando",
+    "Join": "Entrar",
+    "Spectate": "Observar"
+  },
+  "gameroom_id": {
+    "Looking for opponent": "À procura de um adversário",
+    "Connecting": "Conectando",
+    "Draw": "Empate",
+    "Winner": "Vencedor",
+    "Forfeit in": "Desistindo em",
+    "Current turn": "Vez de",
+    "Accept rematch": "Aceitar desforra",
+    "Waiting for opponent": "À espera do adversário",
+    "Rematch": "Desforra"
   }
 }
 

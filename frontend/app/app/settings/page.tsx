@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
 import { GENERIC_ERROR, pickError } from "../lib/formErrors";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
+
+import BackArrow from "../components/backArrow";
 
 /*
 Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos.
@@ -53,25 +53,38 @@ export default function page() {
 	  fileInputRef.current?.click();
 	};
 
-	const [avatarVersion, setAvatarVersion] = useState(0);
-
 	const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-	  const file = e.target.files?.[0];
+	  const input = e.currentTarget;
+	  const file = input.files?.[0];
+	  // limpamos o input logo: sem isto escolher o MESMO ficheiro outra vez
+	  // (depois de um erro) nao disparava o onChange, e nada acontecia
+	  input.value = "";
 	  if (!file) return;
+
+	  setError(null);
+	  setSuccess(false);
 
 	  const formData = new FormData();
 	  formData.append("avatar", file);
 
-	  const res = await fetch("/api/auth/avatar", {
-	    method: "POST",
-	    body: formData,
-	    credentials: "include",
-	  });
+	  try {
+	    const res = await fetch("/api/auth/avatar", {
+	      method: "POST",
+	      body: formData,
+	      credentials: "include",
+	    });
 
-	  if (!res.ok) return;
+	    // falhava em silencio: a foto nao mudava e nao havia nada no ecra a dizer porque
+	    if (!res.ok) {
+	      setError(t("avatarerror"));
+	      return;
+	    }
+	  } catch {
+	    setError(GENERIC_ERROR);
+	    return;
+	  }
 
 	  await refresh();
-	  setAvatarVersion(v => v + 1);
 	};
 
 	// Contas so-OAuth (Google/42) nao tem password local; email e password
@@ -143,8 +156,6 @@ export default function page() {
 		setIsSubmitting(false);
 	}
 
-	const router = useRouter();
-	
   	return (
   	<div className={styles.pageWrapper}>
 		<div className={styles.pageGroup}>
@@ -225,11 +236,7 @@ export default function page() {
 					}
 				</div>
 			</div>
-			<div className={styles.buttonWrapper}>
-				<button className={styles.backButton} onClick={() => {router.back()}}>
-					<Image width={30} height={30} sizes="100vw" alt="" src={"/arrow.svg"}></Image>
-				</button>
-			</div>
+			<div className={styles.buttonWrapper}><BackArrow /></div>
 		</div>
 	)
 }

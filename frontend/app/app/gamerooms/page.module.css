@@ -48,6 +48,19 @@
 	justify-content: center;
 	padding: 10px;
 }
+.spinner {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	border: 5px solid rgba(66, 99, 64, 0.25);
+	border-top-color: #426340;
+	animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
 .noGameRooms {
 	position: relative;
 	font-size: x-large;
@@ -79,7 +92,7 @@
 	transition: transform 0.15s ease;
 }
 .gameroomIcon:active {
-  transform: scale(0.80);
+  transform: scale(0.90);
 }
 
 @media (max-width: 430px) {

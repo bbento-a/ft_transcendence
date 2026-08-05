@@ -1,7 +1,7 @@
 .pageWrapper {
 	position: relative;
 	width: 100%;
-	height: 100%;
+	height: 85vh;
 	display: flex;
 	justify-content: center;
 	padding: 40px 20px;
@@ -295,22 +295,12 @@
 }
 
 /* ---- Voltar ---- */
-.backWrapper {
+.buttonWrapper {
 	position: absolute;
-	top: 20px;
-	left: 20px;
+	top: 30px;
+	left: 30px;
 	z-index: 4;
-}
-.backIcon {
-	width: 30px;
-	height: 30px;
 	transition: transform 0.15s ease;
-}
-.backIcon:hover {
-  transform: scale(1.30);
-}
-.backIcon:active {
-  transform: scale(0.80);
 }
 
 /* ---- Responsivo ---- */

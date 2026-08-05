@@ -147,7 +147,8 @@
     "success": "Profile updated successfully.",
     "passwordmismatch": "Passwords do not match.",
     "nochanges": "Fill in at least one field to save changes.",
-    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here."
+    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here.",
+    "avatarerror": "Could not update the picture. Use a JPEG, PNG, GIF or WebP image under 5MB."
   },
   "dashboard": {
     "title": "Statistics",
@@ -194,6 +195,23 @@
     "NoGameRooms": "No game rooms available at the moment!",
     "playvsbot": "Play vs bot",
     "playvsplayer": "Play vs someone"
+  },
+  "gameroomsWidget": {
+    "Waiting": "Waiting",
+    "Join": "Join",
+    "Spectate": "Spectate"
+  },
+  "gameroom_id": {
+    "Looking for opponent": "Looking for opponent",
+    "Connecting": "Connecting",
+    "Draw": "Draw",
+    "Winner": "Winner",
+    "Forfeit in": "Forfeit in",
+    "Current turn": "Current turn",
+    "Accept rematch": "Accept rematch",
+    "Waiting for opponent": "Waiting for opponent",
+    "Rematch": "Rematch"
   }
+
 }
 
