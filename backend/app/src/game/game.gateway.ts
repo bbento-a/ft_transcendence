@@ -122,20 +122,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     // In a live game: pause it and let GameService decide the forfeit.
+    //
+    // O jogo vs bot passa por aqui exatamente como um multiplayer: sair da
+    // pagina (ir as settings, por exemplo) nao descarta a partida — ela fica em
+    // pausa e retomamo-la ao voltar (ver startAIGame/enterRoom). So se o
+    // periodo de graca esgotar e que conta como forfeit, com a derrota gravada
+    // — a mesma promessa que o popup de saida ja faz contra o bot.
     const game = this.gameService.GetGameByPlayerId(userId);
     if (!game || game.isGameOver) return;
-
-    // Jogo vs bot: nao ha adversario humano para proteger, por isso sair (ex.:
-    // ir as settings) nao e um forfeit — simplesmente descartamos o jogo. Sem
-    // isto, o jogo ficava preso em activeGames e um novo "Play vs bot" era
-    // recusado com "You are already in a game or room.", alem de gravar uma
-    // derrota injusta quando o timer expirava.
-    const vsBot =
-      game.player1Id === AI_PLAYER_ID || game.player2Id === AI_PLAYER_ID;
-    if (vsBot) {
-      this.gameService.AbandonGame(game.roomId);
-      return;
-    }
 
     game.disconnectedPlayerId = userId;
 
@@ -454,11 +448,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('warning', 'You are already in a game or room.');
       return;
     }
-    // Um jogo vs bot antigo e descartavel: abandona-o e comeca um novo, para
-    // "Play vs bot" nunca ficar preso em "already in a game" (ex.: foi as
-    // settings e voltou). So recusamos se for um jogo multiplayer a decorrer.
+    // Ja ha uma partida vs bot a decorrer? Entao isto nao e um jogo novo: e um
+    // regresso a ela (foi as settings e voltou pela seta, que traz o browser de
+    // volta a /ai). Retomamos onde ficou, como o enterRoom faz no multiplayer —
+    // comecar um jogo novo aqui apagava um tabuleiro a meio.
+    // Uma partida terminada ja saiu do activeGames no finalizeGame, por isso o
+    // "Rematch" continua a cair no caminho de baixo e comeca um jogo mesmo novo.
     const existing = this.gameService.GetGameByPlayerId(userId);
-    if (existing) {
+    if (existing && !existing.isGameOver) {
       const existingVsBot =
         existing.player1Id === AI_PLAYER_ID ||
         existing.player2Id === AI_PLAYER_ID;
@@ -466,7 +463,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.emit('warning', 'You are already in a game or room.');
         return;
       }
-      this.gameService.AbandonGame(existing.roomId);
+      this.rejoinGame(client, existing);
+      return;
     }
 
     //Nunca confiar no que vem do cliente: so passa se for mesmo um dos niveis conhecidos
