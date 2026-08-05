@@ -47,6 +47,22 @@
 .button:active {
   background-color: #898989;
 }
+/* A criar a sala: o botao fica quieto (sem hover) enquanto mostra o spinner. */
+.button:disabled {
+	background-color: #ecffe9;
+	opacity: 0.7;
+}
+.buttonSpinner {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 3px solid rgba(36, 49, 25, 0.25);
+	border-top-color: #243119;
+	animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
 .text {
 	position: relative;
 	font-weight: 600;

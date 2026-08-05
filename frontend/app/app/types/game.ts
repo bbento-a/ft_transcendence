@@ -6,6 +6,11 @@
 // The id the backend gives the bot, in place of a real user id.
 export const AI_PLAYER_ID = "AI";
 
+// Niveis do bot. Espelho de DIFFICULTIES no backend (game.types.ts), que
+// valida o que recebe — mandar algo fora desta lista so faz cair no default.
+export type Difficulty = "easy" | "medium" | "hard";
+export const DIFFICULTIES: readonly Difficulty[] = ["easy", "medium", "hard"];
+
 export interface GameState {
   roomId: string;
   board: number[][];      // 6 rows x 7 cols. 0 = empty, 1 = player1 (red), 2 = player2 (yellow)
@@ -17,10 +22,10 @@ export interface GameState {
   isGameOver: boolean;
   winnerId: string | null;
   disconnectedPlayerId?: string | null;
-  // Só existe em jogos contra a IA. Por agora quem decide é a constante
-  // DEFAULT_AI_DIFFICULTY no backend (game.service.ts); quando houver ecrã de
-  // escolha, basta emitir playVsAI com { difficulty }.
-  difficulty?: "easy" | "medium" | "hard";
+  // Só existe em jogos contra a IA. Escolhida no widget de dificuldade do
+  // lobby e enviada em playVsAI com { difficulty }; sem escolha vale o
+  // DEFAULT_AI_DIFFICULTY do backend (game.service.ts).
+  difficulty?: Difficulty;
 }
 
 export interface MatchFoundPayload {

@@ -26,9 +26,30 @@
 	align-items: top;
 	justify-content: left;
 }
+/* Nome do jogador e, por baixo, o nivel do bot. Cada lado alinha o bloco para
+   o seu lado do tabuleiro, como o nome sozinho ja fazia. */
+.playerBlock{
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.sideLeft .playerBlock{
+	align-items: flex-end;
+}
+.sideRight .playerBlock{
+	align-items: flex-start;
+}
 .playerText{
 	color: #ecffe9;
 	font-size: larger;
+	font-weight: 600;
+	text-shadow: 0px 0px 10px #0a1b01;
+}
+/* Secundario face ao nome: mais pequeno e um pouco apagado. */
+.playerDifficulty{
+	color: #ecffe9;
+	opacity: 0.75;
+	font-size: small;
 	font-weight: 600;
 	text-shadow: 0px 0px 10px #0a1b01;
 }

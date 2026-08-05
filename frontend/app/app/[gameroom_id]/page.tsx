@@ -2,9 +2,11 @@
 import styles from "./page.module.css"
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useGameSocket } from "../hooks/useGameSocket";
+import { useParams } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { useTranslations } from "next-intl";
+import { useGameSocket } from "../hooks/useGameSocket";
+import { AI_PLAYER_ID, DIFFICULTIES } from "../types/game";
 
 import { useNavGuard } from "@/context/NavGuardContext";
 
@@ -21,7 +23,8 @@ function emptyBoard(): number[][] {
 }
 
 export default function Page() {
-	const router = useRouter();
+	// Router com view transitions: sair da sala anima de volta como entrar nela.
+	const router = useTransitionRouter();
 	const params = useParams();
 	const t = useTranslations("gameroom_id");
 	// Exit confirmation: opens only when walking out of a LIVE match (back
@@ -57,6 +60,14 @@ export default function Page() {
 	const leftName = state?.player1Name ?? myName ?? "Player1";
 	const rightName = state?.player2Name ?? "Player2";
 
+	// Nivel do bot, por baixo do nome dele: sem isto um jogo no facil e um no
+	// dificil sao o mesmo "Bot" no ecra. So o lado da IA e que o mostra — o
+	// servidor poe a IA no player2, mas verificamos os dois lados na mesma.
+	const tGame = useTranslations("game");
+	const difficultyLabel = state?.difficulty ? tGame(state.difficulty) : null;
+	const leftDifficulty = state?.player1Id === AI_PLAYER_ID ? difficultyLabel : null;
+	const rightDifficulty = state?.player2Id === AI_PLAYER_ID ? difficultyLabel : null;
+
 	const roomId = typeof params?.gameroom_id === "string" ? params.gameroom_id : null;
 
 	// Once connected, act on the route: /ai is the bot, anything else is a room
@@ -65,7 +76,14 @@ export default function Page() {
 	useEffect(() => {
 		if (!connected || started.current || !roomId) return;
 		started.current = true;
-		if (roomId === "ai") playAI();
+		if (roomId === "ai") {
+			// A dificuldade vem do widget do lobby via query (?difficulty=easy).
+			// Lida do window e nao de useSearchParams: este efeito so corre no
+			// cliente e assim a pagina nao precisa de um Suspense boundary. Um
+			// valor invalido (URL a mao) e filtrado aqui e de novo no backend.
+			const requested = new URLSearchParams(window.location.search).get("difficulty");
+			playAI(DIFFICULTIES.find((level) => level === requested));
+		}
 		else enterRoom(roomId);
 	}, [connected, roomId, playAI, enterRoom]);
 
@@ -182,19 +200,22 @@ export default function Page() {
 
 	return (
 	<div className={styles.pageWrapper}>
-		{!inRoom || leaving ? (
-		// Enquanto o socket liga e a sala nao esta confirmada — ou ja pedimos
-		// para sair: so o spinner, sem texto, em vez do esqueleto do jogo. No
-		// caso do "leaving", e o que faz o clique parecer imediato mesmo quando
-		// a navegacao para o lobby demora (ex.: modo dev acabado de compilar).
+		{!inRoom && !leaving ? (
+		// Enquanto o socket liga e a sala nao esta confirmada: so o spinner, sem
+		// texto, em vez do esqueleto do jogo. Durante o "leaving" e ao contrario
+		// — mantemos o jogo no ecra: a view transition congela um snapshot dele
+		// e desvanece-o; trocar para o spinner antes dessa captura fazia a
+		// pagina piscar (jogo -> spinner -> fade).
 		<div className={styles.connecting}>
 			<div className={styles.spinner} />
 		</div>
 		) : (
 		<>
 		<div className={styles.sideLeft}>
-			<div className={styles.playerText}>{leftName}</div>
-
+			<div className={styles.playerBlock}>
+				<div className={styles.playerText}>{leftName}</div>
+				{leftDifficulty && <div className={styles.playerDifficulty}>{leftDifficulty}</div>}
+			</div>
 		</div>
 		<div className={styles.container}>
 			<div className={styles.status}>
@@ -234,7 +255,10 @@ export default function Page() {
 			</div>
 		</div>
 		<div className={styles.sideRight}>
-			<div className={styles.playerText}>{rightName}</div>
+			<div className={styles.playerBlock}>
+				<div className={styles.playerText}>{rightName}</div>
+				{rightDifficulty && <div className={styles.playerDifficulty}>{rightDifficulty}</div>}
+			</div>
 		</div>
 		{/* Aqui a seta NAO pode ser um router.back() simples: tem de avisar o
 		    servidor (leaveRoom) e, a meio de uma partida, perguntar primeiro. */}

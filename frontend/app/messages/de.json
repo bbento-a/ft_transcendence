@@ -192,9 +192,18 @@
     "showingRecent": "Die {shown} neuesten von {total}"
   },
   "gamerooms": {
-    "NoGameRooms": "Derzeit sind keine Spielräume verfügbar!",
-    "playvsbot": "Gegen einen Bot spielen",
+    "NoGameRooms": "Momentan sind keine Spielräume verfügbar!",
+    "difficulty": "Schwierigkeit",
+    "playvsbot": "Gegen den Bot spielen",
     "playvsplayer": "Gegen jemanden spielen"
+  },
+  "game": {
+    "easy": "Leicht",
+    "medium": "Mittel",
+    "hard": "Schwer",
+    "NoGameRooms": "Er zijn momenteel geen speelkamers beschikbaar!",
+    "playvsbot": "Speel tegen een bot",
+    "playvsplayer": "Speel tegen iemand"
   },
   "gameroomsWidget": {
     "Waiting": "Warten",

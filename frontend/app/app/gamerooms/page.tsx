@@ -2,7 +2,9 @@
 import styles from "./page.module.css"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+// O router da next-view-transitions e o do Next com push/replace embrulhados
+// em document.startViewTransition — e isso que anima a troca de pagina.
+import { useTransitionRouter } from "next-view-transitions"
 
 import GameroomWidget from "../components/gameroomWidget"
 import DifficultyWidget from "../components/difficultyWidget"
@@ -16,13 +18,38 @@ export default function Home() {
 	const [toggled, setToggle] = useState(false);
 	const [difficulty, setDifficulty] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
-	const router = useRouter();
+	const router = useTransitionRouter();
 
 	const t = useTranslations("gamerooms");
 
 	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
+	// "Play vs someone" tem uma ida ao servidor ANTES de haver navegacao — a
+	// transicao nao cobre essa espera, por isso e o proprio botao que mostra um
+	// spinner ate o createdRoomId chegar.
+	const [creatingRoom, setCreatingRoom] = useState(false);
+
+	// Rede de seguranca: se o servidor nunca responder, o botao nao pode ficar
+	// preso no spinner para sempre.
+	useEffect(() => {
+		if (!creatingRoom) return;
+		const timer = setTimeout(() => setCreatingRoom(false), 8000);
+		return () => clearTimeout(timer);
+	}, [creatingRoom]);
+
 	useClickOutside([popupRef], () => setToggle(false), toggled);
+
+	// Fechar o popup fecha tambem o widget de dificuldade, senao ao reabrir o
+	// popup ele ja vinha aberto da vez anterior.
+	useEffect(() => {
+		if (!toggled) setDifficulty(false);
+	}, [toggled]);
+
+	// A rota [gameroom_id] e a mesma para qualquer sala, por isso prefetch de um
+	// id qualquer (/ai) ja descarrega o chunk dela — o push depois e imediato.
+	useEffect(() => {
+		router.prefetch("/ai");
+	}, [router]);
 
 	// Ask once we are connected; the server pushes every change after that.
 	useEffect(() => {
@@ -46,8 +73,11 @@ export default function Home() {
 		<div className={styles.wrapperScroll}>
 
 		{
-			// Ainda a carregar a lista: spinner, para nao dar flash do "no rooms".
-			!roomsLoaded ? (
+			// Spinner em vez da lista quando: ainda a carregar; a criar a nossa
+			// sala (o servidor atualiza a lista ANTES de mandar o createdRoomId,
+			// senao via-se o widget da sala nova aparecer no lobby mesmo antes da
+			// navegacao); ou a voltar a um jogo que nunca deixamos.
+			!roomsLoaded || creatingRoom || resumeRoomId ? (
 				<div className={styles.textWrapper}>
 					<div className={styles.spinner} aria-label="Loading" />
 				</div>
@@ -70,11 +100,23 @@ export default function Home() {
 		<div ref={popupRef} className={styles.buttonWrapper}>
 			{
 				toggled &&
-				<GamePopUp onPlayVsSomeone={createRoom}></GamePopUp>
+				<GamePopUp
+					creating={creatingRoom}
+					onPlayVsSomeone={() => {
+						setCreatingRoom(true);
+						createRoom();
+					}}
+					onPlayVsBot={() => setDifficulty((open) => !open)}
+				></GamePopUp>
 			}
 			{
+				// "Play vs bot" abre isto em vez de navegar logo: escolher o nivel
+				// e que arranca o jogo, com a dificuldade a viajar no URL para a
+				// pagina /ai a mandar no playVsAI.
 				toggled && difficulty &&
-				<DifficultyWidget></DifficultyWidget>
+				<DifficultyWidget
+					onSelect={(level) => router.push(`/ai?difficulty=${level}`)}
+				></DifficultyWidget>
 			}
 			<button onClick={() => {setToggle(!toggled)}} className={styles.buttonWrapper}>
 				<Image className={styles.gameroomIcon} width={70} height={70} sizes="100vw" alt="" src="/gameroom.svg" loading="eager"/>

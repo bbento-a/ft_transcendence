@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+// router.back() nao precisa de nada: o popstate ja e animado pela biblioteca.
+// O useTransitionRouter e para os push (pesquisa de outro dashboard).
+import { Link, useTransitionRouter } from "next-view-transitions";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useStatsSocket } from "../hooks/useStatsSocket";
 import styles from "./page.module.css";
@@ -51,7 +54,7 @@ const MODES: GameMode[] = ["all", "player", "bot"];
 export default function DashboardView({ username }: { username?: string }) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isOwn = !username;
 
   const [preset, setPreset] = useState<PresetKey>("all");

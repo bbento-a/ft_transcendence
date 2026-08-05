@@ -8,6 +8,7 @@ import { UserProvider } from "@/context/AuthContext";
 import { NavGuardProvider } from "@/context/NavGuardContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import { ViewTransitions } from "next-view-transitions";
 
 
 /*
@@ -31,24 +32,31 @@ export default async function RootLayout({
 }>) {
   const messages = await getMessages();
 
+  // ViewTransitions liga a View Transitions API do browser as navegacoes do
+  // Next: quem navegar com useTransitionRouter (ou o Link da biblioteca) faz o
+  // browser congelar um snapshot da pagina antiga e anima-lo para a nova — por
+  // isso nunca se ve um estado intermedio. A animacao em si vive no globals.css
+  // (::view-transition-old/new).
   return (
-    <html
-      lang="en"
-      className={`${quicksand.className} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider messages={messages}>
-          <UserProvider>
-            <NavGuardProvider>
-              <NavBar />
-              <div className="background-image">
-                {children}
-              </div>
-              <Footer />
-            </NavGuardProvider>
-          </UserProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <ViewTransitions>
+      <html
+        lang="en"
+        className={`${quicksand.className} h-full antialiased`}
+      >
+        <body className="min-h-full flex flex-col">
+          <NextIntlClientProvider messages={messages}>
+            <UserProvider>
+              <NavGuardProvider>
+                <NavBar />
+                <div className="background-image">
+                  {children}
+                </div>
+                <Footer />
+              </NavGuardProvider>
+            </UserProvider>
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    </ViewTransitions>
   );
 }
