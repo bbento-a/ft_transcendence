@@ -202,7 +202,7 @@ export default function DashboardView({ username }: { username?: string }) {
             <div className={styles.viewingUser}>
               <img
                 className={styles.viewingAvatar}
-                src={data.user.avatarUrl ?? "/profile.svg"}
+                src={data.user.avatarUrl ?? "/profileDark.svg"}
                 alt=""
                 width={40}
                 height={40}
