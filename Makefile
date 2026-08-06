@@ -16,7 +16,7 @@ COMPOSE_PROD  = docker compose -f docker-compose.yml
 
 all: up
 
-# Production stack: built images, no source mounts, nothing but :443 exposed
+# Production stack: built images, no source mounts, nothing but :2222 exposed
 up: $(ENV_FILE)
 	$(COMPOSE_PROD) up -d --build
 	@echo ""

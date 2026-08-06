@@ -37,21 +37,38 @@ export interface GameState {
   difficulty?: Difficulty;
 }
 
+// Uma mensagem vinda do gateway. O servidor nao sabe em que idioma estamos —
+// numa sala podem estar pessoas em idiomas diferentes —, por isso manda a chave
+// da traducao (namespace "gameroomBackend") e os valores da frase, e somos nos
+// que a traduzimos no useGameSocket.
+// Source of truth: backend/app/src/game/game.types.ts
+export interface BackendMessage {
+  key: string;
+  params?: Record<string, string>;
+}
+
 export interface MatchFoundPayload {
   room: string;
-  message: string;
+  message: BackendMessage;
   state: GameState;
 }
 
 export interface GameOverPayload {
   winner: string | null;
   board: number[][];
-  message: string;
+  message: BackendMessage;
 }
 
 // An opponent dropped out. They have `secondsLeft` to come back before the
 // server hands the win to whoever stayed.
 export interface OpponentDisconnectedPayload {
+  message: BackendMessage;
+  secondsLeft: number;
+}
+
+// O mesmo, ja traduzido: e nesta forma que o useGameSocket o guarda e o entrega
+// a pagina, que so quer a frase pronta a mostrar ao lado da contagem.
+export interface ForfeitCountdown {
   message: string;
   secondsLeft: number;
 }

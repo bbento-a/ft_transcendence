@@ -13,7 +13,7 @@ outside; everything else talks over private Docker networks.
 ```
    ┌──────────────────────── HOST ─────────────────────────┐
    │                                                        │
-   │   Browser ──── https://localhost ────► :443            │
+   │   Browser ──── https://localhost ────► :2222            │
    │                                          │             │
    │  ═══════════════════════════════════════ │ ══════════  │
    │                                          ▼             │
@@ -21,7 +21,7 @@ outside; everything else talks over private Docker networks.
    │  ║                                                   ║  │
    │  ║   ┌───────┐      ┌──────────┐     ┌─────────┐   ║  │
    │  ║   │ nginx │─────►│ frontend │     │ backend │   ║  │
-   │  ║   │ :443  │      │  :3000   │     │  :3000  │   ║  │
+   │  ║   │ :2222  │      │  :3000   │     │  :3000  │   ║  │
    │  ║   │ TLS   │──────────────────────►│         │   ║  │
    │  ║   └───────┘      │ Next.js  │     │ NestJS  │   ║  │
    │  ║                  └──────────┘     └────┬────┘   ║  │
@@ -86,7 +86,7 @@ code it builds, so a build context can never reach into a sibling service.
 
 | Service | Image base | Port | Networks | Published? |
 |---|---|---|---|---|
-| `nginx` | `nginx:1.27-alpine` | 443 | `frontend_net` | **yes — 443** |
+| `nginx` | `nginx:1.27-alpine` | 2222 | `frontend_net` | **yes — 2222** |
 | `frontend` | `node:20-alpine` | 3000 | `frontend_net` | no |
 | `backend` | `node:20-alpine` | 3000 | `frontend_net`, `backend_net` | no |
 | `db` | `postgres:15-alpine` | 5432 | `backend_net` | no |
@@ -135,7 +135,7 @@ there is nowhere to exfiltrate to.
 
 | From ↓ | nginx | frontend | backend | db | internet |
 |---|:---:|:---:|:---:|:---:|:---:|
-| host / LAN | ✅ :443 | ❌ | ❌ | ❌ | ✅ |
+| host / LAN | ✅ :2222 | ❌ | ❌ | ❌ | ✅ |
 | nginx | — | ✅ | ✅ | ❌ | ✅ |
 | frontend | ✅ | — | ✅ | ❌ | ✅ |
 | backend | ✅ | ✅ | — | ✅ | ✅ |
@@ -149,7 +149,7 @@ Three distinct concepts that are easy to confuse:
 
 | Directive | Effect | Reachable by |
 |---|---|---|
-| `ports: "443:443"` | **publishes** — opens a real host port | anything reaching the host |
+| `ports: "2222:2222"` | **publishes** — opens a real host port | anything reaching the host |
 | `expose: "3000"` | **documents only** — changes nothing | (no effect) |
 | *(neither)* | default | any container on a shared network |
 
@@ -339,7 +339,7 @@ db starts
             └─ prisma migrate deploy
                  └─ Nest listens on :3000
        └─ frontend starts (parallel, no dependency)
-            └─ nginx starts, both upstreams resolvable ──► serving :443
+            └─ nginx starts, both upstreams resolvable ──► serving :2222
 ```
 
 `depends_on: db: condition: service_healthy` is what prevents the classic
@@ -407,4 +407,4 @@ break the build if missing.
 | Game feels laggy, no errors | WebSocket upgrade failing, Socket.IO fell back to polling | check the `/socket.io/` block |
 | `ERR_CERT_COMMON_NAME_INVALID` | cert missing SANs | already handled in `gen-cert.sh` |
 | Other localhost projects forced to HTTPS | HSTS header applies per host, ignoring port | clear at `chrome://net-internals/#hsts` |
-| Cannot bind port 443 | rootless Docker/Podman restricts ports < 1024 | publish `8443:443` instead |
+| Cannot bind port 2222 | rootless Docker/Podman restricts ports < 1024 | publish `8443:2222` instead |

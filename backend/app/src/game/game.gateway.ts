@@ -9,11 +9,10 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService, FORFEIT_GRACE_PERIOD_MS } from './game.service';
-import { DIFFICULTIES, GameState, otherPlayer } from './game.types';
+import { BackendMessage, DIFFICULTIES, GameState, otherPlayer } from './game.types';
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
-import { useTranslations } from "next-intl";
 
 // A host who closes the tab should not leave a ghost room in the lobby. A host
 // who is just walking from /gamerooms to the game page must not lose the room
@@ -26,8 +25,13 @@ const AI_PLAYER_ID = 'AI';
 // Shown on the board's side panel, matching the "Play vs bot" wording.
 const AI_PLAYER_NAME = 'Bot';
 
-// Translations for frontend
-const t = useTranslations("gameroomBackend");
+// Traduzir aqui era impossivel: o servidor nao tem idioma nenhum — quem o tem e
+// cada browser ligado, e a mesma sala pode ter pessoas em idiomas diferentes.
+// Por isso mandamos so a chave (+ os valores que a frase precisa) e e o
+// frontend que a traduz. As chaves vivem em frontend/app/messages/*.json,
+// debaixo de "gameroomBackend".
+const t = (key: string, params?: Record<string, string>): BackendMessage =>
+  params ? { key, params } : { key };
 
 @WebSocketGateway({ cors: true })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -140,7 +144,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Sent to the whole room, so spectators watch the clock run down too. The
     // server owns the deadline; the page only renders it ticking.
     this.server.to(game.roomId).emit('opponentDisconnected', {
-      message: `${client.data.username} ${t("disconnected")}`,
+      message: t("disconnected", { name: client.data.username }),
       secondsLeft: Math.round(FORFEIT_GRACE_PERIOD_MS / 1000),
     });
 
@@ -305,7 +309,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const bothAgreed =
       room.rematchVotes.has(room.hostId) && room.rematchVotes.has(room.guestId);
     if (!bothAgreed) {
-      client.to(room.id).emit('rematchRequested', `${username} ${t("wantsRematch")}`);
+      client.to(room.id).emit('rematchRequested', t("wantsRematch", { name: username }));
       return;
     }
 
@@ -431,7 +435,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.spectators.set(client.data.userId, room.id);
     client.join(room.id);
     client.emit('gameStateUpdated', game);
-    client.emit('statusWait', `${t("watching")} ${room.hostName} vs ${room.guestName}`);
+    client.emit(
+      'statusWait',
+      t("watching", { host: room.hostName, guest: room.guestName ?? '' }),
+    );
   }
 
   // A player is back (reload, or arriving from the lobby): resume where they left.
@@ -443,7 +450,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit('gameStateUpdated', game);
     client
       .to(game.roomId)
-      .emit('opponentReconnected', `${client.data.username} ${t("reconnected")}.`);
+      .emit('opponentReconnected', t("reconnected", { name: client.data.username }));
   }
 
   // --- gameplay -------------------------------------------------------------
@@ -477,7 +484,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         existing.player1Id === AI_PLAYER_ID ||
         existing.player2Id === AI_PLAYER_ID;
       if (!existingVsBot) {
-        client.emit('warning', 'You are already in a game or room.');
+        client.emit('warning', t("unavailable"));
         return;
       }
       this.rejoinGame(client, existing);
@@ -563,7 +570,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (afterAI.isGameOver) await this.endGame(roomId, afterAI);
   }
 
-  private async endGame(roomId: string, finalState: GameState, customMessage?: string) {
+  private async endGame(
+    roomId: string,
+    finalState: GameState,
+    customMessage?: BackendMessage,
+  ) {
     const message =
       customMessage ??
       (finalState.winnerId ? t("gameOver") : t("gameDraw"));

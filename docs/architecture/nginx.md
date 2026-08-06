@@ -42,7 +42,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY tools/gen-cert.sh /usr/local/bin/gen-cert.sh
 RUN chmod +x /usr/local/bin/gen-cert.sh && /usr/local/bin/gen-cert.sh
 
-EXPOSE 443
+EXPOSE 2222
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
@@ -145,7 +145,7 @@ The `map` is explained under [WebSockets](#websockets).
 ### TLS
 
 ```nginx
-		listen 443 ssl;
+		listen 2222 ssl;
 		http2 on;
 		server_name localhost;
 
@@ -298,7 +298,7 @@ a trailing slash would provide, which is why `/api/` needs an explicit
 | `include mime.types`, `default_type` | nginx proxies 100% of traffic and never types a file. Content-Type comes from upstream. |
 | `sendfile`, `tcp_nopush` | Kernel optimisations for serving files from disk. No files are served. |
 | `gzip` block | Next.js compresses its own responses; double-compressing wastes CPU. |
-| `listen [::]:443` | Docker's default bridge is IPv4-only. |
+| `listen [::]:2222` | Docker's default bridge is IPv4-only. |
 | `ssl_session_cache` | Handshake-reuse tuning with no measurable effect at this scale. |
 | `X-Real-IP` | Redundant with `X-Forwarded-For`, the actual standard. |
 | `client_max_body_size` | Default 1M is fine until uploads exist. Add it (with a real number) when avatars land. |
