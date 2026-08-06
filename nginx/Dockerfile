@@ -8,6 +8,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY tools/gen-cert.sh /usr/local/bin/gen-cert.sh
 RUN chmod +x /usr/local/bin/gen-cert.sh && /usr/local/bin/gen-cert.sh
 
-EXPOSE 443
+EXPOSE 2222
 
 CMD ["nginx", "-g", "daemon off;"]
