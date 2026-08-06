@@ -201,9 +201,9 @@
     "easy": "Leicht",
     "medium": "Mittel",
     "hard": "Schwer",
-    "NoGameRooms": "Er zijn momenteel geen speelkamers beschikbaar!",
-    "playvsbot": "Speel tegen een bot",
-    "playvsplayer": "Speel tegen iemand"
+    "NoGameRooms": "Momentan sind keine Spielräume verfügbar!",
+    "playvsbot": "Gegen den Bot spielen",
+    "playvsplayer": "Gegen jemanden spielen"
   },
   "gameroomsWidget": {
     "Waiting": "Warten",
