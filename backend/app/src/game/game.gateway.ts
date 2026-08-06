@@ -23,7 +23,7 @@ const HOST_RECONNECT_GRACE_MS = 15_000;
 const AI_PLAYER_ID = 'AI';
 
 // Shown on the board's side panel, matching the "Play vs bot" wording.
-const AI_PLAYER_NAME = 'Bot';
+const AI_PLAYER_NAME = 'Carlitos';
 
 @WebSocketGateway({ cors: true })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
