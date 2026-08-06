@@ -13,6 +13,7 @@ import { DIFFICULTIES, GameState, otherPlayer } from './game.types';
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
+import { useTranslations } from "next-intl";
 
 // A host who closes the tab should not leave a ghost room in the lobby. A host
 // who is just walking from /gamerooms to the game page must not lose the room
@@ -24,6 +25,9 @@ const AI_PLAYER_ID = 'AI';
 
 // Shown on the board's side panel, matching the "Play vs bot" wording.
 const AI_PLAYER_NAME = 'Bot';
+
+// Translations for frontend
+const t = useTranslations("gameroomBackend");
 
 @WebSocketGateway({ cors: true })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -60,7 +64,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     const user = await this.authenticateSocket(client);
     if (!user) {
-      client.emit('warning', 'Unauthorized');
+      client.emit('warning', t("unauthorized"));
       client.disconnect();
       return;
     }
@@ -136,12 +140,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Sent to the whole room, so spectators watch the clock run down too. The
     // server owns the deadline; the page only renders it ticking.
     this.server.to(game.roomId).emit('opponentDisconnected', {
-      message: `${client.data.username} disconnected.`,
+      message: `${client.data.username} ${t("disconnected")}`,
       secondsLeft: Math.round(FORFEIT_GRACE_PERIOD_MS / 1000),
     });
 
     this.gameService.StartForfeitTimer(game.roomId, userId, async (finishedGame) => {
-      await this.endGame(finishedGame.roomId, finishedGame, 'Opponent did not reconnect in time. Forfeit.');
+      await this.endGame(finishedGame.roomId, finishedGame, t("noReconnection"));
     });
   }
 
@@ -178,7 +182,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { userId, username } = client.data;
 
     if (this.isBusy(userId)) {
-      client.emit('warning', 'You are already in a game or room.');
+      client.emit('warning', t("alreadyInRoom"));
       return;
     }
 
@@ -216,7 +220,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.rejoinGame(client, aiGame);
         return;
       }
-      client.emit('roomUnavailable', 'This room no longer exists.');
+      client.emit('roomUnavailable', t("noRoom"));
       return;
     }
 
@@ -226,7 +230,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const game = this.gameService.GetStateOfGame(room.id);
       if (game) this.rejoinGame(client, game);
-      else client.emit('statusWait', 'Waiting for an opponent to join...');
+      else client.emit('statusWait', t("waitingOpponent"));
       return;
     }
 
@@ -292,7 +296,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = this.findRoomByUser(userId);
 
     if (!room || room.status !== 'finished' || !room.guestId || !room.guestName) {
-      client.emit('warning', 'There is no finished game to replay here.');
+      client.emit('warning', t("noReplay"));
       return;
     }
 
@@ -301,7 +305,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const bothAgreed =
       room.rematchVotes.has(room.hostId) && room.rematchVotes.has(room.guestId);
     if (!bothAgreed) {
-      client.to(room.id).emit('rematchRequested', `${username} wants a rematch.`);
+      client.to(room.id).emit('rematchRequested', `${username} ${t("wantsRematch")}`);
       return;
     }
 
@@ -325,7 +329,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // and the spectators all reset through the path they already use.
     this.server.to(room.id).emit('MatchFound', {
       room: room.id,
-      message: 'Rematch! Game starting',
+      message: t("rematch"),
       state,
     });
     this.broadcastRooms();
@@ -347,7 +351,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (const [watcherId, watchedRoomId] of this.spectators) {
       if (watchedRoomId !== room.id) continue;
       this.spectators.delete(watcherId);
-      this.server.to(watcherId).emit('roomUnavailable', 'The game ended.');
+      this.server.to(watcherId).emit('roomUnavailable', t("gameEnded"));
     }
 
     this.server.in(room.id).socketsLeave(room.id);
@@ -374,8 +378,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       .emit(
         'gameAborted',
         forfeited
-          ? 'Your opponent left — you win by forfeit. Waiting for a new opponent...'
-          : 'Your opponent left. Waiting for a new opponent...',
+          ? t("leftAndForfeit")
+          : t("leftAndWaiting"),
       );
 
     // They may be gone as well — both players can drop at nearly the same time.
@@ -391,7 +395,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private startGame(client: Socket, room: GameRoom, userId: string, username: string) {
     if (this.isBusy(userId)) {
-      client.emit('warning', 'You are already in a game or room.');
+      client.emit('warning', t("unavailable"));
       return;
     }
 
@@ -411,7 +415,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.server.to(room.id).emit('MatchFound', {
       room: room.id,
-      message: 'Opponent joined! Game starting',
+      message: t("startingGame"),
       state,
     });
     this.broadcastRooms();
@@ -420,14 +424,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private watchGame(client: Socket, room: GameRoom) {
     const game = this.gameService.GetStateOfGame(room.id);
     if (!game) {
-      client.emit('roomUnavailable', 'This game is already over.');
+      client.emit('roomUnavailable', t("alreadyOver"));
       return;
     }
 
     this.spectators.set(client.data.userId, room.id);
     client.join(room.id);
     client.emit('gameStateUpdated', game);
-    client.emit('statusWait', `Watching ${room.hostName} vs ${room.guestName}`);
+    client.emit('statusWait', `${t("watching")} ${room.hostName} vs ${room.guestName}`);
   }
 
   // A player is back (reload, or arriving from the lobby): resume where they left.
@@ -439,7 +443,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit('gameStateUpdated', game);
     client
       .to(game.roomId)
-      .emit('opponentReconnected', `${client.data.username} reconnected.`);
+      .emit('opponentReconnected', `${client.data.username} ${t("reconnected")}.`);
   }
 
   // --- gameplay -------------------------------------------------------------
@@ -458,7 +462,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Uma sala de lobby (multiplayer) bloqueia mesmo — nao a mexemos.
     if (this.findRoomByUser(userId)) {
-      client.emit('warning', 'You are already in a game or room.');
+      client.emit('warning', t("unavailable"));
       return;
     }
     // Ja ha uma partida vs bot a decorrer? Entao isto nao e um jogo novo: e um
@@ -495,7 +499,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.emit('MatchFound', {
       room: roomId,
-      message: 'Playing against AI',
+      message: t("playingAI"),
       state,
     });
 
@@ -511,19 +515,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
 
     if (this.spectators.has(userId)) {
-      client.emit('warning', 'Spectators cannot play.');
+      client.emit('warning', t("specNoPlay"));
       return;
     }
 
     // GameService re-checks this, but rejecting here keeps bad input out of it.
     if (!Number.isInteger(data.column) || data.column < 0 || data.column > 6) {
-      client.emit('warning', 'Invalid column');
+      client.emit('warning', t("invalidColumn"));
       return;
     }
 
     const state = this.gameService.MakeMove(data.roomId, userId, data.column);
     if (!state) {
-      client.emit('warning', 'Invalid play, or it is not your turn.');
+      client.emit('warning', t("invalidPlay"));
       return;
     }
 
@@ -562,7 +566,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private async endGame(roomId: string, finalState: GameState, customMessage?: string) {
     const message =
       customMessage ??
-      (finalState.winnerId ? 'Game over!' : 'Game ended in a draw!');
+      (finalState.winnerId ? t("gameOver") : t("gameDraw"));
 
     this.server.to(roomId).emit('gameOver', {
       winner: finalState.winnerId,
