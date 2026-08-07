@@ -36,6 +36,18 @@ describe('StatsService', () => {
         NotFoundException,
       );
     });
+
+    // A caixa de pesquisa aceita o que a pessoa escrever, mas o nome gravado
+    // passou pelo normalizeUsername: e a PROCURA que tem de ser normalizada.
+    it('normaliza o que foi escrito antes de procurar', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1' });
+
+      await expect(service.findUserIdByUsername('  BoB  ')).resolves.toBe('u1');
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'bob' },
+        select: { id: true },
+      });
+    });
   });
 
   describe('getStatsFor', () => {

@@ -7,6 +7,7 @@ import React,{ useState ,ChangeEvent} from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { apiPost } from "../lib/api";
 import { EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, ErrorKey, ErrorName, firstEmptyField, pickError } from "../lib/formErrors";
+import { EMAIL_MAX, PASSWORD_MAX } from "../lib/fieldLimits";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -27,8 +28,11 @@ Nao ha entrada para "email nao existe": o backend responde "Invalid Credentials"
 tanto para email inexistente como para password errada, de proposito.
 */
 const ERROR_ORDER: ErrorName[] = [
-	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	// o servidor nem respondeu, ou recusou o pedido inteiro: nao ha nada a dizer
+	// sobre os campos
 	"offline",
+	"tooLarge",
+	"rateLimited",
 	"emailInvalid",
 	"passwordMin",
 	"invalidCredentials",
@@ -107,8 +111,8 @@ export default function login() {
 		</div>
 		<div>
 			<form action="" method="Post" className={styles.loginForm} onSubmit={postData}>
-				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" value={user.email} onChange={handleInputs}/>
-				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="current-password" value={user.password} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" maxLength={EMAIL_MAX} value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="current-password" maxLength={PASSWORD_MAX} value={user.password} onChange={handleInputs}/>
 				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{t("submit")}</button>
 			</form>
 		</div>

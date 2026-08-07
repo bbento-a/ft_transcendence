@@ -94,6 +94,10 @@ export class AuthController {
     return this.authService.updateUserData((req.user as { id: string }).id, dto);
   }
 
+  // Limite proprio, mais apertado que o global: cada upload sao ate 5MB a
+  // atravessar o nginx e a passar pelo multer, e ninguem muda de foto cinco
+  // vezes por minuto de boa-fe.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UseGuards(AuthGuard("jwt"))
   @Post("avatar")
   @UseInterceptors(
@@ -146,7 +150,7 @@ export class AuthController {
       sameSite: 'lax',
       expires: new Date(0),
     });
-    return { message: 'Logout efetuado com sucesso familia' };
+    return { message: 'Logout successful' };
   }
 
   @Get('google')

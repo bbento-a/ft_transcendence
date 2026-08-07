@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+// Regras do username num sitio so, partilhadas com os DTO do auth
+import { normalizeUsername } from '../auth/dto/userFields';
 
 // Intervalo de datas opcional para filtrar as partidas. Ambos os limites sao
 // opcionais: sem nenhum => historico todo.
@@ -28,10 +30,15 @@ export class StatsService {
     Resolve um username no seu id. Usado pelo endpoint por-username para nao
     duplicar a logica de stats: quem chama traduz nome -> id e depois usa o
     mesmo getStatsFor de sempre. Lanca 404 se o jogador nao existir.
+
+    Quem escreve na caixa de pesquisa escreve como lhe apetece ("Bento", "BENTO"),
+    mas o que esta gravado passou todo pelo normalizeUsername. Normalizar tambem
+    a procura deixa a comparacao ser exata -- e uma comparacao exata usa o indice
+    unico do username.
   */
   async findUserIdByUsername(username: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
-      where: { username },
+      where: { username: normalizeUsername(username) },
       select: { id: true },
     });
     if (!user) throw new NotFoundException('User not found');

@@ -1,5 +1,5 @@
-// o texto vive no formErrors.ts, onde esta o padrao que o traduz
-import { OFFLINE_MESSAGE } from "./formErrors";
+// os textos vivem no formErrors.ts, onde estao os padroes que os traduzem
+import { OFFLINE_MESSAGE, TOO_LARGE_MESSAGE, RATE_LIMITED_MESSAGE } from "./formErrors";
 
 export type ApiResult<T> =
 	| { ok: true; data: T }
@@ -18,6 +18,18 @@ async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, b
 		// rede abaixo ou pedido cancelado, nem chegou a haver resposta
 		return { ok: false, errors: [OFFLINE_MESSAGE] };
 	}
+
+	/*
+	Decididos pelo codigo, antes de tentar ler o corpo.
+	O 413 pode nem sequer vir do backend: acima do client_max_body_size e o nginx
+	que responde, e responde em HTML. Sem este caso o json() rebentava e o catch
+	la em baixo dizia "servidor indisponivel" a quem so tinha escrito texto a
+	mais. O 429 vem do throttler e o corpo nao acrescenta nada ao codigo.
+	*/
+	if (res.status === 413)
+		return { ok: false, errors: [TOO_LARGE_MESSAGE] };
+	if (res.status === 429)
+		return { ok: false, errors: [RATE_LIMITED_MESSAGE] };
 
 	// quando o backend esta em baixo o nginx responde 502 com html, e o json() rebentava
 	let data: any;

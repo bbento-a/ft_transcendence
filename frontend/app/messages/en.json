@@ -159,7 +159,7 @@
     "emailFromProvider": "Email is managed by your login provider.",
     "passwordEmpty": "Password cannot be empty.",
     "passwordMin": "Password must be at least {n} characters long.",
-    "passwordMax": "Password cannot exceed {n} characters.",
+    "passwordMax": "Password is too long.",
     "currentPasswordEmpty": "Current password cannot be empty.",
     "currentPasswordRequired": "Current password is required to set a new password.",
     "invalidCredentials": "Invalid credentials.",
@@ -168,6 +168,8 @@
     "noChanges": "Fill in at least one field to save changes.",
     "avatarError": "Could not update the picture. Use a JPEG, PNG, GIF or WebP image under 5MB.",
     "offline": "Server unavailable, please try again in a moment.",
+    "tooLarge": "That is too much text — shorten it and try again.",
+    "rateLimited": "Too many attempts. Wait a moment and try again.",
     "generic": "Something went wrong, please try again."
   },
   "a11y": {

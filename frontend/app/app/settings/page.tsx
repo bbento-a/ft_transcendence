@@ -5,7 +5,8 @@ import React, { useState, useRef, ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
-import { AVATAR_ERROR, GENERIC_ERROR, NO_CHANGES, PASSWORD_MISMATCH, ErrorKey, ErrorName, pickError } from "../lib/formErrors";
+import { AVATAR_ERROR, GENERIC_ERROR, NO_CHANGES, PASSWORD_MISMATCH, RATE_LIMITED, ErrorKey, ErrorName, pickError } from "../lib/formErrors";
+import { USERNAME_MAX, EMAIL_MAX, PASSWORD_MAX } from "../lib/fieldLimits";
 
 import BackArrow from "../components/backArrow";
 
@@ -16,8 +17,11 @@ atual, password nova), e deixa para o fim o que so o servidor sabe: password
 atual errada e conflitos com outras contas. Ganha o primeiro que der match.
 */
 const ERROR_ORDER: ErrorName[] = [
-	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	// o servidor nem respondeu, ou recusou o pedido inteiro: nao ha nada a dizer
+	// sobre os campos
 	"offline",
+	"tooLarge",
+	"rateLimited",
 	// a sessao morreu, nao vale a pena queixarmo-nos dos campos
 	"sessionExpired",
 	"usernameEmpty",
@@ -85,7 +89,9 @@ export default function page() {
 
 	    // falhava em silencio: a foto nao mudava e nao havia nada no ecra a dizer porque
 	    if (!res.ok) {
-	      setError(AVATAR_ERROR);
+	      // o 429 do throttler nao tem nada a ver com o ficheiro escolhido; sem
+	      // esta distincao quem batesse no limite lia uma queixa sobre o formato
+	      setError(res.status === 429 ? RATE_LIMITED : AVATAR_ERROR);
 	      return;
 	    }
 	  } catch {
@@ -214,17 +220,17 @@ export default function page() {
 				<div className={styles.formGroup}>
 					<form className={styles.formGroup} onSubmit={postData}>
 						<label className={styles.formDescription} htmlFor="username">{t("changeusername")}</label>
-						<input className={styles.formField} id="username" type="text" name="username" placeholder={t("newusername")} autoComplete="username" value={form.username} onChange={handleInputs}/>
+						<input className={styles.formField} id="username" type="text" name="username" placeholder={t("newusername")} autoComplete="username" maxLength={USERNAME_MAX} value={form.username} onChange={handleInputs}/>
 						{isLocalAccount ? (
 							<>
 								<label className={styles.formDescription} htmlFor="email">{t("changeemail")}</label>
-								<input className={styles.formField} id="email" type="email" name="email" placeholder={t("newemail")} autoComplete="email" value={form.email} onChange={handleInputs}/>
+								<input className={styles.formField} id="email" type="email" name="email" placeholder={t("newemail")} autoComplete="email" maxLength={EMAIL_MAX} value={form.email} onChange={handleInputs}/>
 								<label className={styles.formDescription} htmlFor="currentPassword">{t("currentpassword")}</label>
-								<input className={styles.formField} id="currentPassword" type="password" name="currentPassword" placeholder={t("currentpasswordplaceholder")} autoComplete="current-password" value={form.currentPassword} onChange={handleInputs}/>
+								<input className={styles.formField} id="currentPassword" type="password" name="currentPassword" placeholder={t("currentpasswordplaceholder")} autoComplete="current-password" maxLength={PASSWORD_MAX} value={form.currentPassword} onChange={handleInputs}/>
 								<label className={styles.formDescription} htmlFor="newPassword">{t("changepassword")}</label>
-								<input className={styles.formField} id="newPassword" type="password" name="newPassword" placeholder={t("newpassword")} autoComplete="new-password" value={form.newPassword} onChange={handleInputs}/>
+								<input className={styles.formField} id="newPassword" type="password" name="newPassword" placeholder={t("newpassword")} autoComplete="new-password" maxLength={PASSWORD_MAX} value={form.newPassword} onChange={handleInputs}/>
 								<label className={styles.formDescription} htmlFor="confirmPassword">{t("confirmpassword")}</label>
-								<input className={styles.formField} id="confirmPassword" type="password" name="confirmPassword" placeholder={t("confirmpasswordplaceholder")} autoComplete="new-password" value={form.confirmPassword} onChange={handleInputs}/>
+								<input className={styles.formField} id="confirmPassword" type="password" name="confirmPassword" placeholder={t("confirmpasswordplaceholder")} autoComplete="new-password" maxLength={PASSWORD_MAX} value={form.confirmPassword} onChange={handleInputs}/>
 							</>
 						) : (
 							<div className={styles.oauthNote}>{t("oauthaccountnote")}</div>

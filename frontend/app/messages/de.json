@@ -159,7 +159,7 @@
     "emailFromProvider": "Deine E-Mail-Adresse wird von deinem Login-Anbieter verwaltet.",
     "passwordEmpty": "Das Passwort darf nicht leer sein.",
     "passwordMin": "Das Passwort muss mindestens {n} Zeichen lang sein.",
-    "passwordMax": "Das Passwort darf höchstens {n} Zeichen lang sein.",
+    "passwordMax": "Das Passwort ist zu lang.",
     "currentPasswordEmpty": "Das aktuelle Passwort darf nicht leer sein.",
     "currentPasswordRequired": "Für ein neues Passwort ist das aktuelle Passwort erforderlich.",
     "invalidCredentials": "Ungültige Anmeldedaten.",
@@ -168,6 +168,8 @@
     "noChanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
     "avatarError": "Das Bild konnte nicht aktualisiert werden. Verwende ein JPEG, PNG, GIF oder WebP unter 5MB.",
     "offline": "Server nicht erreichbar, bitte versuche es gleich noch einmal.",
+    "tooLarge": "Das ist zu viel Text — kürze ihn und versuche es erneut.",
+    "rateLimited": "Zu viele Versuche. Warte einen Moment und versuche es erneut.",
     "generic": "Etwas ist schiefgelaufen, bitte versuche es erneut."
   },
   "a11y": {

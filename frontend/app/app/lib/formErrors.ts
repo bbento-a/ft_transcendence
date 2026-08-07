@@ -43,7 +43,9 @@ const PATTERNS = {
 
 	passwordEmpty: /^Password cannot be empty/,
 	passwordMin: /^Password must be at least (\d+)/,
-	passwordMax: /^Password cannot exceed (\d+)/,
+	// sem numero: o limite do backend e em bytes (o do bcrypt), e dizer "72
+	// bytes" a quem esta a escolher uma password nao ajudava nada
+	passwordMax: /^Password is too long/,
 
 	currentPasswordEmpty: /^Current password cannot be empty/,
 	currentPasswordRequired: /^Current password is required/,
@@ -56,6 +58,10 @@ const PATTERNS = {
 	// este nao vem do backend, e o proprio api.ts que o poe quando nem chegou a
 	// haver resposta (ver OFFLINE_MESSAGE)
 	offline: /^Server unavailable/,
+	// estes dois tambem sao postos pelo api.ts, a partir do codigo de estado:
+	// o corpo destas respostas ou nao existe ou nao acrescenta nada
+	tooLarge: /^Payload too large/,
+	rateLimited: /^Too many requests/,
 } as const;
 
 // so estes nomes podem entrar na ordem de um form, um erro de escrita nao
@@ -70,6 +76,15 @@ qualquer outra mensagem, em vez de ser o unico ingles a chegar ao ecra.
 */
 export const OFFLINE_MESSAGE = "Server unavailable, please try again in a moment.";
 
+/*
+Postas pelo api.ts a partir do codigo de estado, sem sequer abrir o corpo da
+resposta. Um 413 pode vir do nginx (que responde em HTML, nao em json) e um 429
+so diz o que o proprio codigo ja diz, por isso nao vale a pena tentar ler
+qualquer uma das duas.
+*/
+export const TOO_LARGE_MESSAGE = "Payload too large.";
+export const RATE_LIMITED_MESSAGE = "Too many requests.";
+
 // Erros que so o cliente conhece: os campos vazios nem chegam a ir ao backend
 // e o resto sao falhas de rede ou coisas que o servidor nem sabe (ex.: o campo
 // de confirmar password).
@@ -77,6 +92,7 @@ export const EMPTY_USERNAME: ErrorKey = { key: "usernameEmpty" };
 export const EMPTY_EMAIL: ErrorKey = { key: "emailEmpty" };
 export const EMPTY_PASSWORD: ErrorKey = { key: "passwordEmpty" };
 export const GENERIC_ERROR: ErrorKey = { key: "generic" };
+export const RATE_LIMITED: ErrorKey = { key: "rateLimited" };
 export const PASSWORD_MISMATCH: ErrorKey = { key: "passwordMismatch" };
 export const NO_CHANGES: ErrorKey = { key: "noChanges" };
 export const AVATAR_ERROR: ErrorKey = { key: "avatarError" };

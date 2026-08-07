@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useStatsSocket } from "../hooks/useStatsSocket";
 import styles from "./page.module.css";
+import { USERNAME_MAX } from "../lib/fieldLimits";
 
 import BackArrow from "../components/backArrow";
 
@@ -222,9 +223,17 @@ export default function DashboardView({ username }: { username?: string }) {
           )}
 
           <form className={styles.search} onSubmit={submitSearch}>
+            {/*
+              O que se escreve aqui vai para dentro de um URL (/dashboard/<nome>),
+              nao para o corpo de um pedido: passado de uns milhares de caracteres
+              o nginx fecha a ligacao sem responder, e ai nao ha erro nenhum para
+              a pagina mostrar. Alem disso procura-se por username, que nunca
+              passa dos USERNAME_MAX -- mais do que isso nao podia dar resultado.
+            */}
             <input
               className={styles.searchInput}
               placeholder={t("searchPlaceholder")}
+              maxLength={USERNAME_MAX}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
