@@ -57,7 +57,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # nest's ownership when Docker first creates it — so the container never needs
 # root, not even in the entrypoint.
 RUN addgroup -S nest && adduser -S nest -G nest \
- && mkdir -p /app/uploads/avatars && chown -R nest:nest /app/uploads
+ && mkdir -p /app/uploads && mkdir -p /app/uploads/avatars && chown -R nest:nest /app/uploads
 USER nest
 
 EXPOSE 3000

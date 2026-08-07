@@ -252,6 +252,10 @@
     "stay": "Bleiben",
     "leave": "Verlassen"
   },
+  "404": {
+    "message": "Die Seite, auf die Sie zugreifen möchten, existiert nicht.",
+    "home": "Klicken Sie hier, um zur Startseite zurückzukehren."
+  },
   "gameroomBackend": {
     "alreadyInRoom": "Du bist bereits in einem Spiel oder in einem Raum",
     "noRoom": "Dieser Raum existiert nicht mehr",

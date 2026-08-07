@@ -252,6 +252,10 @@
     "stay": "Ficar",
     "leave": "Sair"
   },
+  "404": {
+    "message": "A página que está a tentar aceder não existe.",
+    "home": "Clique aqui para voltar à página inicial."
+  },
   "gameroomBackend": {
     "alreadyInRoom": "Já estás numa partida ou numa sala",
     "noRoom": "Esta sala já não existe",

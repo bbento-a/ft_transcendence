@@ -20,7 +20,7 @@ all: up
 up: $(ENV_FILE)
 	$(COMPOSE_PROD) up -d --build
 	@echo ""
-	@echo "  Running at https://localhost"
+	@echo "  Running at https://localhost:2222"
 	@echo "  (self-signed cert -> Advanced -> Proceed to localhost)"
 	@echo ""
 
@@ -28,7 +28,7 @@ up: $(ENV_FILE)
 dev: $(ENV_FILE) host-modules
 	$(COMPOSE) up -d --build
 	@echo ""
-	@echo "  Dev stack running at https://localhost"
+	@echo "  Dev stack running at https://localhost:2222"
 	@echo "  Hot reload is on. After changing package.json, run: make re-dev"
 	@echo ""
 
