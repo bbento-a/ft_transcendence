@@ -77,3 +77,14 @@ export interface GameState
     //So existe em jogos contra a IA. Se vier undefined usa se o DEFAULT_AI_DIFFICULTY
     difficulty?: Difficulty;
 }
+
+/*
+    Uma mensagem para o utilizador, tal como viaja no socket. O backend nao
+    sabe o idioma de quem esta do outro lado, por isso NAO manda texto: manda a
+    chave da traducao (namespace "gameroomBackend" nos messages/*.json do
+    frontend) e os valores que a frase precisa. Quem traduz e o useGameSocket.
+*/
+export interface BackendMessage {
+    key: string;
+    params?: Record<string, string>;
+}

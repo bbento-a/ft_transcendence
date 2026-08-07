@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
+import { useTranslations } from "next-intl";
 import type {
+  BackendMessage,
+  ForfeitCountdown,
+  GameOverPayload,
   GameState,
   MatchFoundPayload,
-  GameOverPayload,
   OpponentDisconnectedPayload,
   RoomSummary,
 } from "../types/game";
@@ -44,6 +47,16 @@ export function useGameSocket() {
   const myId = user?.id ?? null;
   const myName = user?.username ?? null;
 
+  // O gateway nao manda texto, manda chaves (ver BackendMessage): e aqui que
+  // viram frases no idioma de quem esta a ver. Numa ref porque os handlers do
+  // socket sao registados uma unica vez — por `t` nas dependencias do efeito
+  // reabriria o socket a cada troca de idioma, e com ele a sala.
+  const t = useTranslations("gameroomBackend");
+  const tRef = useRef(t);
+  tRef.current = t;
+  const translate = (msg: BackendMessage): string =>
+    tRef.current(msg.key, msg.params);
+
   // Lobby: every open room, refreshed by the server whenever one changes.
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   // Ja recebemos a lista de salas pelo menos uma vez? Distingue "ainda a
@@ -63,7 +76,7 @@ export function useGameSocket() {
   // Who dropped out and how long they have left before forfeiting; null when
   // nobody is missing. The name and the count are kept together because they are
   // only meaningful side by side, and `status` gets overwritten by other events.
-  const [forfeit, setForfeit] = useState<OpponentDisconnectedPayload | null>(null);
+  const [forfeit, setForfeit] = useState<ForfeitCountdown | null>(null);
 
   // Rematch offers standing since the last game ended. A rematch needs both, so
   // the button reads "Rematch", "Waiting..." or "Accept rematch" accordingly.
@@ -80,11 +93,11 @@ export function useGameSocket() {
     socket.on("disconnect", () => setConnected(false));
 
     // Waiting for an opponent, or watching a game: either way we are in a room.
-    socket.on("statusWait", (msg: string) => {
+    socket.on("statusWait", (msg: BackendMessage) => {
       setInRoom(true);
-      setStatus(msg);
+      setStatus(translate(msg));
     });
-    socket.on("warning", (msg: string) => setStatus(msg));
+    socket.on("warning", (msg: BackendMessage) => setStatus(translate(msg)));
 
     socket.on("MatchFound", (d: MatchFoundPayload) => {
       setInRoom(true);
@@ -113,20 +126,21 @@ export function useGameSocket() {
     });
 
     socket.on("opponentDisconnected", (d: OpponentDisconnectedPayload) => {
-      setStatus(d.message);
-      setForfeit(d);
+      const message = translate(d.message);
+      setStatus(message);
+      setForfeit({ message, secondsLeft: d.secondsLeft });
     });
-    socket.on("opponentReconnected", (msg: string) => {
-      setStatus(msg);
+    socket.on("opponentReconnected", (msg: BackendMessage) => {
+      setStatus(translate(msg));
       setForfeit(null); // they made it back, stop the clock
     });
 
     // The opponent walked out. The room reopened around us, so we drop the
     // board and wait for someone new instead of leaving the page.
-    socket.on("gameAborted", (msg: string) => {
+    socket.on("gameAborted", (msg: BackendMessage) => {
       setInRoom(true);
       setState(null);
-      setStatus(msg);
+      setStatus(translate(msg));
       setForfeit(null);
       setIWantRematch(false);
       setOpponentWantsRematch(false);

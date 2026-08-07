@@ -223,6 +223,30 @@
     "description": "Sair a meio de uma partida será considerado como desistência do jogo atual",
     "stay": "Ficar",
     "leave": "Sair"
+  },
+  "gameroomBackend": {
+    "alreadyInRoom": "Já estás numa partida ou numa sala",
+    "noRoom": "Esta sala já não existe",
+    "waitingOpponent": "À espera que um adversário entre no jogo...",
+    "noReplay": "Não há aqui nenhum jogo concluído para voltar a jogar.",
+    "wantsRematch": "{name} quer uma desforra.",
+    "rematch": "Desforra! O jogo está a começar",
+    "gameEnded": "O jogo terminou.",
+    "leftAndForfeit": "O teu adversário saiu — ganhaste por desistência. À espera de um novo adversário...",
+    "leftAndWaiting": "O teu adversário saiu. À espera de um novo adversário...",
+    "unavailable": "Já estás num jogo ou numa sala.",
+    "startingGame": "O adversário entrou! O jogo vai começar",
+    "alreadyOver": "Este jogo já acabou.",
+    "watching": "A ver {host} vs {guest}",
+    "reconnected": "{name} reconectado.",
+    "playingAI": "Jogar contra um bot",
+    "specNoPlay": "Os espectadores não podem jogar.",
+    "invalidColumn": "Coluna inválida",
+    "invalidPlay": "Jogada inválida, ou ainda não é a tua vez.",
+    "gameOver": "Fim do jogo!",
+    "gameDraw": "O jogo terminou empatado!",
+    "unauthorized": "Não autorizado",
+    "disconnected": "{name} desconectado.",
+    "noReconnection": "O adversário não se reconectou a tempo. Desistência."
   }
 }
-

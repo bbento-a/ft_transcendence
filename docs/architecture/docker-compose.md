@@ -112,7 +112,7 @@ independently, and a hard dependency would only make startup more fragile.
     build: ./nginx
     image: transcendence-nginx
     ports:
-      - "443:443"
+      - "2222:2222"
     networks:
       - frontend_net
     depends_on:
@@ -155,7 +155,7 @@ what is in `.env`.
 
 | Directive | Effect | Reachable by |
 |---|---|---|
-| `ports: "443:443"` | publishes a host port (iptables DNAT) | anything reaching the host |
+| `ports: "2222:2222"` | publishes a host port (iptables DNAT) | anything reaching the host |
 | `expose: "3000"` | metadata only — changes nothing | (no effect) |
 | neither | default | any container on a shared network |
 

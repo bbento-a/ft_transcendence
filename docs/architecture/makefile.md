@@ -35,7 +35,7 @@ cache makes repeat runs cheap.
 | Target | Does |
 |---|---|
 | `all` → `up` | Default. |
-| `up` | Production stack: built images, no source mounts, only `:443` published. |
+| `up` | Production stack: built images, no source mounts, only `:2222` published. |
 | `dev` | Dev stack: hot reload, source mounted from the host. |
 | `down` | Stop and remove containers and networks. Volume kept. |
 | `stop` / `start` | Pause and resume without removing anything. |
@@ -265,8 +265,8 @@ docker compose restart nginx
 
 ## Note for the school VM
 
-`make up` binds port 443. Under rootless Docker or Podman, binding a port below
-1024 fails. If that happens, publish `8443:443` in `docker-compose.yml` and
+`make up` binds port 2222. Under rootless Docker or Podman, binding a port below
+1024 fails. If that happens, publish `8443:2222` in `docker-compose.yml` and
 browse to `https://localhost:8443`.
 
 Worth testing before evaluation day rather than during it.
