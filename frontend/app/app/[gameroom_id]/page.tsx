@@ -26,6 +26,7 @@ export default function Page() {
 	// Router com view transitions: sair da sala anima de volta como entrar nela.
 	const router = useTransitionRouter();
 	const params = useParams();
+	// Translations for gamepage
 	const t = useTranslations("gameroom_id");
 	// Exit confirmation: opens only when walking out of a LIVE match (back
 	// button or the navbar's wawa icon). Leaving any other room state skips

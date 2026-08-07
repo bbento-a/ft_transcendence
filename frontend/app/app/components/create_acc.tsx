@@ -6,7 +6,7 @@ import { Link } from "next-view-transitions";
 import React,{ useState ,ChangeEvent} from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { apiPost } from "../lib/api";
-import { EMPTY_USERNAME, EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, firstEmptyField, pickError } from "../lib/formErrors";
+import { EMPTY_USERNAME, EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, ErrorKey, ErrorName, firstEmptyField, pickError } from "../lib/formErrors";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -19,31 +19,35 @@ const login42 = () => {
 };
 
 /*
-Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos:
-campos vazios primeiro (de cima para baixo do form), depois as regras de cada
-campo e por fim os conflitos (409). O primeiro padrao que der match ganha, por
-isso as regras estao presas ao verbo (must/cannot/can only) para nao apanharem
-tambem o "Username already in use.".
+Ordem por que os erros do backend sao mostrados, um de cada vez em vez de todos
+juntos: campos vazios primeiro (de cima para baixo do form), depois as regras de
+cada campo e por fim os conflitos (409). Ganha o primeiro que der match.
 */
-const ERROR_ORDER: RegExp[] = [
-	/^Username cannot be empty/,
-	/^Email cannot be empty/,
-	/^Password cannot be empty/,
-	/^Username (must|cannot|can only)/,
-	/email address/,
-	/^Password (must|cannot)/,
-	/^Username already in use/,
-	/^Email already in use/,
+const ERROR_ORDER: ErrorName[] = [
+	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	"offline",
+	"usernameEmpty",
+	"passwordEmpty",
+	"usernameMin",
+	"usernameMax",
+	"usernamePattern",
+	"emailInvalid",
+	"passwordMin",
+	"passwordMax",
+	"usernameTaken",
+	"emailTaken",
 ];
 
 export default function create_acc() {
 	const t = useTranslations("createAcc");
+	// as mensagens de erro sao chaves, so viram texto aqui na renderizacao
+	const tError = useTranslations("formErrors");
 
 	const [user,setUser] = useState({
 		username:"",email:"",password:""
 	})
 	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
-	const [error,setError] = useState<string | null>(null);
+	const [error,setError] = useState<ErrorKey | null>(null);
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useTransitionRouter();
@@ -67,9 +71,9 @@ export default function create_acc() {
 
 		// campos vazios nem chegam a ir ao backend, mostra logo o primeiro em falta
 		const missing = firstEmptyField([
-			{ value: user.username, message: EMPTY_USERNAME },
-			{ value: user.email, message: EMPTY_EMAIL },
-			{ value: user.password, message: EMPTY_PASSWORD, trim: false },
+			{ value: user.username, error: EMPTY_USERNAME },
+			{ value: user.email, error: EMPTY_EMAIL },
+			{ value: user.password, error: EMPTY_PASSWORD, trim: false },
 		]);
 		if (missing)
 		{
@@ -115,7 +119,7 @@ export default function create_acc() {
 		<div className={styles.errorSpace}>
 		{error &&
 			<div className={styles.errorWrapper}>
-				<div className={styles.errorText}>{error}</div>
+				<div className={styles.errorText}>{tError(error.key, error.params)}</div>
 			</div>
 		}
 		</div>

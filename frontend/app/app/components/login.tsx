@@ -6,7 +6,7 @@ import { Link } from "next-view-transitions";
 import React,{ useState ,ChangeEvent} from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { apiPost } from "../lib/api";
-import { EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, firstEmptyField, pickError } from "../lib/formErrors";
+import { EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, ErrorKey, ErrorName, firstEmptyField, pickError } from "../lib/formErrors";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -19,28 +19,32 @@ const login42 = () => {
 };
 
 /*
-Campos vazios primeiro, depois o formato de cada campo, e o "Invalid Credentials"
-em ultimo por ser o unico que sobra quando os campos estao bem preenchidos.
+Ordem por que os erros do backend sao mostrados, um de cada vez: o formato de
+cada campo de cima para baixo do form, e o "invalidCredentials" em ultimo por
+ser o unico que sobra quando os campos estao bem preenchidos.
+Os campos vazios nao entram aqui, sao apanhados antes pelo firstEmptyField.
 Nao ha entrada para "email nao existe": o backend responde "Invalid Credentials"
 tanto para email inexistente como para password errada, de proposito.
 */
-const ERROR_ORDER: RegExp[] = [
-	/^Email cannot be empty/,
-	/^Password cannot be empty/,
-	/email address/,
-	/^Password must/,
-	/^Invalid Credentials/,
+const ERROR_ORDER: ErrorName[] = [
+	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	"offline",
+	"emailInvalid",
+	"passwordMin",
+	"invalidCredentials",
 ];
 
 export default function login() {
 	const t = useTranslations("login");
+	// as mensagens de erro sao chaves, so viram texto aqui na renderizacao
+	const tError = useTranslations("formErrors");
 
 	const [user,setUser] = useState({
 		email:"",password:""
 	})
 
 	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
-	const [error,setError] = useState<string | null>(null);
+	const [error,setError] = useState<ErrorKey | null>(null);
 	const [isSubmitting,setIsSubmitting] = useState(false);
 
 	const router = useTransitionRouter();
@@ -64,8 +68,8 @@ export default function login() {
 
 		// campos vazios nem chegam a ir ao backend, mostra logo o primeiro em falta
 		const missing = firstEmptyField([
-			{ value: user.email, message: EMPTY_EMAIL },
-			{ value: user.password, message: EMPTY_PASSWORD, trim: false },
+			{ value: user.email, error: EMPTY_EMAIL },
+			{ value: user.password, error: EMPTY_PASSWORD, trim: false },
 		]);
 		if (missing)
 		{
@@ -111,7 +115,7 @@ export default function login() {
 		<div className={styles.errorSpace}>
 		{error &&
 			<div className={styles.errorWrapper}>
-				<div className={styles.errorText}>{error}</div>
+				<div className={styles.errorText}>{tError(error.key, error.params)}</div>
 			</div>
 		}
 		</div>

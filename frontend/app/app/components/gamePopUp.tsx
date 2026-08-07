@@ -21,6 +21,8 @@ export default function gamePopUp({
 	creating?: boolean;
 }) {
   const t = useTranslations("gamerooms");
+  // texto que so os leitores de ecra veem, ver namespace a11y
+  const tA11y = useTranslations("a11y");
 
   return (
 	<div className={styles.popup}>
@@ -31,7 +33,7 @@ export default function gamePopUp({
 				<button className={styles.button} onClick={onPlayVsSomeone} disabled={creating}>
 					{
 						creating
-						? <div className={styles.buttonSpinner} aria-label="Loading" />
+						? <div className={styles.buttonSpinner} aria-label={tA11y("loading")} />
 						: <div className={styles.text}>{t("playvsplayer")}</div>
 					}
 				</button>

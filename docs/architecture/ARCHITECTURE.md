@@ -407,4 +407,3 @@ break the build if missing.
 | Game feels laggy, no errors | WebSocket upgrade failing, Socket.IO fell back to polling | check the `/socket.io/` block |
 | `ERR_CERT_COMMON_NAME_INVALID` | cert missing SANs | already handled in `gen-cert.sh` |
 | Other localhost projects forced to HTTPS | HSTS header applies per host, ignoring port | clear at `chrome://net-internals/#hsts` |
-| Cannot bind port 2222 | rootless Docker/Podman restricts ports < 1024 | publish `82222:2222` instead |

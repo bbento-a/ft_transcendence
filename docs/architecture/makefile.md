@@ -260,3 +260,13 @@ make fclean && make up   # after changing POSTGRES_PASSWORD in .env
 make nginx-test      # after editing nginx.conf in dev
 docker compose restart nginx
 ```
+
+---
+
+## Note for the school VM
+
+`make up` binds port 2222. Under rootless Docker or Podman, binding a port below
+1024 fails. If that happens, publish `8443:2222` in `docker-compose.yml` and
+browse to `https://localhost:8443`.
+
+Worth testing before evaluation day rather than during it.

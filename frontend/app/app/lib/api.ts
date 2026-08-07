@@ -1,8 +1,9 @@
+// o texto vive no formErrors.ts, onde esta o padrao que o traduz
+import { OFFLINE_MESSAGE } from "./formErrors";
+
 export type ApiResult<T> =
 	| { ok: true; data: T }
 	| { ok: false; errors: string[] };
-
-const OFFLINE_ERROR = "Server unavailable, please try again in a moment.";
 
 async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, body: unknown): Promise<ApiResult<T>> {
 	let res: Response;
@@ -15,7 +16,7 @@ async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, b
 		});
 	} catch {
 		// rede abaixo ou pedido cancelado, nem chegou a haver resposta
-		return { ok: false, errors: [OFFLINE_ERROR] };
+		return { ok: false, errors: [OFFLINE_MESSAGE] };
 	}
 
 	// quando o backend esta em baixo o nginx responde 502 com html, e o json() rebentava
@@ -23,7 +24,7 @@ async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, b
 	try {
 		data = await res.json();
 	} catch {
-		return { ok: false, errors: [OFFLINE_ERROR] };
+		return { ok: false, errors: [OFFLINE_MESSAGE] };
 	}
 
 	if (res.ok) {
@@ -34,7 +35,7 @@ async function apiRequest<T = unknown>(method: "POST" | "PATCH", path: string, b
 	if (Array.isArray(data?.message))
 		return { ok: false, errors: data.message };
 
-	return { ok: false, errors: [data?.message ?? OFFLINE_ERROR] };
+	return { ok: false, errors: [data?.message ?? OFFLINE_MESSAGE] };
 }
 
 export function apiPost<T = unknown>(path: string, body: unknown): Promise<ApiResult<T>> {
