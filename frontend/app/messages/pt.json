@@ -223,6 +223,10 @@
     "description": "Sair a meio de uma partida será considerado como desistência do jogo atual",
     "stay": "Ficar",
     "leave": "Sair"
+  },
+  "404": {
+    "message": "A página que está a tentar aceder não existe.",
+    "home": "Clique aqui para voltar à página inicial."
   }
 }
 

@@ -226,6 +226,9 @@
     "description": "Das Verlassen eines Spiels während des Spielverlaufs gilt als Aufgabe des aktuellen Spiels",
     "stay": "Bleiben",
     "leave": "Verlassen"
+  },
+  "404": {
+    "message": "Die Seite, auf die Sie zugreifen möchten, existiert nicht.",
+    "home": "Klicken Sie hier, um zur Startseite zurückzukehren."
   }
-
 }
