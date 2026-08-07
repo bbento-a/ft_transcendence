@@ -1,11 +1,4 @@
 .env
-
-# Fail closed: everything under secrets/ is ignored, and only the README is
-# whitelisted back in. A stray key.pem or postgres_password.txt.bak is then
-# ignored by default instead of being one `git add -A` away from a leak.
-secrets/*
-!secrets/README.md
-
 node_modules/
 dist/
 .next/

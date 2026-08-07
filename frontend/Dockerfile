@@ -44,13 +44,8 @@ COPY --from=builder --chown=next:next /app/public ./public
 COPY --from=builder --chown=next:next /app/.next/standalone ./
 COPY --from=builder --chown=next:next /app/.next/static ./.next/static
 
-# Loads JWT_SECRET from /run/secrets before handing over to the server.
-COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 USER next
 
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["node", "server.js"]
