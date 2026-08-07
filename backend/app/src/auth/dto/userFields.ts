@@ -1,3 +1,5 @@
+import { registerDecorator, ValidationOptions } from 'class-validator';
+
 /*
 Regras dos campos de utilizador num sitio so. O RegisterDto, o UpdateUserDto e o
 LoginDto importam daqui para nao poderem divergir: antes o registo cortava o
@@ -15,9 +17,12 @@ export const USERNAME_MIN = 3;
 export const USERNAME_MAX = 12;
 export const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
 
+// em CARACTERES (ver MinCharacters mais abaixo)
 export const PASSWORD_MIN = 6;
-// limite do bcrypt: a partir dos 72 bytes o resto da password e ignorado
-export const PASSWORD_MAX = 72;
+// em BYTES: limite do bcrypt, a partir dos 72 bytes o resto da password e
+// ignorado em silencio -- duas passwords com os mesmos 72 bytes iniciais abrem
+// a mesma conta. Por isso e recusada aqui em vez de ser cortada la dentro.
+export const PASSWORD_MAX_BYTES = 72;
 
 export const USERNAME_EMPTY_MSG = 'Username cannot be empty.';
 export const USERNAME_MIN_MSG = `Username must be at least ${USERNAME_MIN} characters long.`;
@@ -28,7 +33,9 @@ export const EMAIL_INVALID_MSG = 'Please provide a valid email address.';
 
 export const PASSWORD_EMPTY_MSG = 'Password cannot be empty.';
 export const PASSWORD_MIN_MSG = `Password must be at least ${PASSWORD_MIN} characters long.`;
-export const PASSWORD_MAX_MSG = `Password cannot exceed ${PASSWORD_MAX} characters.`;
+// sem numero na mensagem de proposito: o limite e em bytes, e "72 bytes" nao
+// diz nada a quem so quer escolher uma password
+export const PASSWORD_MAX_MSG = 'Password is too long.';
 
 export const CURRENT_PASSWORD_EMPTY_MSG = 'Current password cannot be empty.';
 
@@ -46,3 +53,46 @@ Nao faz mais limpeza nenhuma: os DTO ja rejeitam tudo o que nao seja
 */
 export const normalizeUsername = (username: string): string =>
   username.trim().toLowerCase();
+
+/*
+Porque e que a password nao usa o @MinLength/@MaxLength do class-validator:
+esses contam String.length, que sao unidades UTF-16 -- nem caracteres nem bytes.
+Um emoji conta 2. Na pratica isso queria dizer que
+
+  "🔥🔥🔥"        passava o minimo de 6 sendo 3 caracteres;
+  36 emojis      passavam o maximo de 72 sendo 144 bytes.
+
+O segundo caso era o mau: o bcrypt le no maximo 72 BYTES e ignora o resto sem
+avisar, portanto metade da password nao contava para nada.
+
+*/
+export function MinCharacters(min: number, options?: ValidationOptions) {
+  return function (target: object, propertyName: string) {
+    registerDecorator({
+      name: 'minCharacters',
+      target: target.constructor,
+      propertyName,
+      options,
+      validator: {
+        // o spread parte a string em code points, ao contrario do .length
+        validate: (value: unknown) =>
+          typeof value === 'string' && [...value].length >= min,
+      },
+    });
+  };
+}
+
+export function MaxBytes(max: number, options?: ValidationOptions) {
+  return function (target: object, propertyName: string) {
+    registerDecorator({
+      name: 'maxBytes',
+      target: target.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'string' && Buffer.byteLength(value, 'utf8') <= max,
+      },
+    });
+  };
+}

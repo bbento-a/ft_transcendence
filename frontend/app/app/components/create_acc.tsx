@@ -7,6 +7,7 @@ import React,{ useState ,ChangeEvent} from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { apiPost } from "../lib/api";
 import { EMPTY_USERNAME, EMPTY_EMAIL, EMPTY_PASSWORD, GENERIC_ERROR, ErrorKey, ErrorName, firstEmptyField, pickError } from "../lib/formErrors";
+import { USERNAME_MAX, EMAIL_MAX, PASSWORD_MAX } from "../lib/fieldLimits";
 import { useUser } from "@/context/AuthContext";
 import { useTranslations } from "next-intl";
 
@@ -24,8 +25,11 @@ juntos: campos vazios primeiro (de cima para baixo do form), depois as regras de
 cada campo e por fim os conflitos (409). Ganha o primeiro que der match.
 */
 const ERROR_ORDER: ErrorName[] = [
-	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	// o servidor nem respondeu, ou recusou o pedido inteiro: nao ha nada a dizer
+	// sobre os campos
 	"offline",
+	"tooLarge",
+	"rateLimited",
 	"usernameEmpty",
 	"passwordEmpty",
 	"usernameMin",
@@ -110,9 +114,9 @@ export default function create_acc() {
 		</div>
 		<div>
 			<form action="" method="Post" className={styles.form} onSubmit={postData}>
-				<input className={styles.button} type="text" name="username" placeholder={t("username")} autoComplete="username" value={user.username} onChange={handleInputs}/>
-				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" value={user.email} onChange={handleInputs}/>
-				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="new-password" value={user.password} onChange={handleInputs}/>
+				<input className={styles.button} type="text" name="username" placeholder={t("username")} autoComplete="username" maxLength={USERNAME_MAX} value={user.username} onChange={handleInputs}/>
+				<input className={styles.button} type="email" name="email" placeholder={t("email")} autoComplete="email" maxLength={EMAIL_MAX} value={user.email} onChange={handleInputs}/>
+				<input className={styles.button} type="password" name="password" placeholder={t("password")} autoComplete="new-password" maxLength={PASSWORD_MAX} value={user.password} onChange={handleInputs}/>
 				<button className={styles.buttonDark} type="submit" disabled={isSubmitting}>{t("submit")}</button>
 			</form>
 		</div>

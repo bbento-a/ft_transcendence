@@ -159,7 +159,7 @@
     "emailFromProvider": "O email é gerido pelo teu fornecedor de login.",
     "passwordEmpty": "A palavra-passe não pode estar vazia.",
     "passwordMin": "A palavra-passe tem de ter pelo menos {n} caracteres.",
-    "passwordMax": "A palavra-passe não pode ter mais de {n} caracteres.",
+    "passwordMax": "A palavra-passe é demasiado longa.",
     "currentPasswordEmpty": "A palavra-passe atual não pode estar vazia.",
     "currentPasswordRequired": "É preciso a palavra-passe atual para definir uma nova.",
     "invalidCredentials": "Credenciais inválidas.",
@@ -168,6 +168,8 @@
     "noChanges": "Preenche pelo menos um campo para guardar alterações.",
     "avatarError": "Não foi possível atualizar a imagem. Usa um JPEG, PNG, GIF ou WebP com menos de 5MB.",
     "offline": "Servidor indisponível, tenta novamente daqui a um momento.",
+    "tooLarge": "Isso é texto a mais — encurta e tenta outra vez.",
+    "rateLimited": "Demasiadas tentativas. Espera um momento e tenta outra vez.",
     "generic": "Algo correu mal, tenta novamente."
   },
   "a11y": {

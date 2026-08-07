@@ -5,7 +5,8 @@ import {
   USERNAME_MIN, USERNAME_MAX, USERNAME_PATTERN,
   USERNAME_EMPTY_MSG, USERNAME_MIN_MSG, USERNAME_MAX_MSG, USERNAME_PATTERN_MSG,
   EMAIL_INVALID_MSG,
-  PASSWORD_MIN, PASSWORD_MAX, PASSWORD_EMPTY_MSG, PASSWORD_MIN_MSG, PASSWORD_MAX_MSG,
+  PASSWORD_MIN, PASSWORD_MAX_BYTES, PASSWORD_EMPTY_MSG, PASSWORD_MIN_MSG, PASSWORD_MAX_MSG,
+  MinCharacters, MaxBytes,
 } from './userFields';
 
 export class RegisterDto {
@@ -34,9 +35,12 @@ export class RegisterDto {
   @IsEmail({}, { message: EMAIL_INVALID_MSG })
   email!: string;
 
+  // Sem @Matches: uma password pode ter o que lhe apetecer (emojis, espacos,
+  // acentos). O que conta e o TAMANHO, e conta-se como deve ser -- ver o
+  // comentario do MinCharacters/MaxBytes no userFields.ts
   @IsString()
   @IsNotEmpty({ message: PASSWORD_EMPTY_MSG })
-  @MinLength(PASSWORD_MIN, { message: PASSWORD_MIN_MSG })
-  @MaxLength(PASSWORD_MAX, { message: PASSWORD_MAX_MSG })
+  @MinCharacters(PASSWORD_MIN, { message: PASSWORD_MIN_MSG })
+  @MaxBytes(PASSWORD_MAX_BYTES, { message: PASSWORD_MAX_MSG })
   password!: string;
 }
