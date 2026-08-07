@@ -57,25 +57,6 @@ export class ConnectFourAI
     //De quantos em quantos nos e que vamos ver as horas
     private static readonly TIME_CHECK_INTERVAL = 1024;
 
-    /*
-        Profundidade que a ultima procura chegou mesmo a terminar. Nao e usado pela IA,
-        serve para se perceber o que o orcamento de tempo esta a dar em cada posicao
-        (util para afinar os niveis ou para um log de debug).
-    */
-    public lastSearchDepth = 0;
-
-    /**
-     * Devolve a melhor coluna para a IA jogar, sem qualquer aleatoriedade de nivel.
-     * Mantido com esta assinatura para nao partir quem ja chamava com uma profundidade.
-     * @param board estado atual do tabuleiro
-     * @param aiPlayer numero que representa a IA (1 ou 2)
-     * @param depth profundidade maxima de procura
-     */
-    public getBestMove(board: number[][], aiPlayer: number, depth = 6): number
-    {
-        return this.getMove(board, aiPlayer, { depth, blunderChance: 0 });
-    }
-
     /**
      * Escolhe a jogada da IA de acordo com o nivel de dificuldade.
      * @param board estado atual do tabuleiro (nao e modificado)
@@ -159,7 +140,6 @@ export class ConnectFourAI
             devolver mesmo com um orcamento absurdamente pequeno.
         */
         let bestMoves = this.searchFixedDepth(board, aiPlayer, 2);
-        this.lastSearchDepth = 2;
 
         /*
             De 2 em 2 e nao de 1 em 1, para acabar sempre numa profundidade PAR.
@@ -179,7 +159,6 @@ export class ConnectFourAI
                 break;
 
             bestMoves = moves;
-            this.lastSearchDepth = depth;
         }
 
         //Deixar o estado limpo para a proxima chamada

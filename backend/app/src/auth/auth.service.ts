@@ -6,7 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { OAuthProfile } from './types/oauth-profile.type';
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { USERNAME_MAX } from './dto/userFields';
+import { USERNAME_MAX, normalizeUsername } from './dto/userFields';
 import { unlink } from "fs/promises";
 import * as path from "path";
 
@@ -18,9 +18,15 @@ export class AuthService {
               private jwtService: JwtService,
               ) {}
 
+  // Um unico sitio a assinar tokens: todos os caminhos de entrada (registo,
+  // login, Google e 42) emitem exatamente o mesmo payload e a mesma validade.
   private async signToken(user: { id: string; username: string }) {
-    const payload = { sub: user.id, username: user.username };
-    return this.jwtService.signAsync(payload);
+    return {
+      access_token: await this.jwtService.signAsync({
+        sub: user.id,
+        username: user.username,
+      }),
+    };
   }
 
   async login(dto: LoginDto)
@@ -50,20 +56,20 @@ export class AuthService {
     }
 
     //Esta tudo o User existe
-    return{
-      access_token: await this.signToken(user),
-    };
+    return this.signToken(user);
   }
 
 
   async register(dto: RegisterDto) {
     // Normalize email to avoid duplicate accounts differing only in case
     const email = dto.email.toLowerCase();
+    // ... e o username pela mesma razao, ver normalizeUsername
+    const username = normalizeUsername(dto.username);
 
     // Check if email or username are already taken (parallel queries)
     const [emailTaken, usernameTaken] = await Promise.all([
       this.prisma.user.findUnique({ where: { email } }),
-      this.prisma.user.findUnique({ where: { username: dto.username } }),
+      this.prisma.user.findUnique({ where: { username } }),
     ]);
 
     /*
@@ -86,7 +92,7 @@ export class AuthService {
 
     const newUser = await this.prisma.user.create({
       data: {
-        username: dto.username,
+        username,
         email,
         password: hashedPassword,
       },
@@ -94,13 +100,12 @@ export class AuthService {
 
     // Never return the password hash, even hashed
     return {
-      message: 'User registered successfully.',
       user: {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
       },
-      access_token: await this.signToken(newUser),
+      ...(await this.signToken(newUser)),
     };
   }
 
@@ -177,11 +182,15 @@ export class AuthService {
       }
     }
   
-    return this.signOAuthToken(user.id, user.username);
+    return this.signToken(user);
   }
 
   private async makeUniqueUsername(base: string) {
-    const clean = (value: string) => value.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    // O nome vem do provider, nao de um DTO: aqui ainda pode trazer espacos e
+    // acentos, por isso e este o unico sitio que precisa de os limpar antes de
+    // normalizar.
+    const clean = (value: string) =>
+      normalizeUsername(value.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''));
 
     // O nome vem do provider e pode ser maior que o USERNAME_MAX; sem o corte
     // ficavamos com contas OAuth que o UpdateUserDto ja nao aceitava de volta
@@ -230,14 +239,14 @@ export class AuthService {
     const data: any = {};
 
     if (dto.username) {
-      const clean = dto.username.trim().replace(/\s+/g, '_').toLowerCase();
+      const username = normalizeUsername(dto.username);
 
-      const taken = await this.prisma.user.findUnique({ where: { username: clean } });
+      const taken = await this.prisma.user.findUnique({ where: { username } });
       if (taken && taken.id !== userId) {
         throw new ConflictException('Username already in use.');
       }
 
-      data.username = clean;
+      data.username = username;
     }
 
     if (dto.email || dto.newPassword) {
@@ -294,14 +303,6 @@ export class AuthService {
         avatarUrl: true,
       },
     });
-  }
-  private async signOAuthToken(userId: string, username: string) {
-    return {
-      access_token: await this.jwtService.signAsync({
-        sub: userId,
-        username,
-      }),
-    };
   }
   async updateAvatar(userId: string, avatarUrl: string) {
     const user = await this.prisma.user.findUnique({

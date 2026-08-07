@@ -146,7 +146,7 @@ export class AuthController {
       sameSite: 'lax',
       expires: new Date(0),
     });
-    return { message: 'Logout efetuado com sucesso familia' };
+    return { message: 'Logout successful' };
   }
 
   @Get('google')

@@ -31,3 +31,18 @@ export const PASSWORD_MIN_MSG = `Password must be at least ${PASSWORD_MIN} chara
 export const PASSWORD_MAX_MSG = `Password cannot exceed ${PASSWORD_MAX} characters.`;
 
 export const CURRENT_PASSWORD_EMPTY_MSG = 'Current password cannot be empty.';
+
+/*
+Forma canonica de um username. Guardamos SEMPRE assim (registo, update e contas
+OAuth) para nao poderem existir um "Bento" e um "bento" como contas diferentes.
+
+Como tudo o que esta gravado ja passou por aqui, quem PROCURA por nome so tem de
+normalizar o que lhe escreveram e comparar exatamente -- e o que a pesquisa do
+dashboard faz. Nao ha necessidade de comparacoes insensiveis a maiusculas, que
+alem de mais lentas nao usariam o indice unico do username.
+
+Nao faz mais limpeza nenhuma: os DTO ja rejeitam tudo o que nao seja
+[a-zA-Z0-9_], por isso aqui nao ha espacos nem simbolos para tratar.
+*/
+export const normalizeUsername = (username: string): string =>
+  username.trim().toLowerCase();

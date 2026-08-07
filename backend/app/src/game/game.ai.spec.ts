@@ -5,6 +5,15 @@ function emptyBoard(): number[][] {
   return Array.from({ length: 6 }, () => Array(7).fill(0));
 }
 
+/*
+A IA tem uma unica porta de entrada, o getMove(board, player, config). Nestes
+testes queremos sempre a melhor jogada, sem a aleatoriedade dos niveis, por isso
+o blunderChance fica a 0 e so a profundidade varia.
+*/
+function bestMove(ai: ConnectFourAI, board: number[][], player: number, depth: number): number {
+  return ai.getMove(board, player, { depth, blunderChance: 0 });
+}
+
 describe('ConnectFourAI', () => {
   let ai: ConnectFourAI;
 
@@ -14,7 +23,7 @@ describe('ConnectFourAI', () => {
 
   it('numa board vazia, deve preferir a coluna central', () => {
     const board = emptyBoard();
-    const move = ai.getBestMove(board, 1, 1); // depth=1 chega, e mantem o teste rapido
+    const move = bestMove(ai, board, 1, 1); // depth=1 chega, e mantem o teste rapido
 
     expect(move).toBe(3); // coluna central (0-indexed, 7 colunas: 0..6)
   });
@@ -27,7 +36,7 @@ describe('ConnectFourAI', () => {
     board[5][1] = 2;
     board[5][2] = 2;
 
-    const move = ai.getBestMove(board, 1, 2); // depth=2: precisa de ver a resposta do adversario
+    const move = bestMove(ai, board, 1, 2); // depth=2: precisa de ver a resposta do adversario
 
     expect(move).toBe(3);
   });
@@ -39,7 +48,7 @@ describe('ConnectFourAI', () => {
     board[5][1] = 1;
     board[5][2] = 1;
 
-    const move = ai.getBestMove(board, 1, 1); // depth=1 chega: a vitoria e detetada assim que terminal
+    const move = bestMove(ai, board, 1, 1); // depth=1 chega: a vitoria e detetada assim que terminal
 
     expect(move).toBe(3);
   });
@@ -51,7 +60,7 @@ describe('ConnectFourAI', () => {
       board[r][3] = (r % 2) + 1;
     }
 
-    const move = ai.getBestMove(board, 1, 3);
+    const move = bestMove(ai, board, 1, 3);
 
     expect(move).not.toBe(3);
   });
@@ -64,7 +73,7 @@ describe('ConnectFourAI', () => {
     board[5][3] = 2;
     board[5][4] = 2;
 
-    const move = ai.getBestMove(board, 2, 6);
+    const move = bestMove(ai, board, 2, 6);
 
     // Empilhar na coluna 3 tambem levava a vitoria, so que uma jogada mais tarde.
     // Como a vitoria vale WIN_SCORE + depth, ganhar agora vale mais do que ganhar
@@ -84,7 +93,7 @@ describe('ConnectFourAI', () => {
     ];
 
     // -1 = nao ha coluna nenhuma para jogar
-    expect(ai.getBestMove(pattern, 2, 4)).toBe(-1);
+    expect(bestMove(ai, pattern, 2, 4)).toBe(-1);
   });
 
   describe('niveis de dificuldade', () => {

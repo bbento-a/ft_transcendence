@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AiConfig, BoardCell, Difficulty, GamePlayer, GameState, PlayerNumber, otherPlayer } from './game.types';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,9 +10,9 @@ export const FORFEIT_GRACE_PERIOD_MS = 30_000; //30s para reconectar
 const AI_PLAYER_ID = 'AI';
 
 /*
-    >>> MUDA AQUI PARA TESTAR OS NIVEIS <<<
-    Enquanto o frontend nao tiver ecra de escolha, e este valor que manda em todos
-    os jogos contra a IA. Aceita 'easy', 'medium' ou 'hard'.
+    Nivel usado quando o pedido nao traz nenhum. O lobby manda sempre a escolha
+    do jogador no playVsAI, por isso na pratica isto so serve de rede de
+    seguranca (ex.: um jogo criado antes de o campo existir).
 */
 const DEFAULT_AI_DIFFICULTY: Difficulty = 'hard';
 
@@ -46,6 +46,8 @@ const AI_LEVELS: Record<Difficulty, AiConfig> = {
 @Injectable()
 export class GameService
 {
+  private readonly logger = new Logger(GameService.name);
+
   //Mapa que contem os jogos ativos Key: Sala, Value: Estado do jogo
   private activeGames = new Map<string,GameState>();
   private forfeitTimers = new Map<string, NodeJS.Timeout>();
@@ -351,7 +353,7 @@ async finalizeGame(game: GameState): Promise<void> {
 
       await this.prisma.$transaction(ops);
     } catch (error) {
-      console.error(`[Game] Failed to persist result for room ${game.roomId}:`, error);
+      this.logger.error(`Failed to persist result for room ${game.roomId}`, error);
     }
   }
 
