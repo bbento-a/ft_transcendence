@@ -5,29 +5,34 @@ import React, { useState, useRef, ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/AuthContext";
 import { apiPatch } from "../lib/api";
-import { GENERIC_ERROR, pickError } from "../lib/formErrors";
+import { AVATAR_ERROR, GENERIC_ERROR, NO_CHANGES, PASSWORD_MISMATCH, ErrorKey, ErrorName, pickError } from "../lib/formErrors";
 
 import BackArrow from "../components/backArrow";
 
 /*
-Ordem por que os erros sao mostrados, um de cada vez em vez de todos juntos.
-Segue os campos de cima para baixo do form (username, email, password atual,
-password nova), e deixa para o fim o que so o servidor sabe: password atual
-errada e conflitos com outras contas.
-Ganha o primeiro match, por isso as regras estao presas ao verbo para nao
-apanharem tambem o "Username already in use.".
+Ordem por que os erros do backend sao mostrados, um de cada vez em vez de todos
+juntos. Segue os campos de cima para baixo do form (username, email, password
+atual, password nova), e deixa para o fim o que so o servidor sabe: password
+atual errada e conflitos com outras contas. Ganha o primeiro que der match.
 */
-const ERROR_ORDER: RegExp[] = [
-	/^Username cannot be empty/,
-	/^Username (must|cannot|can only)/,
-	/email address/,
-	/^Current password cannot be empty/,
-	/^Password (must|cannot)/,
-	/^Current password is required/,
-	/^Invalid credentials/,
-	/^Username already in use/,
-	/^Email already in use/,
-	/^Email is managed by your login provider/,
+const ERROR_ORDER: ErrorName[] = [
+	// o servidor nem respondeu, nao ha nada a dizer sobre os campos
+	"offline",
+	// a sessao morreu, nao vale a pena queixarmo-nos dos campos
+	"sessionExpired",
+	"usernameEmpty",
+	"usernameMin",
+	"usernameMax",
+	"usernamePattern",
+	"emailInvalid",
+	"currentPasswordEmpty",
+	"passwordMin",
+	"passwordMax",
+	"currentPasswordRequired",
+	"invalidCredentials",
+	"usernameTaken",
+	"emailTaken",
+	"emailFromProvider",
 ];
 
 /*
@@ -46,6 +51,10 @@ function maskEmail(email: string): string {
 
 export default function page() {
 	const t = useTranslations("settings");
+	// as mensagens de erro sao chaves, so viram texto aqui na renderizacao
+	const tError = useTranslations("formErrors");
+	// texto que so os leitores de ecra veem, ver namespace a11y
+	const tA11y = useTranslations("a11y");
 	const { user, refresh } = useUser();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +85,7 @@ export default function page() {
 
 	    // falhava em silencio: a foto nao mudava e nao havia nada no ecra a dizer porque
 	    if (!res.ok) {
-	      setError(t("avatarerror"));
+	      setError(AVATAR_ERROR);
 	      return;
 	    }
 	  } catch {
@@ -95,7 +104,7 @@ export default function page() {
 		username: "", email: "", currentPassword: "", newPassword: "", confirmPassword: ""
 	});
 	// so um erro de cada vez, escolhido por prioridade em ERROR_ORDER
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<ErrorKey | null>(null);
 	const [success, setSuccess] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -118,7 +127,7 @@ export default function page() {
 
 		// verificacao so do cliente, o backend nem conhece o campo de confirmacao
 		if (form.newPassword && form.newPassword !== form.confirmPassword) {
-			setError(t("passwordmismatch"));
+			setError(PASSWORD_MISMATCH);
 			return;
 		}
 
@@ -133,7 +142,7 @@ export default function page() {
 
 		// sem isto o Save nao fazia nada visivel quando o form estava todo vazio
 		if (Object.keys(payload).length === 0) {
-			setError(t("nochanges"));
+			setError(NO_CHANGES);
 			return;
 		}
 
@@ -168,7 +177,7 @@ export default function page() {
 					      ? `${user.avatarUrl}`
 					      : "/profile.svg"
 					  }
-					  alt="Profile picture"
+					  alt={tA11y("profilePicture")}
 					  width={250}
 					  height={250}
 					/>
@@ -226,7 +235,7 @@ export default function page() {
 					</form>
 					{error &&
 						<div className={styles.errorWrapper}>
-							<div className={styles.errorText}>{error}</div>
+							<div className={styles.errorText}>{tError(error.key, error.params)}</div>
 						</div>
 					}
 					{success &&

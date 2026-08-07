@@ -21,6 +21,8 @@ export default function Home() {
 	const router = useTransitionRouter();
 
 	const t = useTranslations("gamerooms");
+	// texto que so os leitores de ecra veem, ver namespace a11y
+	const tA11y = useTranslations("a11y");
 
 	const { rooms, roomsLoaded, connected, getRooms, createRoom, createdRoomId, resumeRoomId } = useGameSocket();
 
@@ -79,7 +81,7 @@ export default function Home() {
 			// navegacao); ou a voltar a um jogo que nunca deixamos.
 			!roomsLoaded || creatingRoom || resumeRoomId ? (
 				<div className={styles.textWrapper}>
-					<div className={styles.spinner} aria-label="Loading" />
+					<div className={styles.spinner} aria-label={tA11y("loading")} />
 				</div>
 			) : rooms.length === 0 ? (
 				<div className={styles.textWrapper}>
