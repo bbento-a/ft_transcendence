@@ -1,10 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
+  // o Logger do Nest em vez de console.log: sai com timestamp e contexto, na
+  // mesma forma que o resto do arranque nos logs do container
+  private readonly logger = new Logger(PrismaService.name);
+
   constructor() {
     // 1. Grab your database connection string
     const connectionString = process.env.DATABASE_URL;
@@ -21,6 +25,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
   async onModuleInit() {
     await this.$connect();
-    console.log('Database connected via Prisma with success');
+    this.logger.log('Database connected via Prisma with success');
   }
 }

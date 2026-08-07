@@ -322,7 +322,7 @@ export class AuthService {
 
       try {
         await unlink(filePath);
-      } catch (err) {
+      } catch {
         // File may already be deleted
       }
     }
