@@ -106,6 +106,7 @@ export default function DashboardView({ username }: { username?: string }) {
       if (!silent) setLoading(true);
       setError(false);
       setNotFound(false);
+      
       try {
         const url = username
           ? `/api/stats/user/${encodeURIComponent(username)}`
