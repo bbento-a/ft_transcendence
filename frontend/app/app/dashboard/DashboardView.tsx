@@ -53,6 +53,8 @@ const MODES: GameMode[] = ["all", "player", "bot"];
 */
 export default function DashboardView({ username }: { username?: string }) {
   const t = useTranslations("dashboard");
+  // texto que so os leitores de ecra veem, ver namespace a11y
+  const tA11y = useTranslations("a11y");
   const locale = useLocale();
   const router = useTransitionRouter();
   const isOwn = !username;
@@ -225,7 +227,7 @@ export default function DashboardView({ username }: { username?: string }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <button className={styles.searchBtn} type="submit" aria-label="Search">
+            <button className={styles.searchBtn} type="submit" aria-label={tA11y("search")}>
               🔍
             </button>
           </form>

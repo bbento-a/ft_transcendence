@@ -5,6 +5,7 @@ import styles from "./css_modules/navbar.module.css"
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from "next/navigation";
 import { useUser } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 import useClickOutside from "../hooks/useClickOutside";
 // O Link da next-view-transitions e o next/link com a navegacao embrulhada em
 // view transition. Chama o nosso onClick primeiro e respeita preventDefault,
@@ -31,6 +32,8 @@ export default function NavBar()
 
 	
 	const [openMenu, setOpenMenu] = useState<"lang" | "profile" | null>(null);
+	// texto que so os leitores de ecra veem, ver namespace a11y
+	const tA11y = useTranslations("a11y");
 	const { user, loading } = useUser();
 	const { guard } = useNavGuard();
 	const pathname = usePathname();
@@ -106,7 +109,7 @@ export default function NavBar()
 							<img
 								className={styles.profilePic}
 								src={user?.avatarUrl ? user.avatarUrl : "/profile.svg"}
-								alt="Profile picture"
+								alt={tA11y("profilePicture")}
 								width={50}
 								height={50}
 							/>

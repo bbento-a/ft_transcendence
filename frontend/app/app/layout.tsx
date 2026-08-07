@@ -7,23 +7,29 @@ import Footer from "./components/footer";
 import { UserProvider } from "@/context/AuthContext";
 import { NavGuardProvider } from "@/context/NavGuardContext";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ViewTransitions } from "next-view-transitions";
 
 
 /*
   Muda se isto so pq e feito a mao ent tens q apontar para aonde esta e ya e isso
  */
-const quicksand = localFont({ 
+const quicksand = localFont({
   src: "../fonts/Quicksand-VariableFont_wght.ttf",
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "WawaConnect",
-  description:
-    "WawaConnect is a 4-connect game built for ft_transcendence, a project from 42 school curriculum",
-};
+// Funcao em vez de objeto constante porque a descricao (a que aparece no
+// separador e em quem partilhe o link) tambem segue o idioma escolhido. O
+// titulo e o nome do produto, esse e igual em toda a parte.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+
+  return {
+    title: "WawaConnect",
+    description: t("description"),
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -31,6 +37,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const messages = await getMessages();
+  // sem isto o html dizia sempre lang="en": os leitores de ecra liam paginas em
+  // PT/DE com pronuncia inglesa e o browser oferecia traduzir uma pagina que ja
+  // estava no idioma de quem a estava a ver
+  const locale = await getLocale();
 
   // ViewTransitions liga a View Transitions API do browser as navegacoes do
   // Next: quem navegar com useTransitionRouter (ou o Link da biblioteca) faz o
@@ -40,7 +50,7 @@ export default async function RootLayout({
   return (
     <ViewTransitions>
       <html
-        lang="en"
+        lang={locale}
         className={`${quicksand.className} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">

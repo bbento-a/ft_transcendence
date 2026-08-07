@@ -145,10 +145,38 @@
     "currentpasswordplaceholder": "Aktuelles Passwort",
     "confirmpasswordplaceholder": "Neues Passwort bestätigen",
     "success": "Profil erfolgreich aktualisiert.",
-    "passwordmismatch": "Die Passwörter stimmen nicht überein.",
-    "nochanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
-    "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden.",
-    "avatarerror": "Das Bild konnte nicht aktualisiert werden. Verwende ein JPEG, PNG, GIF oder WebP unter 5MB."
+    "oauthaccountnote": "Deine E-Mail und dein Passwort werden von deinem Login-Anbieter (Google/42) verwaltet und können hier nicht geändert werden."
+  },
+  "formErrors": {
+    "usernameEmpty": "Der Benutzername darf nicht leer sein.",
+    "usernameMin": "Der Benutzername muss mindestens {n} Zeichen lang sein.",
+    "usernameMax": "Der Benutzername darf höchstens {n} Zeichen lang sein.",
+    "usernamePattern": "Der Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten.",
+    "usernameTaken": "Dieser Benutzername wird bereits verwendet.",
+    "emailEmpty": "Die E-Mail-Adresse darf nicht leer sein.",
+    "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse an.",
+    "emailTaken": "Diese E-Mail-Adresse wird bereits verwendet.",
+    "emailFromProvider": "Deine E-Mail-Adresse wird von deinem Login-Anbieter verwaltet.",
+    "passwordEmpty": "Das Passwort darf nicht leer sein.",
+    "passwordMin": "Das Passwort muss mindestens {n} Zeichen lang sein.",
+    "passwordMax": "Das Passwort darf höchstens {n} Zeichen lang sein.",
+    "currentPasswordEmpty": "Das aktuelle Passwort darf nicht leer sein.",
+    "currentPasswordRequired": "Für ein neues Passwort ist das aktuelle Passwort erforderlich.",
+    "invalidCredentials": "Ungültige Anmeldedaten.",
+    "sessionExpired": "Deine Sitzung ist abgelaufen, bitte melde dich erneut an.",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "noChanges": "Fülle mindestens ein Feld aus, um Änderungen zu speichern.",
+    "avatarError": "Das Bild konnte nicht aktualisiert werden. Verwende ein JPEG, PNG, GIF oder WebP unter 5MB.",
+    "offline": "Server nicht erreichbar, bitte versuche es gleich noch einmal.",
+    "generic": "Etwas ist schiefgelaufen, bitte versuche es erneut."
+  },
+  "a11y": {
+    "loading": "Wird geladen",
+    "search": "Suchen",
+    "profilePicture": "Profilbild"
+  },
+  "metadata": {
+    "description": "WawaConnect ist ein Vier-gewinnt-Spiel für ft_transcendence, ein Projekt aus dem Lehrplan der Schule 42"
   },
   "dashboard": {
     "title": "Statistiken",
@@ -200,10 +228,7 @@
   "game": {
     "easy": "Leicht",
     "medium": "Mittel",
-    "hard": "Schwer",
-    "NoGameRooms": "Momentan sind keine Spielräume verfügbar!",
-    "playvsbot": "Gegen den Bot spielen",
-    "playvsplayer": "Gegen jemanden spielen"
+    "hard": "Schwer"
   },
   "gameroomsWidget": {
     "Waiting": "Warten",
