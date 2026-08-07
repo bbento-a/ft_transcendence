@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import { useTranslations } from "next-intl";
 import type {
   BackendMessage,
   ForfeitCountdown,
@@ -37,7 +36,15 @@ export function useGameSocket() {
   const pendingLeaveRef = useRef<Promise<void> | null>(null);
 
   const [state, setState] = useState<GameState | null>(null);
-  const [status, setStatus] = useState<string>("");
+  /*
+    A mensagem de estado guardada como CHAVE (o que o gateway manda), nunca como
+    frase. Traduzir aqui, no momento em que o evento chega, congelava o texto no
+    idioma dessa altura: quem trocasse de idioma a espera de adversario ficava
+    com o "Waiting for an opponent..." em ingles ate a proxima mensagem chegar,
+    porque o socket nao volta a emitir nada. Quem traduz e a pagina, a cada
+    renderizacao.
+  */
+  const [status, setStatus] = useState<BackendMessage | null>(null);
   const [connected, setConnected] = useState(false);
   // Quem somos: id (para saber se somos o player 1 ou 2) e nome. Vem do
   // AuthContext, que ja carregou o /api/auth/me uma vez — NAO voltamos a
@@ -47,15 +54,10 @@ export function useGameSocket() {
   const myId = user?.id ?? null;
   const myName = user?.username ?? null;
 
-  // O gateway nao manda texto, manda chaves (ver BackendMessage): e aqui que
-  // viram frases no idioma de quem esta a ver. Numa ref porque os handlers do
-  // socket sao registados uma unica vez — por `t` nas dependencias do efeito
-  // reabriria o socket a cada troca de idioma, e com ele a sala.
-  const t = useTranslations("gameroomBackend");
-  const tRef = useRef(t);
-  tRef.current = t;
-  const translate = (msg: BackendMessage): string =>
-    tRef.current(msg.key, msg.params);
+  // Nada aqui traduz: o gateway manda chaves (ver BackendMessage) e elas
+  // atravessam este hook intactas ate a pagina que as mostra. Assim os handlers
+  // do socket, que sao registados uma unica vez, nunca dependem do idioma -- e
+  // trocar de idioma nao reabre o socket nem deixa texto velho no ecra.
 
   // Lobby: every open room, refreshed by the server whenever one changes.
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
@@ -95,15 +97,15 @@ export function useGameSocket() {
     // Waiting for an opponent, or watching a game: either way we are in a room.
     socket.on("statusWait", (msg: BackendMessage) => {
       setInRoom(true);
-      setStatus(translate(msg));
+      setStatus(msg);
     });
-    socket.on("warning", (msg: BackendMessage) => setStatus(translate(msg)));
+    socket.on("warning", (msg: BackendMessage) => setStatus(msg));
 
     socket.on("MatchFound", (d: MatchFoundPayload) => {
       setInRoom(true);
       roomRef.current = d.room;
       setState(d.state);
-      setStatus("");
+      setStatus(null);
       // A new game is running (first match or rematch): the offers are spent.
       setIWantRematch(false);
       setOpponentWantsRematch(false);
@@ -115,7 +117,7 @@ export function useGameSocket() {
       setInRoom(true);
       roomRef.current = s.roomId;
       setState(s);
-      setStatus("");
+      setStatus(null);
     });
 
     socket.on("gameOver", (d: GameOverPayload) => {
@@ -126,12 +128,11 @@ export function useGameSocket() {
     });
 
     socket.on("opponentDisconnected", (d: OpponentDisconnectedPayload) => {
-      const message = translate(d.message);
-      setStatus(message);
-      setForfeit({ message, secondsLeft: d.secondsLeft });
+      setStatus(d.message);
+      setForfeit({ message: d.message, secondsLeft: d.secondsLeft });
     });
     socket.on("opponentReconnected", (msg: BackendMessage) => {
-      setStatus(translate(msg));
+      setStatus(msg);
       setForfeit(null); // they made it back, stop the clock
     });
 
@@ -140,7 +141,7 @@ export function useGameSocket() {
     socket.on("gameAborted", (msg: BackendMessage) => {
       setInRoom(true);
       setState(null);
-      setStatus(translate(msg));
+      setStatus(msg);
       setForfeit(null);
       setIWantRematch(false);
       setOpponentWantsRematch(false);

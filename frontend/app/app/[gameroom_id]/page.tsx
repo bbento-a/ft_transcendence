@@ -28,6 +28,10 @@ export default function Page() {
 	const params = useParams();
 	// Translations for gamepage
 	const t = useTranslations("gameroom_id");
+	// As mensagens que vêm do gateway chegam aqui como chave (ver BackendMessage)
+	// e só viram texto nesta renderização — é isso que faz a troca de idioma
+	// atualizar o estado que já está no ecrã.
+	const tBackend = useTranslations("gameroomBackend");
 	// Exit confirmation: opens only when walking out of a LIVE match (back
 	// button or the navbar's wawa icon). Leaving any other room state skips
 	// the question and just leaves.
@@ -188,7 +192,9 @@ export default function Page() {
 
 	function statusText() {
 		if (!state)
-			return status || (connected ? `${t("Looking for opponent")}...` : `${t("Connecting")}...`);
+			return status
+				? tBackend(status.key, status.params)
+				: (connected ? `${t("Looking for opponent")}...` : `${t("Connecting")}...`);
 		if (state.isGameOver) {
 			if (state.winnerId === null)
 				return `${t("Draw")}!`;
@@ -196,7 +202,7 @@ export default function Page() {
 		}
 		// Someone dropped out: name them and show how long they have to come back.
 		if (forfeit)
-			return `${forfeit.message} ${t("Forfeit in")} ${forfeit.secondsLeft}`;
+			return `${tBackend(forfeit.message.key, forfeit.message.params)} ${t("Forfeit in")} ${forfeit.secondsLeft}`;
 		return `${t("Current turn")}: ${state.currentPlayer === 1 ? state.player1Name : state.player2Name}`;
 	}
 

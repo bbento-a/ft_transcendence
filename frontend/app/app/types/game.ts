@@ -66,10 +66,11 @@ export interface OpponentDisconnectedPayload {
   secondsLeft: number;
 }
 
-// O mesmo, ja traduzido: e nesta forma que o useGameSocket o guarda e o entrega
-// a pagina, que so quer a frase pronta a mostrar ao lado da contagem.
+// O mesmo em forma de estado: guarda a CHAVE, nao a frase. Quem traduz e a
+// pagina, no momento de mostrar -- guardar aqui texto ja traduzido deixava a
+// contagem presa ao idioma que estava escolhido quando o adversario caiu.
 export interface ForfeitCountdown {
-  message: string;
+  message: BackendMessage;
   secondsLeft: number;
 }
 
