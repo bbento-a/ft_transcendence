@@ -224,7 +224,10 @@
     "description": "Leaving during a match will be considered as forfeiting the current game",
     "stay": "Stay",
     "leave": "Leave"
+  },
+  "404": {
+    "message": "The page you're looking for doesn't exist.",
+    "home": "Click here to go the home page."
   }
-
 }
 
