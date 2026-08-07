@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { GameModule } from './game/game.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -12,9 +10,11 @@ import { ConfigModule } from '@nestjs/config';
 /*
 
 @Module e uma classe vazia, o objetivoe agrupar peças de codigo relacionadas
-Ou seja e um ficheiro de ligaçao 
+Ou seja e um ficheiro de ligaçao
 
-Como listei o AppController e o AppService o compilador agora sabe que estao a trabalhar juntos
+Este e o modulo de raiz: nao tem controladores proprios, so junta os modulos
+que fazem o trabalho (jogo, auth, stats) e o que e transversal a todos eles
+(configuracao, base de dados, rate limit).
 */
 @Module({
   imports: [
@@ -29,9 +29,8 @@ Como listei o AppController e o AppService o compilador agora sabe que estao a t
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     GameModule, PrismaModule, AuthModule, StatsModule
   ],  //Modulos que este modulo vai precisar
-  controllers: [AppController], //Controladores que pertencem a este modulo
   providers: [
-    AppService, // Serviçoes que pertencem a este modulo
+    // guarda global: aplica o rate limit a toda a app
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
