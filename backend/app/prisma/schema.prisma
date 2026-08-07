@@ -24,10 +24,7 @@ model User {
   googleId      String?  @unique
   fortyTwoId    String?  @unique
   
-  password      String?  
-
-  //provider      String?  @default("local")
-  //providerId    String?  @unique
+  password      String?
 
   // Perfil e Stats do 4 em Linha
   avatarUrl     String?

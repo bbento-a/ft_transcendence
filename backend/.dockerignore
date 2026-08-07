@@ -6,8 +6,8 @@ app/.env
 app/.env.*
 app/Makefile
 app/docker-compose.yml
-app/README.md
 app/coverage
-app/test
+# os testes nao entram na imagem; o build ja os exclui do dist (tsconfig.build.json)
+app/src/**/*.spec.ts
 **/*.log
 .DS_Store

@@ -252,7 +252,6 @@ export class AuthService {
           throw new ForbiddenException('Email is managed by your login provider.');
         }
 
-        // Normalize email to avoid duplicate accounts differing only in case
         const email = dto.email.toLowerCase();
 
         const taken = await this.prisma.user.findUnique({ where: { email } });
@@ -268,7 +267,6 @@ export class AuthService {
           throw new BadRequestException('Current password is required to set a new password.');
         }
 
-        // OAuth-only accounts have no password to verify against
         if (isOAuthOnly) {
           throw new UnauthorizedException('Invalid credentials.');
         }
@@ -322,7 +320,7 @@ export class AuthService {
 
       try {
         await unlink(filePath);
-      } catch (err) {
+      } catch {
         // File may already be deleted
       }
     }

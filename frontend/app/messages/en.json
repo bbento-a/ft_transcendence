@@ -145,10 +145,38 @@
     "currentpasswordplaceholder": "Current Password",
     "confirmpasswordplaceholder": "Confirm New Password",
     "success": "Profile updated successfully.",
-    "passwordmismatch": "Passwords do not match.",
-    "nochanges": "Fill in at least one field to save changes.",
-    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here.",
-    "avatarerror": "Could not update the picture. Use a JPEG, PNG, GIF or WebP image under 5MB."
+    "oauthaccountnote": "Your email and password are managed by your login provider (Google/42) and can't be changed here."
+  },
+  "formErrors": {
+    "usernameEmpty": "Username cannot be empty.",
+    "usernameMin": "Username must be at least {n} characters long.",
+    "usernameMax": "Username cannot exceed {n} characters.",
+    "usernamePattern": "Username can only contain letters, numbers and underscores.",
+    "usernameTaken": "Username already in use.",
+    "emailEmpty": "Email cannot be empty.",
+    "emailInvalid": "Please provide a valid email address.",
+    "emailTaken": "Email already in use.",
+    "emailFromProvider": "Email is managed by your login provider.",
+    "passwordEmpty": "Password cannot be empty.",
+    "passwordMin": "Password must be at least {n} characters long.",
+    "passwordMax": "Password cannot exceed {n} characters.",
+    "currentPasswordEmpty": "Current password cannot be empty.",
+    "currentPasswordRequired": "Current password is required to set a new password.",
+    "invalidCredentials": "Invalid credentials.",
+    "sessionExpired": "Your session has expired, please log in again.",
+    "passwordMismatch": "Passwords do not match.",
+    "noChanges": "Fill in at least one field to save changes.",
+    "avatarError": "Could not update the picture. Use a JPEG, PNG, GIF or WebP image under 5MB.",
+    "offline": "Server unavailable, please try again in a moment.",
+    "generic": "Something went wrong, please try again."
+  },
+  "a11y": {
+    "loading": "Loading",
+    "search": "Search",
+    "profilePicture": "Profile picture"
+  },
+  "metadata": {
+    "description": "WawaConnect is a 4-connect game built for ft_transcendence, a project from 42 school curriculum"
   },
   "dashboard": {
     "title": "Statistics",
@@ -223,6 +251,10 @@
     "description": "Leaving during a match will be considered as forfeiting the current game",
     "stay": "Stay",
     "leave": "Leave"
+  },
+  "404": {
+    "message": "The page you are trying to access does not exist.",
+    "home": "Click here to return to the home page."
   },
   "gameroomBackend": {
     "alreadyInRoom": "You are already in a game or room",

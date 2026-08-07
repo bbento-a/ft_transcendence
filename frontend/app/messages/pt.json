@@ -145,10 +145,38 @@
     "currentpasswordplaceholder": "Palavra-passe atual",
     "confirmpasswordplaceholder": "Confirmar nova palavra-passe",
     "success": "Perfil atualizado com sucesso.",
-    "passwordmismatch": "As palavras-passe não coincidem.",
-    "nochanges": "Preenche pelo menos um campo para guardar alterações.",
-    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui.",
-    "avatarerror": "Não foi possível atualizar a imagem. Usa um JPEG, PNG, GIF ou WebP com menos de 5MB."
+    "oauthaccountnote": "O teu email e palavra-passe são geridos pelo teu fornecedor de login (Google/42) e não podem ser alterados aqui."
+  },
+  "formErrors": {
+    "usernameEmpty": "O nome de utilizador não pode estar vazio.",
+    "usernameMin": "O nome de utilizador tem de ter pelo menos {n} caracteres.",
+    "usernameMax": "O nome de utilizador não pode ter mais de {n} caracteres.",
+    "usernamePattern": "O nome de utilizador só pode conter letras, números e underscores.",
+    "usernameTaken": "Este nome de utilizador já está a ser usado.",
+    "emailEmpty": "O email não pode estar vazio.",
+    "emailInvalid": "Introduz um email válido.",
+    "emailTaken": "Este email já está a ser usado.",
+    "emailFromProvider": "O email é gerido pelo teu fornecedor de login.",
+    "passwordEmpty": "A palavra-passe não pode estar vazia.",
+    "passwordMin": "A palavra-passe tem de ter pelo menos {n} caracteres.",
+    "passwordMax": "A palavra-passe não pode ter mais de {n} caracteres.",
+    "currentPasswordEmpty": "A palavra-passe atual não pode estar vazia.",
+    "currentPasswordRequired": "É preciso a palavra-passe atual para definir uma nova.",
+    "invalidCredentials": "Credenciais inválidas.",
+    "sessionExpired": "A tua sessão expirou, volta a entrar.",
+    "passwordMismatch": "As palavras-passe não coincidem.",
+    "noChanges": "Preenche pelo menos um campo para guardar alterações.",
+    "avatarError": "Não foi possível atualizar a imagem. Usa um JPEG, PNG, GIF ou WebP com menos de 5MB.",
+    "offline": "Servidor indisponível, tenta novamente daqui a um momento.",
+    "generic": "Algo correu mal, tenta novamente."
+  },
+  "a11y": {
+    "loading": "A carregar",
+    "search": "Pesquisar",
+    "profilePicture": "Imagem de perfil"
+  },
+  "metadata": {
+    "description": "O WawaConnect é um jogo do 4 em linha feito para o ft_transcendence, um projeto do currículo da escola 42"
   },
   "dashboard": {
     "title": "Estatísticas",
@@ -223,6 +251,10 @@
     "description": "Sair a meio de uma partida será considerado como desistência do jogo atual",
     "stay": "Ficar",
     "leave": "Sair"
+  },
+  "404": {
+    "message": "A página que está a tentar aceder não existe.",
+    "home": "Clique aqui para voltar à página inicial."
   },
   "gameroomBackend": {
     "alreadyInRoom": "Já estás numa partida ou numa sala",

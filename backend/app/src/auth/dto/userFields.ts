@@ -6,8 +6,9 @@ username que o registo nunca teria aceitado.
 
 As mensagens sao construidas a partir dos mesmos numeros, entao o texto e o
 limite tambem nao podem ficar fora de sincronia. Se mudares um limite, muda so
-aqui: o frontend faz match pelo inicio da mensagem (ver ERROR_ORDER em
-formErrors.ts), nao pelo numero, por isso continua a funcionar.
+aqui: o frontend faz match pelo inicio da mensagem (ver PATTERNS em
+frontend/app/app/lib/formErrors.ts), nao pelo numero, e apanha o numero a
+propria mensagem para o mostrar traduzido. Se mudares o TEXTO, muda la o padrao.
 */
 
 export const USERNAME_MIN = 3;
