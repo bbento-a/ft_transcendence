@@ -7,6 +7,15 @@
 #
 #  Everything here is development-only. Nothing in this file
 #  should ever be required for the production stack to work.
+#
+#  Secrets are NOT redefined here: the `secrets:` blocks in the
+#  base file already apply, so dev containers get the same
+#  /run/secrets/* mounts as production.
+#
+#  The dev images stop at the `deps` stage, which does not contain
+#  the entrypoint scripts (those are copied in `runtime`), so each
+#  script is bind-mounted in and invoked explicitly. Running it as
+#  `/bin/sh <script>` means the host file does not need +x.
 # ============================================================
 services:
 
@@ -19,9 +28,11 @@ services:
     volumes:
       - ./backend/app:/app  # live source from the host
       - /app/node_modules   # anonymous volume: shields the image's copy
-    entrypoint: ["/bin/sh", "-c"]
+      - ./backend/tools/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+      - /app/uploads
+    entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint.sh", "/bin/sh", "-c"]
     command:
-      - "npx prisma generate && npx prisma migrate deploy && npm run start:dev"
+      - "npx prisma generate && npm run start:dev"
 
   frontend:
     build:
@@ -32,7 +43,8 @@ services:
     volumes:
       - ./frontend/app:/app
       - /app/node_modules
-    entrypoint: ["/bin/sh", "-c"]
+      - ./frontend/tools/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint.sh", "/bin/sh", "-c"]
     command:
       - "npm run dev -- -H 0.0.0.0 -p 3000"
 

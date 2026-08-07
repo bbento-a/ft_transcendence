@@ -4,6 +4,11 @@
 
 ENV_FILE      = .env
 ENV_EXAMPLE   = .env.example
+SECRETS_DIR   = secrets
+
+GEN_SECRETS   = postgres_password jwt_secret
+OAUTH_SECRETS = google_client_id google_client_secret ft_client_id ft_client_secret
+ALL_SECRETS   = $(GEN_SECRETS) $(OAUTH_SECRETS)
 
 # Base file only -> production stack.
 # Without -f, compose also picks up docker-compose.override.yml -> dev stack.
@@ -17,7 +22,7 @@ COMPOSE_PROD  = docker compose -f docker-compose.yml
 all: up
 
 # Production stack: built images, no source mounts, nothing but :2222 exposed
-up: $(ENV_FILE)
+up: $(ENV_FILE) check-secrets
 	$(COMPOSE_PROD) up -d --build
 	@echo ""
 	@echo "  Running at https://localhost"
@@ -25,7 +30,7 @@ up: $(ENV_FILE)
 	@echo ""
 
 # Development stack: hot reload, source mounted (db stays internal; use make psql)
-dev: $(ENV_FILE) host-modules
+dev: $(ENV_FILE) check-secrets host-modules
 	$(COMPOSE) up -d --build
 	@echo ""
 	@echo "  Dev stack running at https://localhost"
@@ -63,8 +68,8 @@ start:
 #  Environment
 # ==========================================================
 
-# Generated on first run; never committed. Secrets come from openssl,
-# not from this Makefile, so nothing sensitive lives in git.
+# Generated on first run; never committed. Holds only NON-secret config
+# (db role/name, OAuth callback URLs). Every credential lives in secrets/.
 $(ENV_FILE): $(ENV_EXAMPLE)
 	@if [ -f $(ENV_FILE) ]; then \
 		echo ">> $(ENV_FILE) already exists, leaving it alone"; \
@@ -78,18 +83,57 @@ $(ENV_FILE): $(ENV_EXAMPLE)
 		fi; \
 		touch $(ENV_FILE); \
 	else \
-		echo ">> Generating $(ENV_FILE) with random secrets..."; \
-		PG_PASS=$$(openssl rand -hex 32); \
-		JWT=$$(openssl rand -hex 32); \
-		sed -e "s|^POSTGRES_USER=.*|POSTGRES_USER=transcendence|" \
-		    -e "s|^POSTGRES_DB=.*|POSTGRES_DB=transcendence|" \
-		    -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$$PG_PASS|" \
-		    -e "s|^JWT_SECRET=.*|JWT_SECRET=$$JWT|" \
-		    $(ENV_EXAMPLE) > $(ENV_FILE); \
+		echo ">> Generating $(ENV_FILE) from $(ENV_EXAMPLE)..."; \
+		cp $(ENV_EXAMPLE) $(ENV_FILE); \
 		echo ">> Done."; \
 	fi
 
-setup: $(ENV_FILE)
+# ----------------------------------------------------------
+#  Secrets
+# ----------------------------------------------------------
+
+# Creates secrets/ and one file per credential. The two we can generate are
+# generated with openssl; the four OAuth ones are created empty for you to
+# paste into. Files that already have content are never touched, so running
+# this again is safe and never rotates your database password.
+secrets:
+	@mkdir -p $(SECRETS_DIR)
+	@for name in $(GEN_SECRETS); do \
+		f="$(SECRETS_DIR)/$$name.txt"; \
+		if [ ! -s "$$f" ]; then \
+			openssl rand -hex 32 | tr -d '\n' > "$$f"; \
+			echo ">> generated $$f"; \
+		fi; \
+	done
+	@for name in $(OAUTH_SECRETS); do \
+		f="$(SECRETS_DIR)/$$name.txt"; \
+		if [ ! -e "$$f" ]; then \
+			: > "$$f"; \
+			echo ">> created   $$f (paste the value from the provider)"; \
+		fi; \
+	done
+	@# The containers run as non-root users, so they must be able to read these.
+	@chmod 644 $(SECRETS_DIR)/*.txt
+
+# up and dev depend on this: the stack must not start with a missing value.
+# Without it, compose would build everything and the backend would only then
+# fail, in a restart loop.
+check-secrets: secrets
+	@missing=""; \
+	for name in $(ALL_SECRETS); do \
+		[ -s "$(SECRETS_DIR)/$$name.txt" ] || missing="$$missing $$name"; \
+	done; \
+	if [ -n "$$missing" ]; then \
+		echo ""; \
+		echo ">> Cannot start: these secrets are empty:$$missing"; \
+		echo ">>   Google -> https://console.cloud.google.com"; \
+		echo ">>   42     -> https://profile.intra.42.fr/oauth/applications"; \
+		echo ">>   Put the raw value in $(SECRETS_DIR)/<name>.txt, then run make again."; \
+		echo ""; \
+		exit 1; \
+	fi
+
+setup: $(ENV_FILE) secrets
 
 # ==========================================================
 #  Inspection commands
@@ -156,7 +200,7 @@ clean-artifacts:
 # Everything goes: containers, networks, database volume, images, and the
 # build artifacts left on the host by dev mode.
 fclean:
-	$(COMPOSE) down -v --rmi all --remove-orphans
+	$(COMPOSE_PROD) down -v --rmi all --remove-orphans
 	@rm -rf $(ARTIFACTS)
 	@echo ">> Removed host build artifacts (.next, dist, next-env.d.ts)"
 
@@ -165,6 +209,7 @@ re: fclean up
 
 re-dev: fclean dev
 
-.PHONY: all up dev down stop start setup host-modules ps logs logs-backend \
+.PHONY: all up dev down stop start setup secrets check-secrets \
+        host-modules ps logs logs-backend \
         logs-frontend logs-nginx psql shell-backend shell-frontend nginx-test \
         clean clean-artifacts fclean re re-dev
