@@ -5,6 +5,11 @@
 ENV_FILE      = .env
 ENV_EXAMPLE   = .env.example
 
+SECRETS_DIR    = secrets
+AUTO_SECRETS   = postgres_password jwt_secret
+MANUAL_SECRETS = google_client_secret ft_client_secret
+PLACEHOLDER    = CHANGE_ME
+
 # Base file only -> production stack.
 # Without -f, compose also picks up docker-compose.override.yml -> dev stack.
 COMPOSE       = docker compose
@@ -17,7 +22,7 @@ COMPOSE_PROD  = docker compose -f docker-compose.yml
 all: up
 
 # Production stack: built images, no source mounts, nothing but :2222 exposed
-up: $(ENV_FILE)
+up: $(ENV_FILE) secrets
 	$(COMPOSE_PROD) up -d --build
 	@echo ""
 	@echo "  Running at https://localhost:2222"
@@ -25,7 +30,7 @@ up: $(ENV_FILE)
 	@echo ""
 
 # Development stack: hot reload, source mounted (db stays internal; use make psql)
-dev: $(ENV_FILE) host-modules
+dev: $(ENV_FILE) secrets host-modules
 	$(COMPOSE) up -d --build
 	@echo ""
 	@echo "  Dev stack running at https://localhost:2222"
@@ -63,8 +68,9 @@ start:
 #  Environment
 # ==========================================================
 
-# Generated on first run; never committed. Secrets come from openssl,
-# not from this Makefile, so nothing sensitive lives in git.
+# .env holds CONFIGURATION only -- user names, host names, OAuth client ids and
+# callback URLs. Nothing in it is a credential, so it is a plain copy of the
+# committed example. Real credentials live in $(SECRETS_DIR)/, see below.
 $(ENV_FILE): $(ENV_EXAMPLE)
 	@if [ -f $(ENV_FILE) ]; then \
 		echo ">> $(ENV_FILE) already exists, leaving it alone"; \
@@ -78,18 +84,55 @@ $(ENV_FILE): $(ENV_EXAMPLE)
 		fi; \
 		touch $(ENV_FILE); \
 	else \
-		echo ">> Generating $(ENV_FILE) with random secrets..."; \
-		PG_PASS=$$(openssl rand -hex 32); \
-		JWT=$$(openssl rand -hex 32); \
-		sed -e "s|^POSTGRES_USER=.*|POSTGRES_USER=transcendence|" \
-		    -e "s|^POSTGRES_DB=.*|POSTGRES_DB=transcendence|" \
-		    -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$$PG_PASS|" \
-		    -e "s|^JWT_SECRET=.*|JWT_SECRET=$$JWT|" \
-		    $(ENV_EXAMPLE) > $(ENV_FILE); \
-		echo ">> Done."; \
+		echo ">> Creating $(ENV_FILE) from $(ENV_EXAMPLE)..."; \
+		cp $(ENV_EXAMPLE) $(ENV_FILE); \
+		echo ">> Edit it to add the OAuth client ids (only needed for OAuth login)."; \
 	fi
 
-setup: $(ENV_FILE)
+# Creates every file under $(SECRETS_DIR)/, one credential per file, and leaves
+# any file that already has content untouched -- so it is safe to re-run and is
+# a cheap no-op prerequisite of `up` and `dev`.
+#
+# Random values come from openssl (with a /dev/urandom fallback for the rare
+# box without it), never from this Makefile: the Makefile is committed, so a
+# value written here would be a value published to everyone.
+#
+# Permissions: 700 on the directory keeps other users on the host out, while
+# 644 on the files is required -- Compose bind-mounts them as they are, and the
+# backend and frontend containers deliberately run as non-root users that must
+# still be able to read them. Compose's `uid`/`gid`/`mode` secret options are
+# swarm-only and silently ignored here, so the host mode is the real one.
+secrets:
+	@mkdir -p $(SECRETS_DIR)
+	@chmod 700 $(SECRETS_DIR) 2>/dev/null || true
+	@for name in $(AUTO_SECRETS); do \
+		f=$(SECRETS_DIR)/$$name.txt; \
+		if [ ! -s $$f ]; then \
+			printf '%s\n' "$$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" > $$f; \
+			echo ">> generated $$f"; \
+		fi; \
+		chmod 644 $$f 2>/dev/null || true; \
+	done
+	@for name in $(MANUAL_SECRETS); do \
+		f=$(SECRETS_DIR)/$$name.txt; \
+		if [ ! -s $$f ]; then \
+			printf '%s\n' "$(PLACEHOLDER)" > $$f; \
+			echo ">> created $$f  <-- paste the real value in"; \
+		fi; \
+		chmod 644 $$f 2>/dev/null || true; \
+	done
+	@todo=""; \
+	for name in $(MANUAL_SECRETS); do \
+		if grep -q '^$(PLACEHOLDER)$$' $(SECRETS_DIR)/$$name.txt 2>/dev/null; then \
+			todo="$$todo $(SECRETS_DIR)/$$name.txt"; \
+		fi; \
+	done; \
+	if [ -n "$$todo" ]; then \
+		echo ">> WARNING: still holding a placeholder:$$todo"; \
+		echo ">>          The stack boots, but OAuth login will not work."; \
+	fi
+
+setup: $(ENV_FILE) secrets
 
 # ==========================================================
 #  Inspection commands
@@ -119,9 +162,12 @@ logs-nginx:
 psql:
 	$(COMPOSE) exec db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB'
 
-# Shell inside a running container
+# Shell inside a running container.
+# `docker exec` starts from the image's environment, not from the running
+# process's, so the secrets the entrypoint loaded are NOT there. Sourcing the
+# same script gives this shell a working DATABASE_URL for prisma commands.
 shell-backend:
-	$(COMPOSE) exec backend sh
+	$(COMPOSE) exec backend sh -c '. /usr/local/bin/load-secrets.sh && exec sh'
 
 # Shell inside a running container
 shell-frontend:
@@ -165,6 +211,6 @@ re: fclean up
 
 re-dev: fclean dev
 
-.PHONY: all up dev down stop start setup host-modules ps logs logs-backend \
+.PHONY: all up dev down stop start setup secrets host-modules ps logs logs-backend \
         logs-frontend logs-nginx psql shell-backend shell-frontend nginx-test \
         clean clean-artifacts fclean re re-dev

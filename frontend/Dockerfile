@@ -12,6 +12,13 @@ COPY app/package.json app/package-lock.json ./
 # download cache between builds — only changed packages get downloaded.
 RUN --mount=type=cache,target=/root/.npm npm ci
 
+# The entrypoint lives in this stage, after npm ci so editing it does not
+# invalidate the install layer. `make dev` stops the build here, and dev needs
+# the same secret loading as production — only CMD differs.
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
 
 # ============================================================
 #  Stage 2 — build: produce Next.js standalone output
@@ -44,8 +51,13 @@ COPY --from=builder --chown=next:next /app/public ./public
 COPY --from=builder --chown=next:next /app/.next/standalone ./
 COPY --from=builder --chown=next:next /app/.next/static ./.next/static
 
+# Already copied and made executable in the deps stage; reuse it so the two
+# stacks can never drift apart.
+COPY --from=deps /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+
 USER next
 
 EXPOSE 3000
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["node", "server.js"]

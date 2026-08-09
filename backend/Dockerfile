@@ -11,6 +11,13 @@ COPY app/package.json app/package-lock.json ./
 # the image), so a rebuild only downloads packages that actually changed.
 RUN --mount=type=cache,target=/root/.npm npm ci
 
+# The startup scripts live in this stage, after npm ci so editing them does not
+# invalidate the install layer. `make dev` stops the build here, and dev needs
+# the same secret loading and migrations as production — only CMD differs.
+COPY tools/entrypoint.sh tools/load-secrets.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
 
 # ============================================================
 #  Stage 2 — build: prisma client + compiled dist/
@@ -45,8 +52,10 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY app/prisma ./prisma
 COPY app/prisma.config.ts ./prisma.config.ts
 
-COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Already copied and made executable in the deps stage; reuse them so the two
+# stacks can never drift apart.
+COPY --from=deps /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=deps /usr/local/bin/load-secrets.sh /usr/local/bin/load-secrets.sh
 
 # No `chown -R /app`: it would rewrite every file's metadata and make Docker
 # store a second full copy of node_modules (~400MB) in a new layer. The app

@@ -104,8 +104,13 @@ Miss `.next/static` and the page renders unstyled with 404s for every chunk.
 | `PORT=3000` | Read by `server.js`. |
 | `HOSTNAME=0.0.0.0` | **Required.** Standalone binds `localhost` by default, which inside a container means *only that container* — nginx could not reach it. |
 
-The frontend receives **no secrets** from Compose. Its only compose-level
-variable is `NODE_ENV`.
+The frontend receives exactly **one** secret, and never as a compose variable:
+`jwt_secret`, mounted as a file at `/run/secrets/jwt_secret`. `tools/entrypoint.sh`
+reads it and execs `server.js` with `JWT_SECRET` in the environment, which is
+what `app/lib/session.ts` verifies the session cookie against.
+
+No database password, no OAuth credentials — they are not listed for this
+service in `docker-compose.yml`, so Compose does not mount them at all.
 
 > Never put a secret in a `NEXT_PUBLIC_*` variable. Anything with that prefix
 > is inlined into the browser bundle and readable by any visitor. If the
@@ -180,18 +185,22 @@ proxies. Hardcoding `http://localhost:3000` would bypass the proxy and fail.
     volumes:
       - ./frontend/app:/app
       - /app/node_modules
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - "npm run dev -- -H 0.0.0.0 -p 3000"
+    command: ["/bin/sh", "-c", "npm run dev -- -H 0.0.0.0 -p 3000"]
 ```
 
 `-H 0.0.0.0` is required for the same reason as `HOSTNAME` in production:
 `next dev` binds localhost by default and would be unreachable from nginx.
 
-> **The command must stay a single quoted string.** Compose splits an unquoted
-> `command:` on whitespace, and `sh -c` runs only its first argument — so
-> `command: npm run dev -- -H 0.0.0.0 -p 3000` executes bare `npm` and the
-> container restart-loops while printing npm's help text.
+**`entrypoint` is not overridden.** `tools/entrypoint.sh` is copied in the
+`deps` stage, so the dev image has it too, and it is what puts `JWT_SECRET`
+into the environment — overriding it would leave `next dev` unable to validate
+any session. Only `command` changes between the two stacks.
+
+> **The script must stay a single argument to `sh -c`.** `sh -c` runs only its
+> *first* argument as the script, and Compose splits an unquoted `command:` on
+> whitespace — so `command: npm run dev -- -H 0.0.0.0 -p 3000` executes bare
+> `npm` and the container restart-loops while printing npm's help text. The
+> exec-form list above keeps the three arguments explicit.
 
 Hot reload uses a WebSocket, which is why `location /` in
 [nginx.conf](nginx.md) carries the upgrade headers too — without them HMR

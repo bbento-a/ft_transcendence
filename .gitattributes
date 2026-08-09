@@ -1,0 +1,7 @@
+# Shell scripts and the Makefile are executed by Linux tools (busybox sh inside
+# the containers, GNU make on the host). A clone made on Windows with
+# core.autocrlf=true would give them CRLF endings, and the container then fails
+# with a confusing "no such file or directory" on the shebang line.
+# Forcing LF here keeps the repo usable from any OS.
+*.sh    text eol=lf
+Makefile text eol=lf

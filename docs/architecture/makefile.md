@@ -49,7 +49,8 @@ cache makes repeat runs cheap.
 
 | Target | Does |
 |---|---|
-| `setup` | Creates `.env` if absent. Implied by `up` and `dev`. |
+| `setup` | `.env` + `secrets` in one go. |
+| `secrets` | Creates any missing file under `secrets/`. Implied by `up` and `dev`. |
 
 ### Inspection
 
@@ -126,17 +127,16 @@ it gains no space and costs a reinstall.
 $(ENV_FILE): $(ENV_EXAMPLE)
 	@if [ -f $(ENV_FILE) ]; then \
 		echo ">> $(ENV_FILE) already exists, leaving it alone"; \
+		... warn about keys present in the example but missing here ... \
 		touch $(ENV_FILE); \
 	else \
-		PG_PASS=$$(openssl rand -hex 32); \
-		JWT=$$(openssl rand -hex 32); \
-		sed -e "s|^POSTGRES_USER=.*|POSTGRES_USER=transcendence|" \
-		    -e "s|^POSTGRES_DB=.*|POSTGRES_DB=transcendence|" \
-		    -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$$PG_PASS|" \
-		    -e "s|^JWT_SECRET=.*|JWT_SECRET=$$JWT|" \
-		    $(ENV_EXAMPLE) > $(ENV_FILE); \
+		cp $(ENV_EXAMPLE) $(ENV_FILE); \
 	fi
 ```
+
+`.env` holds **configuration, not credentials** — user names, host names, OAuth
+client ids, callback URLs. Nothing in it is sensitive, which is why generating
+it is a plain `cp` of the committed example. Credentials live in `secrets/`.
 
 ### It is a file target, not a phony one
 
@@ -153,15 +153,69 @@ properties for free:
 The `touch` in the "already exists" branch stops the rule re-running forever
 once `.env.example` is newer.
 
+---
+
+## `make secrets`
+
+```makefile
+AUTO_SECRETS   = postgres_password jwt_secret
+MANUAL_SECRETS = google_client_secret ft_client_secret
+PLACEHOLDER    = CHANGE_ME
+```
+
+One credential per file under `secrets/`, mounted into the containers as Docker
+secrets. The target creates only what is **missing** (`[ ! -s $$f ]`), so it is
+idempotent and cheap enough to be a prerequisite of `up` and `dev`.
+
+Two kinds:
+
+- **`AUTO_SECRETS`** get `openssl rand -hex 32`. Nobody types or reads them.
+- **`MANUAL_SECRETS`** get the literal `CHANGE_ME`, and you paste the real
+  OAuth client secret in. The target warns on every run while a placeholder is
+  still in place — the stack still boots, only OAuth login is dead.
+
 ### Secrets come from openssl, never from this file
 
 The Makefile is committed. It contains the *instruction* to generate secrets,
-never the values — those exist only in the gitignored `.env`, differ per
+never the values — those exist only in the gitignored `secrets/`, differ per
 machine, and were never typed by a human.
 
 > An earlier version of this Makefile hardcoded `admin_password` and a literal
 > JWT secret. Because the Makefile is tracked, those went into git history,
-> which defeats the purpose of `.env` entirely.
+> which defeats the purpose entirely.
+
+### `.PHONY: secrets` is not optional here
+
+There is a **directory** named `secrets/`. Without the `.PHONY` entry Make
+would see the target as an up-to-date file and skip it forever, so a teammate
+who deleted one file would never get it back.
+
+### Permissions
+
+```makefile
+@chmod 700 $(SECRETS_DIR) 2>/dev/null || true
+...
+chmod 644 $$f 2>/dev/null || true;
+```
+
+`0644` on the files is a requirement, not laziness: outside swarm mode Compose
+bind-mounts the host file untouched and ignores the `mode:` option, while the
+backend and frontend containers run as non-root users that still have to read
+it. `0600` gives `permission denied` on Linux. The `0700` on the directory is
+what keeps other users on the host out — the Docker daemon runs as root and
+resolves the path anyway.
+
+The `|| true` covers Windows filesystems, where `chmod` is a no-op or fails
+outright and neither matters.
+
+### The openssl fallback
+
+```sh
+openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'
+```
+
+`||` binds looser than `|`, so the fallback is the whole three-command
+pipeline. It produces the same 64 hex characters on any box that lacks openssl.
 
 ### Two portability details
 
@@ -192,9 +246,28 @@ psql:
 ```
 
 Postgres is not published in production, so this goes **through** Docker rather
-than connecting from the host. Credentials are read from the container's own
-environment — `$$` escapes so the container's shell expands them, not Make. No
-secrets in the Makefile, and it works even though nothing is published.
+than connecting from the host. The user and database names are read from the
+container's own environment — `$$` escapes so the container's shell expands
+them, not Make. No password is needed: the connection is over the container's
+local socket, which Postgres trusts.
+
+---
+
+## `make shell-backend` sources the secrets
+
+```makefile
+shell-backend:
+	$(COMPOSE) exec backend sh -c '. /usr/local/bin/load-secrets.sh && exec sh'
+```
+
+**`docker exec` starts a process from the *image's* environment, not from the
+running process's.** So the variables the entrypoint built — `DATABASE_URL`
+above all — are simply not there in a plain `exec` shell, and every `npx prisma`
+command fails with *"Environment variable not found: DATABASE_URL"*.
+
+Sourcing the same script the entrypoint uses rebuilds them, then `exec sh`
+hands over an interactive shell. This is the reason the secret loading lives in
+its own `load-secrets.sh` instead of inline in `entrypoint.sh`.
 
 ---
 
@@ -213,7 +286,8 @@ fclean:
 `fclean` is destructive and is also **the fix for the two recurring gotchas**:
 
 - a stale `node_modules` anonymous volume after a dependency change
-- a `POSTGRES_PASSWORD` that no longer matches an already-initialised volume
+- a `secrets/postgres_password.txt` that no longer matches an already-
+  initialised volume
 
 **`--rmi all`, not `--rmi local`.** This is a trap worth knowing: `local` only
 removes images that have *no* custom name, and every service here sets
@@ -225,8 +299,10 @@ re-pulled on the next `make up`, but nothing else on the machine is affected.
 `--remove-orphans` clears containers from services deleted out of the compose
 file.
 
-**`.env` is deliberately kept** by `fclean`. Deleting it would rotate every
-secret on a command whose purpose is resetting containers.
+**`.env` and `secrets/` are deliberately kept** by `fclean`. Deleting them
+would rotate every credential — and throw away the hand-typed OAuth secrets —
+on a command whose purpose is resetting containers. Nothing in the Makefile
+ever deletes a secret; that stays a manual `rm`.
 
 **`docker system prune` is deliberately absent.** It reaches outside this
 project and removes unrelated images across the whole machine — hostile if you
@@ -249,13 +325,14 @@ skip it. `$(ENV_FILE)` is correctly **absent** — it is a genuine file target.
 ## Common flows
 
 ```sh
-make                 # first run: generates .env, builds, starts production
+make                 # first run: writes .env + secrets/, builds, starts production
+make secrets         # just the credential files, e.g. after deleting one
 make dev             # daily development with hot reload
 make logs-backend    # follow one service
 make psql            # inspect the database
 
 make re              # after changing package.json (rebuilds, wipes volumes)
-make fclean && make up   # after changing POSTGRES_PASSWORD in .env
+make fclean && make up   # after changing secrets/postgres_password.txt
 
 make nginx-test      # after editing nginx.conf in dev
 docker compose restart nginx

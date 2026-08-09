@@ -6,8 +6,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      # The postgres image reads the password from this file itself: every
+      # POSTGRES_* variable has a _FILE twin for exactly this purpose.
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -24,16 +28,23 @@ services:
     container_name: backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
-      JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
       PORT: 3000
+      # DATABASE_URL is assembled from these by the entrypoint, once the
+      # password has been read from its secret file.
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
       42_CLIENT_ID: ${FT_CLIENT_ID}
-      42_CLIENT_SECRET: ${FT_CLIENT_SECRET}
       42_CALLBACK_URL: ${FT_CALLBACK_URL}
+    secrets:
+      - postgres_password
+      - jwt_secret
+      - google_client_secret
+      - ft_client_secret
     networks:
       - frontend_net
       - backend_net
@@ -52,7 +63,10 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET}
+    # Only jwt_secret: the frontend verifies the session cookie, it never
+    # talks to the database and never sees the OAuth secrets.
+    secrets:
+      - jwt_secret
     networks:
       - frontend_net
     expose:
@@ -70,6 +84,20 @@ services:
     depends_on:
       - frontend
       - backend
+
+# ||  --- SECRETS ---  ||
+# One value per file, created by `make secrets`, never committed.
+# Compose mounts each one read-only at /run/secrets/<name>, and only inside
+# the services that list it above.
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  google_client_secret:
+    file: ./secrets/google_client_secret.txt
+  ft_client_secret:
+    file: ./secrets/ft_client_secret.txt
 
 # ||  --- NETWORKS ---  ||
 networks:

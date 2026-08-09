@@ -7,7 +7,8 @@ backend/
 ├── Dockerfile
 ├── .dockerignore
 ├── tools/
-│   └── entrypoint.sh   runs migrations, then starts Nest
+│   ├── entrypoint.sh     runs migrations, then starts Nest
+│   └── load-secrets.sh   sourced: /run/secrets/* → environment variables
 └── app/                ← the NestJS project (package.json lives here)
 ```
 
@@ -95,8 +96,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY app/prisma ./prisma
 COPY app/prisma.config.ts ./prisma.config.ts
 
-COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY --from=deps /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=deps /usr/local/bin/load-secrets.sh /usr/local/bin/load-secrets.sh
 
 RUN addgroup -S nest && adduser -S nest -G nest
 USER nest
@@ -145,23 +146,38 @@ command it execs. This keeps migration logic in the entrypoint while leaving
 
 ---
 
+**The scripts are copied in the `deps` stage**, not here — `make dev` stops at
+`deps`, and dev needs the same secret loading and migrations as production.
+Copying them once and reusing them with `--from=deps` is what stops the two
+stacks from drifting apart.
+
+---
+
 ## tools/entrypoint.sh
 
 ```sh
 #!/bin/sh
 set -e
 
+. /usr/local/bin/load-secrets.sh
+
 echo ">> Running database migrations..."
 npx prisma migrate deploy
 
 echo ">> Starting application..."
-exec "$@"
+exec env 42_CLIENT_SECRET="$FT_CLIENT_SECRET" "$@"
 ```
 
-Three details in five lines:
-
 **`set -e`** — abort on any failure. Without it a failed migration is logged and
-the app starts against a half-migrated schema.
+the app starts against a half-migrated schema, and a missing secret would be a
+warning rather than a stop.
+
+**`exec env NAME=value`, not `export`.** The backend reads the 42 credentials as
+`42_CLIENT_ID` / `42_CLIENT_SECRET`, and **no POSIX shell accepts a variable
+name starting with a digit** — `export 42_CLIENT_SECRET=x` is a syntax error in
+`sh`, `ash` and `bash` alike. `env` has no such restriction, so the value is
+handed to the exec'd process directly. (This is also why `.env` spells the
+config half `FT_CLIENT_ID`: Compose maps it to `42_CLIENT_ID` on the way in.)
 
 **`prisma migrate deploy` runs here, not in the Dockerfile** — there is no
 database at build time. This is also what makes `make up` work on a fresh clone
@@ -171,6 +187,49 @@ with an empty volume.
 PID 1 and receives signals directly. Without `exec`, the shell stays PID 1 and
 swallows `SIGTERM`: `docker stop` waits 10s then hard-kills Node, with no
 graceful shutdown.
+
+---
+
+## tools/load-secrets.sh
+
+Sourced, never executed. It turns the files Compose mounted under
+`/run/secrets` into environment variables, which is what lets `ConfigService`
+and `process.env` keep working — **no application code changed for any of
+this**.
+
+```sh
+read_secret() {
+	file="/run/secrets/$1"
+	[ -r "$file" ] || { echo "!! missing secret: $file" >&2; return 1; }
+	value=$(tr -d '\r' < "$file")
+	[ -n "$value" ] || { echo "!! empty secret: $file" >&2; return 1; }
+	printf '%s' "$value"
+}
+```
+
+**`return 1`, not `exit 1`.** The function's output is captured with `$(...)`,
+which runs it in a **subshell** — an `exit` there would kill only the subshell
+and let the script carry on with an empty value. Returning non-zero lets the
+caller's `set -e` stop the container, which is the point: booting with an empty
+`JWT_SECRET` is worse than not booting.
+
+**`tr -d '\r'`** tolerates a secret file saved by a Windows editor. The command
+substitution at the call site strips the trailing newline, so an editor that
+adds one is fine too.
+
+**Assign first, export second.**
+
+```sh
+JWT_SECRET=$(read_secret jwt_secret)
+export JWT_SECRET
+```
+
+`export JWT_SECRET=$(read_secret jwt_secret)` would look identical and be
+subtly broken: the exit status of that line is `export`'s own, always `0`, so
+`set -e` would never see the failure.
+
+**The Postgres password is never exported** — it goes into `DATABASE_URL` and
+is then `unset`, so it does not sit in the environment on its own.
 
 ### `migrate deploy` vs `migrate dev`
 
@@ -201,7 +260,7 @@ app/test
 |---|---|
 | `node_modules` | Host copy is macOS-compiled; would overwrite the Linux build. Also 400MB+ of build context transferred on every build. |
 | `dist` | Stale build output; the image rebuilds it. |
-| `.env`, `.env.*` | **Never bake secrets into an image.** Environment arrives at runtime from Compose. |
+| `.env`, `.env.*` | **Never bake secrets into an image.** Configuration arrives at runtime from Compose, credentials from `/run/secrets`. |
 | `Makefile`, `docker-compose.yml` | Superseded by the root versions. |
 | `test`, `coverage` | No reason to ship tests to production. |
 
@@ -265,21 +324,25 @@ are skipped entirely:
     volumes:
       - ./backend/app:/app
       - /app/node_modules
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - "npx prisma generate && npx prisma migrate deploy && npm run start:dev"
+    command: ["/bin/sh", "-c", "npx prisma generate && npm run start:dev"]
 ```
 
-The entrypoint must be overridden because `tools/entrypoint.sh` is only copied into the
-`runtime` stage. `prisma generate` is re-run because dev never reaches the
-builder stage and the anonymous volume needs the client generated into it —
-skipping it gives `@prisma/client did not initialize yet`.
+**`entrypoint` is not overridden.** Both scripts are copied in the `deps` stage,
+so the dev image has them, and they are what load the secrets and build
+`DATABASE_URL`. Overriding the entrypoint would start the dev backend with no
+database URL and no `JWT_SECRET`. `migrate deploy` is gone from the command for
+the same reason — the entrypoint already ran it.
 
-> **The command must stay a single string.** `sh -c` runs only its *first*
-> argument as the script, and Compose splits an unquoted `command:` on
+`prisma generate` stays, because dev never reaches the builder stage and the
+anonymous volume needs the client generated into it — skipping it gives
+`@prisma/client did not initialize yet`.
+
+> **The script must stay a single argument to `sh -c`.** `sh -c` runs only its
+> *first* argument as the script, and Compose splits an unquoted `command:` on
 > whitespace. Written as `command: >` or bare, the container executes just
 > `npx` and exits — the logs show a usage/help dump rather than an error, which
-> makes it easy to misread. Keeping it as one quoted list item avoids the split.
+> makes it easy to misread. The exec-form list above keeps the three arguments
+> explicit and unsplittable.
 
 ---
 

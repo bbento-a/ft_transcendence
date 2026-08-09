@@ -1,6 +1,7 @@
 # docker-compose.yml
 
-Describes the whole system: four services, two networks, one volume.
+Describes the whole system: four services, four secrets, two networks, two
+volumes.
 Lives at the project root because it orchestrates everything — no single
 service owns it.
 
@@ -28,8 +29,10 @@ whatever Compose you have. Omitting it is correct, not an oversight.
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -46,6 +49,13 @@ whatever Compose you have. Omitting it is correct, not an oversight.
 | `postgres:15-alpine` | Pinned major — 16 changes defaults. Alpine is ~80MB vs ~380MB. |
 | `restart: unless-stopped` | Recovers from crashes and host reboots, but respects a deliberate `docker stop`. `always` would fight manual stops. |
 | `environment` (map) | Per-service scoping — see below. |
+| `POSTGRES_PASSWORD_FILE` | Read by the image itself: every `POSTGRES_*` variable has a `_FILE` twin, so no wrapper script is needed here. |
+| `secrets:` | Mounts `secrets/postgres_password.txt` at `/run/secrets/postgres_password`, read-only. |
+
+The user name and database name stay plain `environment:` on purpose. They are
+not credentials, and the healthcheck needs them at the Compose level — a
+`pg_isready` that had to read a file first would be a shell script, not a
+one-liner.
 | `volumes: pg_data:` | Named volume, so data survives `down`. See [database](database.md). |
 | `networks: backend_net` | Data tier only. nginx and frontend cannot reach it. |
 | `healthcheck` | Gate for `depends_on`. See [database](database.md). |
@@ -58,10 +68,21 @@ whatever Compose you have. Omitting it is correct, not an oversight.
     build: ./backend
     image: transcendence-backend
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
-      JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
       PORT: 3000
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      42_CLIENT_ID: ${FT_CLIENT_ID}
+      42_CALLBACK_URL: ${FT_CALLBACK_URL}
+    secrets:
+      - postgres_password
+      - jwt_secret
+      - google_client_secret
+      - ft_client_secret
     networks:
       - frontend_net
       - backend_net
@@ -78,9 +99,14 @@ container itself. `db` is resolved by Docker's embedded DNS on `backend_net`.
 **Both networks.** The backend is the only bridge between the app tier and the
 data tier. This is deliberate and is the whole point of the split.
 
-**`DATABASE_URL` composed from parts.** Credentials are defined once in `.env`;
-the connection string is assembled here. Hardcoding a second copy is how the
-two drift apart.
+**`DATABASE_URL` is no longer here.** The password arrives as a file, so the
+connection string is assembled from `POSTGRES_HOST`/`PORT`/`USER`/`DB` plus the
+secret by `backend/tools/load-secrets.sh`. The four parts stay in this file so
+the topology is still readable from Compose alone.
+
+**Client ids and callback URLs are not secrets.** They travel in the browser's
+address bar during the OAuth redirect, so they stay in `.env` — only the two
+client *secrets* are mounted as files.
 
 **`image:` on a built service** names the resulting image. Without it you get
 `local_transcendence-backend`, which is harder to recognise in `docker images`.
@@ -93,14 +119,18 @@ two drift apart.
     image: transcendence-frontend
     environment:
       NODE_ENV: production
+    secrets:
+      - jwt_secret
     networks:
       - frontend_net
     expose:
       - "3000"
 ```
 
-Receives **no secrets** — not `JWT_SECRET`, not any `POSTGRES_*`. If the
-frontend container is ever compromised, `env` yields nothing useful.
+Receives **one** secret: `jwt_secret`, because `app/lib/session.ts` verifies
+the session cookie before rendering. It gets no database password and no OAuth
+credentials — those are not listed, so Compose does not mount them and
+`/run/secrets/` inside the container holds `jwt_secret` and nothing else.
 
 No `depends_on`. It does not need the backend at boot; nginx routes
 independently, and a hard dependency would only make startup more fragile.
@@ -127,26 +157,63 @@ The **only** service with `ports:`. One published port in the entire stack.
 
 ---
 
-## `environment:` vs `env_file:`
+## Secrets
 
-The file uses `environment:` maps with `${VAR}` interpolation, never
-`env_file:`.
+```yaml
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  google_client_secret:
+    file: ./secrets/google_client_secret.txt
+  ft_client_secret:
+    file: ./secrets/ft_client_secret.txt
+```
+
+**Both halves are required**, same as volumes: the top-level block *declares*
+where the value comes from, the `secrets:` list inside a service *mounts* it at
+`/run/secrets/<name>`, read-only. A service that is not listed gets nothing.
+
+The files are created by `make secrets` and are gitignored. They must exist
+before `up` — a missing one fails with
+`bind source path does not exist: .../secrets/jwt_secret.txt`, which is why
+`up` and `dev` both depend on the `secrets` target.
+
+### Why files instead of `environment:`
+
+```sh
+docker compose config        # the whole interpolated file — no secret in it
+docker inspect backend       # the container's env — no secret in it either
+```
+
+An `environment:` value is stored in the container's configuration, so it shows
+up in both of those, in `docker compose exec backend env`, and in the terminal
+of anyone who runs them. A secret file is read by the entrypoint and passed to
+the app process alone.
+
+### Permissions, and why `uid`/`gid`/`mode` are not used
+
+Compose accepts `uid`, `gid` and `mode` on a secret, but **only honours them in
+swarm mode** — a plain `docker compose up` bind-mounts the host file exactly as
+it is. The backend and frontend containers run as non-root users, so a `0600`
+file on the host would give them `permission denied` on Linux.
+
+`make secrets` therefore creates the files `0644` and the *directory* `0700`.
+Other users on the host cannot traverse into the directory, while the Docker
+daemon (root) still resolves the path when it sets up the mount.
+
+### `environment:` vs `env_file:`
+
+For everything that is *not* a credential, the file uses `environment:` maps
+with `${VAR}` interpolation, never `env_file:`.
 
 - **`env_file: .env`** passes the *entire file* into the container. Every
-  service would then hold every secret.
+  service would then hold every value in it.
 - **`environment:` + `${VAR}`** has Compose read `.env` on the host and inject
   only the named values.
 
-That is what makes per-service scoping possible: the db gets `POSTGRES_*`, the
-backend gets `DATABASE_URL` and `JWT_SECRET`, the frontend gets neither.
-
-Verify with:
-
-```sh
-docker compose config          # shows the fully interpolated file
-```
-
-A blank value (`postgresql://:@db:5432/`) means a variable name does not match
+A blank value in `docker compose config` means a variable name does not match
 what is in `.env`.
 
 ---
@@ -269,6 +336,11 @@ docker compose -f docker-compose.yml up    # base only       → production
 
 These are `make dev` and `make up`. Merge semantics: maps like `environment`
 merge key-by-key; scalars like `command` are replaced wholesale.
+
+The override replaces `command` but deliberately **leaves `entrypoint` alone**.
+The entrypoint is what loads the secrets and runs the migrations, and dev needs
+both exactly as production does — overriding it would start the dev containers
+with no `DATABASE_URL` and no `JWT_SECRET`.
 
 Full detail in [ARCHITECTURE.md §9](ARCHITECTURE.md#9-dev-vs-production).
 

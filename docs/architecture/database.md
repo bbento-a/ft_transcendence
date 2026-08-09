@@ -31,8 +31,10 @@ custom `postgresql.conf` tuning, or seed scripts in
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -163,14 +165,14 @@ docker volume inspect local_transcendence_pg_data
 
 **The most common confusion with this setup.**
 
-`POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` are read **only when
-the data directory is empty**. Postgres runs `initdb` once, creates the role
-and database, and never consults those variables again.
+`POSTGRES_USER`, the password and `POSTGRES_DB` are read **only when the data
+directory is empty**. Postgres runs `initdb` once, creates the role and
+database, and never consults them again.
 
 So:
 
 ```
-change POSTGRES_PASSWORD in .env
+change secrets/postgres_password.txt
   → db container starts fine, still using the OLD password
   → backend fails authentication
 ```
@@ -178,20 +180,33 @@ change POSTGRES_PASSWORD in .env
 **Fix:** `make fclean && make up` — wipe the volume so `initdb` re-runs.
 
 Same applies across a team: whoever ran `make up` first "wins", and everyone
-else must `fclean` before their own `.env` values take effect.
+else must `fclean` before their own values take effect. Note that
+`make secrets` generates a *different* random password on every machine, so
+this is the normal state of things, not an edge case.
 
 ---
 
-## Connection string
+## Where the password comes from
 
-Assembled in `docker-compose.yml`, not stored in `.env`:
+Not from `.env` — from the Docker secret `postgres_password`, a file created by
+`make secrets` and mounted at `/run/secrets/postgres_password`.
 
-```yaml
-DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
-```
+Two consumers, two mechanisms:
 
-Credentials are defined once, in `.env`, and reused by both the db service and
-the backend's URL — no drift.
+- **db** reads it itself, via `POSTGRES_PASSWORD_FILE`. Every `POSTGRES_*`
+  variable the image understands has a `_FILE` twin built for this.
+- **backend** reads it in `tools/load-secrets.sh` and assembles the connection
+  string:
+
+  ```sh
+  DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}?schema=public"
+  ```
+
+  The password stays an unexported shell variable — only `DATABASE_URL` is
+  exported, so the raw value never appears on its own in the process
+  environment.
+
+Both read the same file, so the two can never drift apart.
 
 **`@db:5432`, never `@localhost:5432`.** Inside a container `localhost` is that
 container itself; the backend would find nothing.
@@ -262,8 +277,14 @@ and can reset the database.
 Creating a new migration is a developer action, run against the dev stack:
 
 ```sh
-docker compose exec backend npx prisma migrate dev --name add_match_table
+make shell-backend
+npx prisma migrate dev --name add_match_table
 ```
+
+Go through `make shell-backend`, not a bare `docker compose exec`: `exec`
+starts from the *image's* environment, which has no `DATABASE_URL` — the
+entrypoint built that at boot from the secret. The make target sources
+`load-secrets.sh` first, so prisma finds the database.
 
 The generated folder under `migrations/` must be committed.
 
@@ -279,8 +300,9 @@ docker compose exec db psql -U <user> -d <db>
 docker compose logs -f db
 ```
 
-`make psql` reads credentials from the container's own environment, so no
-secrets are hardcoded in the Makefile.
+`make psql` reads the user and database names from the container's own
+environment, so no credentials are hardcoded in the Makefile. It needs no
+password: the connection goes over the container's local socket.
 
 ### The port cannot be published, in any mode
 
@@ -322,7 +344,8 @@ inside the network.
 | `The datasource.url property is required in your Prisma config file` | `prisma.config.ts` was not copied into the runtime image | Confirm `COPY app/prisma.config.ts` is in `backend/Dockerfile` |
 | `The datasource property 'url' is no longer supported in schema files` | `url = env(...)` added to `schema.prisma` | Remove it — Prisma 7 keeps the URL in `prisma.config.ts` |
 | `Cannot find module '/app/dist/main'` | `prisma.config.ts` was compiled by Nest, nesting output at `dist/src/main.js` | Add `"prisma.config.ts"` to `exclude` in `tsconfig.build.json` |
-| `password authentication failed` | `.env` changed after the volume was initialised | `make fclean && make up` |
+| `password authentication failed` | `secrets/postgres_password.txt` changed after the volume was initialised | `make fclean && make up` |
+| `Environment variable not found: DATABASE_URL` | ran `docker compose exec backend`, which starts from the image env | `make shell-backend` |
 | `could not resolve host db` from frontend | Working as designed — frontend is not on `backend_net` | — |
 | `psql: command not found` on host | Postgres is not published in production | `make psql` |
 | Data lost after `make fclean` | `fclean` runs `down -v` | Use `make clean` to keep data |

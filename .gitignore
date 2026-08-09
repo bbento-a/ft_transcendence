@@ -1,4 +1,6 @@
 .env
+secrets/*
+!secrets/README.md
 node_modules/
 dist/
 .next/
