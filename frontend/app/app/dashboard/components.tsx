@@ -171,12 +171,15 @@ export function WinRateLine({
   data: WinRatePoint[];
   label: string;
 }) {
+
+  const dateOf = (index: number) => data[index - 1]?.date ?? "";
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
         <XAxis
-          dataKey="date"
+          dataKey="index"
+          tickFormatter={dateOf}
           tick={{ fill: AXIS, fontSize: 11 }}
           tickMargin={8}
           interval="preserveStartEnd"
@@ -188,7 +191,11 @@ export function WinRateLine({
           tick={{ fill: AXIS, fontSize: 12 }}
           width={40}
         />
-        <Tooltip contentStyle={TOOLTIP_STYLE} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(value) => [`${value}%`, label]}
+          labelFormatter={(l) => dateOf(Number(l))}
+        />
         <Line
           type="monotone"
           dataKey="winRate"

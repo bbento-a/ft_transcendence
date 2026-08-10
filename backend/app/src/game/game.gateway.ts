@@ -3,6 +3,7 @@ import {
   SubscribeMessage,
   ConnectedSocket,
   WebSocketServer,
+  OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
   MessageBody,
@@ -35,7 +36,9 @@ const t = (key: string, params?: Record<string, string>): BackendMessage =>
   params ? { key, params } : { key };
 
 @WebSocketGateway({ cors: true })
-export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GameGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -67,22 +70,46 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // --- connection lifecycle -------------------------------------------------
 
-  async handleConnection(client: Socket) {
-    const user = await this.authenticateSocket(client);
-    if (!user) {
-      client.emit('warning', t("unauthorized"));
-      client.disconnect();
-      return;
-    }
+  /*
 
-    client.data.userId = user.id;
-    client.data.username = user.username;
-    client.join(user.id); // personal channel, used to reach a user directly
+    Quem falha aqui recebe um connect_error (ver o handler no useGameSocket),
+    ja nao o evento 'warning' — antes do handshake acabar nao ha canal para
+    emitir eventos nossos.
+  */
+  afterInit(server: Server) {
+    server.use(async (socket, next) => {
+      const user = await this.authenticateSocket(socket);
+      if (!user) return next(new Error('unauthorized'));
+
+      socket.data.userId = user.id;
+      socket.data.username = user.username;
+      // O dashboard liga um socket so para ouvir statsUpdated (useStatsSocket,
+      // query scope=stats). Ele NAO conta como presenca no jogo: sem esta marca,
+      // sair de uma partida para o dashboard nunca arrancava o cronometro de
+      // desistencia — o gateway via este socket e achava que o jogador ainda
+      // ca estava. Tudo o que nao se identificar fica 'game', como sempre foi.
+      socket.data.scope =
+        socket.handshake.query.scope === 'stats' ? 'stats' : 'game';
+      next();
+    });
+  }
+
+  handleConnection(client: Socket) {
+    // O middleware do afterInit ja autenticou; sem client.data nem chegamos ca.
+    const { userId } = client.data;
+
+    // O canal pessoal e para TODOS os sockets: e por ele que o statsUpdated
+    // chega ao dashboard, e o socket de stats liga-se exatamente para isso.
+    client.join(userId);
+
+    // Mas so um socket de JOGO e puxado de volta para uma sala pendente — o
+    // dashboard nao tem pagina de jogo nenhuma para onde voltar.
+    if (client.data.scope === 'stats') return;
 
     // Still tied to a room (closed the tab, lost the network, crashed)? Point the
     // lobby straight back at it, instead of leaving the player looking at their
     // own game in the list with a "Spectate" button on it.
-    const roomId = this.findResumableRoom(user.id);
+    const roomId = this.findResumableRoom(userId);
     if (roomId) client.emit('resumeRoom', { roomId });
   }
 
@@ -100,17 +127,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return null;
   }
 
+  /*
+    "Este utilizador ainda esta no jogo?" — conta apenas sockets de JOGO.
+    O socket de stats do dashboard vive no mesmo canal pessoal (precisa dele
+    para o statsUpdated), mas estar a olhar para o dashboard nao e estar numa
+    partida: se ele contasse, sair de um jogo para o dashboard nunca arrancava
+    o cronometro de desistencia e o adversario ficava pendurado sem contagem.
+  */
+  private async hasGameSockets(userId: string): Promise<boolean> {
+    const sockets = await this.server.in(userId).fetchSockets();
+    return sockets.some((s) => s.data.scope !== 'stats');
+  }
+
   async handleDisconnect(client: Socket) {
     const userId = client.data?.userId;
     if (!userId) return;
 
     // Moving between pages closes one socket and opens another, and the two can
-    // be handled in either order. If this user still has a live socket they have
-    // not gone anywhere, so leaving now would start a forfeit against someone who
-    // is sitting right there. The socket being cleaned up has already left its
-    // rooms, so it cannot count itself here.
-    const otherSockets = await this.server.in(userId).fetchSockets();
-    if (otherSockets.length > 0) return;
+    // be handled in either order. If this user still has a live GAME socket they
+    // have not gone anywhere, so leaving now would start a forfeit against
+    // someone who is sitting right there. The socket being cleaned up has
+    // already left its rooms, so it cannot count itself here.
+    if (await this.hasGameSockets(userId)) return;
 
     this.spectators.delete(userId);
 
@@ -452,12 +490,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.in(stayingId).socketsJoin(room.id);
     this.server.to(stayingId).emit('gameAborted', t("leftAndWaiting"));
 
-    // They may be gone as well — both players can drop at nearly the same time.
-    // A promoted host who is not actually connected will never disconnect again,
-    // so nothing else would ever clean this room up and it would sit in the
-    // lobby forever. Give them the same grace period as any other absent host.
-    const stayingSockets = await this.server.in(stayingId).fetchSockets();
-    if (stayingSockets.length > 0) this.cancelRoomCleanup(room.id);
+
+    if (await this.hasGameSockets(stayingId)) this.cancelRoomCleanup(room.id);
     else this.scheduleRoomCleanup(room.id);
 
     this.broadcastRooms();
@@ -685,8 +719,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private async anyPlayerConnected(room: GameRoom): Promise<boolean> {
     for (const playerId of [room.hostId, room.guestId]) {
       if (!playerId) continue;
-      const sockets = await this.server.in(playerId).fetchSockets();
-      if (sockets.length > 0) return true;
+      if (await this.hasGameSockets(playerId)) return true;
     }
     return false;
   }
