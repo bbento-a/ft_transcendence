@@ -2,7 +2,7 @@
 import styles from "./page.module.css"
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useTransitionRouter } from "next-view-transitions";
 import { useTranslations } from "next-intl";
 import { useGameSocket } from "../hooks/useGameSocket";
@@ -16,6 +16,11 @@ import BackArrow from "../components/backArrow";
 const ROWS = 6;
 const COLUMNS = 7;
 
+// Quanto tempo a mensagem de "ganhaste por desistencia" fica no ecra antes de
+// voltarmos ao lobby. Curto de mais e ninguem a le; longo de mais e uma pagina
+// onde ja nao ha nada para fazer.
+const FORFEIT_EXIT_DELAY_MS = 3000;
+
 // Empty board shown before a match starts, so the page looks like the game board
 // even while we are connecting / waiting for an opponent.
 function emptyBoard(): number[][] {
@@ -25,6 +30,10 @@ function emptyBoard(): number[][] {
 export default function Page() {
 	// Router com view transitions: sair da sala anima de volta como entrar nela.
 	const router = useTransitionRouter();
+	// Sem transicao, para o que nao vem de um clique nosso (ver o roomUnavailable
+	// mais abaixo): o startViewTransition rejeita com InvalidStateError se a
+	// pagina estiver escondida ou ja a sair, e essa rejeicao ficava por apanhar.
+	const plainRouter = useRouter();
 	const params = useParams();
 	// Translations for gamepage
 	const t = useTranslations("gameroom_id");
@@ -45,6 +54,7 @@ export default function Page() {
 	const { setGuard } = useNavGuard();
 	const {
 		state, status, connected, inRoom, roomUnavailable, forfeit, myName, myPlayerNumber,
+		wonByForfeit,
 		playAI, enterRoom, leaveRoom, play,
 		requestRematch, iWantRematch, opponentWantsRematch,
 	} = useGameSocket();
@@ -94,8 +104,23 @@ export default function Page() {
 
 	// No such room (a stale link or a hand-typed URL): back to the lobby.
 	useEffect(() => {
-		if (roomUnavailable) router.push("/gamerooms");
-	}, [roomUnavailable, router]);
+		if (roomUnavailable) plainRouter.push("/gamerooms");
+	}, [roomUnavailable, plainRouter]);
+
+	/*
+	  Ganhamos por desistencia: a sala ja nao existe do lado do servidor, por isso
+	  nao ha aqui nada para fazer a nao ser ler a mensagem. Damos esses segundos e
+	  voltamos ao lobby sozinhos.
+
+	  Sem leaveRoom nenhum: a sala foi fechada no resetRoom e o jogo apagado no
+	  finalizeGame, portanto nao ha nada de que sair — e e tambem por isso que nao
+	  somos mandados ca para dentro outra vez quando o lobby liga.
+	*/
+	useEffect(() => {
+		if (!wonByForfeit) return;
+		const timer = setTimeout(() => plainRouter.push("/gamerooms"), FORFEIT_EXIT_DELAY_MS);
+		return () => clearTimeout(timer);
+	}, [wonByForfeit, plainRouter]);
 
 	// O guard fica registado enquanto estivermos numa sala, mas tem de correr
 	// sempre a logica mais recente. Guardamo-la numa ref: re-registar a cada
@@ -266,9 +291,11 @@ export default function Page() {
 			</div>
 			)}
 			{/* Only once the game is over. Disabled while our own offer stands,
-			    so the label reads as a status instead of an action. */}
+			    so the label reads as a status instead of an action.
+			    Escondido quando ganhamos por desistencia: a sala ja fechou e o
+			    adversario foi-se, portanto nao ha revanche nenhuma a pedir. */}
 			<div className={styles.centerButton}>
-				{state?.isGameOver && (
+				{state?.isGameOver && !wonByForfeit && (
 				<button
 					className={styles.rematch}
 					onClick={requestRematch}
