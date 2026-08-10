@@ -55,7 +55,6 @@ local_transcendence/
 ├── .env                        non-secret config — gitignored
 ├── .env.example                same keys, placeholder values — committed
 ├── .gitignore
-├── .gitattributes              forces LF on *.sh, so a Windows clone still boots
 │
 ├── secrets/                    one credential per file — gitignored
 │   ├── README.md               the one committed file in here
