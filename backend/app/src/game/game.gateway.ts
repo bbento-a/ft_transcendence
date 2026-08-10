@@ -13,6 +13,7 @@ import { BackendMessage, DIFFICULTIES, GameState, otherPlayer } from './game.typ
 import { GameRoom, RoomSummary, toRoomSummary } from './game.room';
 import { JwtService } from '@nestjs/jwt';
 import * as cookie from 'cookie';
+import { PrismaService } from '../prisma/prisma.service';
 
 // A host who closes the tab should not leave a ghost room in the lobby. A host
 // who is just walking from /gamerooms to the game page must not lose the room
@@ -57,6 +58,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly gameService: GameService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   private sleep(ms: number): Promise<void> {
@@ -166,7 +168,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
       });
-      return { id: payload.sub, username: payload.username };
+
+      // O token so serve para provar QUEM somos (payload.sub). O nome vem
+      // sempre da BD: o payload.username fica congelado no que era na altura do
+      // login, e o PATCH /auth/me nao reemite o cookie -- quem mudasse de nick
+      // continuava a aparecer com o antigo no tabuleiro (e no historico de
+      // partidas) ate as 24h do token passarem.
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, username: true },
+      });
+
+      // Token nosso mas o utilizador ja nao existe (BD recriada, conta apagada):
+      // o mesmo criterio do getMe, nao ha sessao fantasma a jogar.
+      return user ?? null;
     } catch {
       return null;
     }
