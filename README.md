@@ -579,3 +579,7 @@ make fclean     # remove everything, including volumes and images
 - Helping with documentation drafts for the files in docs/architure/.
 - Generating tests for the project.
 - Consolidation of learned knowledge.
+
+**Tools Used**: Claude
+
+Disclouser: AI was used consciously and critically, acting as a supplementary learning tool to accelerate understanding, not to skip learning steps. All architectural decisions, code implementations, and debugging sessions were manually driven.

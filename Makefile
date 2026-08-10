@@ -102,7 +102,7 @@ $(ENV_FILE): $(ENV_EXAMPLE)
 # backend and frontend containers deliberately run as non-root users that must
 # still be able to read them. Compose's `uid`/`gid`/`mode` secret options are
 # swarm-only and silently ignored here, so the host mode is the real one.
-secrets:
+secrets: $(ENV_FILE)
 	@mkdir -p $(SECRETS_DIR)
 	@chmod 700 $(SECRETS_DIR) 2>/dev/null || true
 	@for name in $(AUTO_SECRETS); do \
