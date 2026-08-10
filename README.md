@@ -131,7 +131,7 @@ the model design.
 
 PostgreSQL, accessed exclusively through Prisma. Two tables: `User` and `Match`.
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 ### `User`
 
