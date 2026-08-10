@@ -2,6 +2,7 @@
 import styles from "./page.module.css"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 // O router da next-view-transitions e o do Next com push/replace embrulhados
 // em document.startViewTransition — e isso que anima a troca de pagina.
 import { useTransitionRouter } from "next-view-transitions"
@@ -19,6 +20,22 @@ export default function Home() {
 	const [difficulty, setDifficulty] = useState(false);
 	const popupRef = useRef<HTMLDivElement>(null);
 	const router = useTransitionRouter();
+	/*
+	  Router SEM view transitions, para as navegacoes que nao vem de um clique.
+	  O startViewTransition precisa de fotografar a pagina, e recusa-se a comecar
+	  se o separador estiver escondido ou se ja estivermos a sair da pagina --
+	  rejeita com "InvalidStateError: Transition was aborted because of invalid
+	  state", e a next-view-transitions nao apanha essa rejeicao (so toca nas
+	  promessas da transicao se lhe passarmos um onTransitionReady), por isso
+	  aparecia na consola como erro por tratar.
+
+	  Quem manda nas navegacoes aqui em baixo e o SERVIDOR, pelo socket, e ele
+	  nao sabe se estamos a olhar para o separador. Animar um redirecionamento
+	  que ninguem pediu tambem nao acrescenta nada: as transicoes ficam nos
+	  cliques (entrar numa sala, escolher dificuldade), que so acontecem com a
+	  pagina a vista.
+	*/
+	const plainRouter = useRouter();
 
 	const t = useTranslations("gamerooms");
 	// texto que so os leitores de ecra veem, ver namespace a11y
@@ -58,16 +75,48 @@ export default function Home() {
 		if (connected) getRooms();
 	}, [connected, getRooms]);
 
+	/*
+	  ...mas as atualizacoes empurradas podem perder-se, e o lobby nao tinha como
+	  se recuperar: pedia a lista UMA vez, ao ligar, e ficava com essa fotografia
+	  ate um F5. Num separador em segundo plano (testar com duas contas em duas
+	  janelas e o caso tipico) o browser estrangula temporizadores e o socket
+	  pode religar sem o `connected` chegar a mudar de valor, portanto o efeito
+	  de cima nao volta a correr.
+
+	  O sintoma era so o rotulo: as salas sao REUTILIZADAS (o resetRoom devolve
+	  uma sala que estava a jogar ao estado 'waiting'), por isso quem perdesse
+	  essa transicao continuava a ver "Spectate" numa sala que ja aceitava
+	  jogadores. O clique funcionava na mesma, porque quem decide o que fazer com
+	  ele e o servidor, com o estado ao vivo -- so o texto e que vinha da cache.
+
+	  Voltar ao separador volta a pedir a lista. E uma mensagem de socket e a
+	  resposta e o que ja mandamos a toda a gente em cada mudanca.
+	*/
+	useEffect(() => {
+		const resync = () => {
+			if (document.visibilityState === "visible") getRooms();
+		};
+
+		// visibilitychange apanha a troca de separador; focus apanha a troca de
+		// JANELA, que em alguns browsers nao dispara o primeiro.
+		document.addEventListener("visibilitychange", resync);
+		window.addEventListener("focus", resync);
+		return () => {
+			document.removeEventListener("visibilitychange", resync);
+			window.removeEventListener("focus", resync);
+		};
+	}, [getRooms]);
+
 	// Our room exists now, so we can walk into it by its real id.
 	useEffect(() => {
-		if (createdRoomId) router.push(`/${createdRoomId}`);
-	}, [createdRoomId, router]);
+		if (createdRoomId) plainRouter.push(`/${createdRoomId}`);
+	}, [createdRoomId, plainRouter]);
 
 	// We are still in a game we never left, so go back to it. `replace` keeps the
 	// lobby out of the history: the game's back button must lead somewhere.
 	useEffect(() => {
-		if (resumeRoomId) router.replace(`/${resumeRoomId}`);
-	}, [resumeRoomId, router]);
+		if (resumeRoomId) plainRouter.replace(`/${resumeRoomId}`);
+	}, [resumeRoomId, plainRouter]);
 
   return (
 	<RequireAuth>

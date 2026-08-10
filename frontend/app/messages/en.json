@@ -266,7 +266,7 @@
     "wantsRematch": "{name} wants a rematch.",
     "rematch": "Rematch! Game starting",
     "gameEnded": "The game ended.",
-    "leftAndForfeit": "Your opponent left — you win by forfeit. Waiting for a new opponent...",
+    "leftAndForfeit": "Your opponent left — you win by forfeit. Taking you back to the game rooms...",
     "leftAndWaiting": "Your opponent left. Waiting for a new opponent...",
     "unavailable": "You are already in a game or room.",
     "startingGame": "Opponent joined! Game starting",

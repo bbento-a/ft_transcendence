@@ -152,7 +152,42 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.gameService.StartForfeitTimer(game.roomId, userId, async (finishedGame) => {
       await this.endGame(finishedGame.roomId, finishedGame, t("noReconnection"));
+      this.dismissAfterForfeit(finishedGame);
     });
+  }
+
+  /*
+    Desistencia por nao voltar a tempo. O endGame ja deixou a sala em 'finished'
+    a espera de uma revanche — so que o adversario nao esta la para a aceitar, e
+    nao vai estar: foi precisamente por isso que o cronometro chegou ao fim. Sem
+    isto o vencedor ficava com um botao de revanche que nunca ninguem premia.
+
+    Fechamos a sala e mandamos o vencedor de volta ao lobby, como na desistencia
+    deliberada. Ao contrario dessa, aqui NAO limpamos o tabuleiro: o gameOver
+    acabou de mostrar a jogada final e vale a pena deixar ver como ficou.
+  */
+  private dismissAfterForfeit(finalState: GameState) {
+    // Sem sala: ou era um jogo contra o bot (que nunca teve uma), ou o proprio
+    // endGame ja a fechou por nao haver ninguem ligado. Nos dois casos nao ha
+    // ninguem para tirar de lado nenhum.
+    const room = this.rooms.get(finalState.roomId);
+    if (!room) return;
+
+    // Quem estava a ver fica sem sala: mandamo-los embora como em qualquer
+    // outro fim de sala, senao ficavam num canal que ja nao existe.
+    for (const [watcherId, watchedRoomId] of this.spectators) {
+      if (watchedRoomId !== room.id) continue;
+      this.spectators.delete(watcherId);
+      this.server.to(watcherId).emit('roomUnavailable', t("gameEnded"));
+    }
+
+    this.server.in(room.id).socketsLeave(room.id);
+    this.closeRoom(room.id);
+
+    // Canal pessoal: o socketsLeave acima ja o tirou do canal da sala.
+    if (finalState.winnerId) {
+      this.server.to(finalState.winnerId).emit('returnToLobby');
+    }
   }
 
   private async authenticateSocket(
@@ -354,9 +389,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.broadcastRooms();
   }
 
-  // A player walked out of a live game. Nobody won, so no result is recorded:
-  // the game is dropped, anyone watching is sent back to the lobby, and the room
-  // reopens with whoever stayed as its host — free for anyone to join again.
+  // A player walked out. Anyone watching is sent back to the lobby, and what
+  // happens to the room depends on whether there was a game to lose:
+  //   jogo a decorrer  -> desistencia. A sala FECHA e quem ficou volta ao lobby.
+  //   sala em revanche -> nada a perder. A sala reabre com quem ficou de anfitriao.
   private async resetRoom(room: GameRoom, leaverId: string) {
     // Walking out of a RUNNING game is a forfeit — exactly what the exit popup
     // warns — so the result is recorded: the leaver takes the loss, whoever
@@ -382,6 +418,26 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    /*
+      Vitoria por desistencia: quem ficou nao herda uma sala vazia a espera de
+      um desconhecido. A sala fecha e a pagina dele volta ao lobby passados
+      alguns segundos, o tempo de ler a mensagem.
+
+      Fechar a sala e o que garante que ele nao volta ca para dentro: enquanto
+      fosse anfitriao dela, o findResumableRoom apanhava-a assim que a ligacao
+      seguinte se abrisse no lobby e mandava-o de volta com 'resumeRoom'.
+      O jogo em si ja desapareceu no finalizeGame, portanto tambem nao ha nada
+      la para o puxar.
+
+      A mensagem vai para o canal pessoal (stayingId) e nao para a sala, porque
+      o socketsLeave acima ja o tirou dela.
+    */
+    if (forfeited) {
+      this.closeRoom(room.id);
+      this.server.to(stayingId).emit('opponentForfeited', t("leftAndForfeit"));
+      return;
+    }
+
     room.hostId = stayingId;
     room.hostName = stayingName;
     room.guestId = null;
@@ -390,16 +446,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Adversario novo: a alternancia recomeca do zero, com sorteio.
     room.lastStarter = null;
 
-    // Whoever stayed keeps the room and waits in it, exactly like a fresh host.
+    // Sem desistencia (saiu de uma sala a espera de revanche) nao houve jogo
+    // nenhum a perder, por isso quem ficou guarda a sala e espera nela, tal e
+    // qual um anfitriao acabado de criar uma.
     this.server.in(stayingId).socketsJoin(room.id);
-    this.server
-      .to(stayingId)
-      .emit(
-        'gameAborted',
-        forfeited
-          ? t("leftAndForfeit")
-          : t("leftAndWaiting"),
-      );
+    this.server.to(stayingId).emit('gameAborted', t("leftAndWaiting"));
 
     // They may be gone as well — both players can drop at nearly the same time.
     // A promoted host who is not actually connected will never disconnect again,

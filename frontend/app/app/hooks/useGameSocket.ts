@@ -79,6 +79,10 @@ export function useGameSocket() {
   // nobody is missing. The name and the count are kept together because they are
   // only meaningful side by side, and `status` gets overwritten by other events.
   const [forfeit, setForfeit] = useState<ForfeitCountdown | null>(null);
+  // Ganhamos por desistencia do adversario: a sala ja fechou no servidor e nao
+  // ha nada para fazer aqui. A pagina usa isto para nos levar de volta ao lobby
+  // depois de dar tempo de ler a mensagem.
+  const [wonByForfeit, setWonByForfeit] = useState(false);
 
   // Rematch offers standing since the last game ended. A rematch needs both, so
   // the button reads "Rematch", "Waiting..." or "Accept rematch" accordingly.
@@ -136,8 +140,9 @@ export function useGameSocket() {
       setForfeit(null); // they made it back, stop the clock
     });
 
-    // The opponent walked out. The room reopened around us, so we drop the
-    // board and wait for someone new instead of leaving the page.
+    // The opponent walked out of a room that was only waiting on a rematch. The
+    // room reopened around us, so we drop the board and wait for someone new
+    // instead of leaving the page.
     socket.on("gameAborted", (msg: BackendMessage) => {
       setInRoom(true);
       setState(null);
@@ -146,6 +151,24 @@ export function useGameSocket() {
       setIWantRematch(false);
       setOpponentWantsRematch(false);
     });
+
+    // O adversario saiu a meio do jogo: ganhamos por desistencia e o servidor
+    // fechou a sala. Fica so a mensagem no ecra -- quem nos tira daqui e a
+    // pagina, passado o tempo de a ler.
+    socket.on("opponentForfeited", (msg: BackendMessage) => {
+      setInRoom(true);
+      setState(null);
+      setStatus(msg);
+      setForfeit(null);
+      setIWantRematch(false);
+      setOpponentWantsRematch(false);
+      setWonByForfeit(true);
+    });
+
+    // Desistencia por nao voltar a tempo: o gameOver acabou de chegar com o
+    // tabuleiro final, e o servidor fechou a sala a seguir. Nao mexemos em nada
+    // do que esta no ecra — so marcamos que nao ha aqui mais nada para fazer.
+    socket.on("returnToLobby", () => setWonByForfeit(true));
 
     // --- lobby ---
     socket.on("roomList", (list: RoomSummary[]) => {
@@ -280,6 +303,7 @@ export function useGameSocket() {
   return {
     state, status, connected, isMyTurn, myPlayerNumber, myName, canPlay, play, playAI,
     rooms, roomsLoaded, createdRoomId, resumeRoomId, roomUnavailable, inRoom, forfeit,
+    wonByForfeit,
     getRooms, createRoom, enterRoom, leaveRoom,
     requestRematch, iWantRematch, opponentWantsRematch,
     ROWS, COLS,
