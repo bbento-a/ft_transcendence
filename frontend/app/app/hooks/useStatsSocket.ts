@@ -17,7 +17,8 @@ import { io } from "socket.io-client";
 export function useStatsSocket(onUpdate: () => void, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
-    const socket = io({ withCredentials: true });
+ 
+    const socket = io({ withCredentials: true, query: { scope: "stats" } });
     socket.on("statsUpdated", onUpdate);
     return () => {
       socket.off("statsUpdated", onUpdate);

@@ -98,6 +98,17 @@ export function useGameSocket() {
     socket.on("connect", () => setConnected(true));
     socket.on("disconnect", () => setConnected(false));
 
+    // O gateway autentica agora no handshake (middleware): quem for recusado
+    // recebe isto em vez do antigo evento 'warning' — depois do handshake
+    // falhar nao ha canal para eventos nossos. Sem este handler a pagina
+    // ficava num "Connecting..." eterno, sem explicacao nenhuma.
+    // So a recusa do middleware ("unauthorized") mostra a mensagem: um
+    // connect_error de rede (backend a reiniciar) e transitorio e o socket.io
+    // continua a tentar religar sozinho — ai o "Connecting..." e a verdade.
+    socket.on("connect_error", (err) => {
+      if (err.message === "unauthorized") setStatus({ key: "unauthorized" });
+    });
+
     // Waiting for an opponent, or watching a game: either way we are in a room.
     socket.on("statusWait", (msg: BackendMessage) => {
       setInRoom(true);
