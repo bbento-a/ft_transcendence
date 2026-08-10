@@ -87,10 +87,42 @@ export class StatsService {
       else if (m.result === 'draw') totals.draws++;
     }
 
+    /*
+      Match.opponent e uma fotografia do nome no momento do jogo, e o dashboard
+      liga para /dashboard/<nome>. Se o adversario mudar de nick depois, essas
+      linhas ficam a apontar para um jogador que ja nao existe -> 404.
+
+      O opponentId e que e estavel (foi para isso que ele existe, ver o schema),
+      por isso e por ele que resolvemos o nome ATUAL. Uma unica query com IN
+      para todos os adversarios distintos, em vez de uma por linha.
+    */
+    const opponentIds = [
+      ...new Set(
+        matches
+          .map((m) => m.opponentId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+
+    const currentNames = new Map<string, string>();
+    if (opponentIds.length > 0) {
+      const opponents = await this.prisma.user.findMany({
+        where: { id: { in: opponentIds } },
+        select: { id: true, username: true },
+      });
+      for (const o of opponents) currentNames.set(o.id, o.username);
+    }
+
     return {
       user,
       totals: { ...totals, total: matches.length },
-      matches,
+      matches: matches.map((m) => ({
+        ...m,
+        // Sem nome atual (id da IA e null; conta que desapareceu da BD) fica a
+        // fotografia: e a unica coisa que ainda sabemos sobre quem foi.
+        opponent:
+          (m.opponentId && currentNames.get(m.opponentId)) ?? m.opponent,
+      })),
     };
   }
 }
