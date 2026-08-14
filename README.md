@@ -1,7 +1,3 @@
-# README.md
-
----
-
 *This project has been created as part of the 42 curriculum by hguerrei, randrade, bbento-a, aaleixo-.*
 
 # —   Description   ———————————————
